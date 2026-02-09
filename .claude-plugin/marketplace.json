@@ -1,0 +1,22 @@
+{
+  "name": "trogonstack",
+  "owner": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  },
+  "metadata": {
+    "description": "TrogonStack agent skills",
+    "version": "0.0.1"
+  },
+  "plugins": [
+    {
+      "name": "diataxis",
+      "description": "Documentation skills following the Diataxis framework for organizing and generating docs into tutorials, how-to guides, reference, and explanation sections",
+      "source": "./",
+      "skills": [
+        "./skills/diataxis-gen-readme",
+        "./skills/diataxis-organize-docs"
+      ]
+    }
+  ]
+}
