@@ -17,6 +17,14 @@
         "./skills/diataxis-gen-readme",
         "./skills/diataxis-organize-docs"
       ]
+    },
+    {
+      "name": "gh",
+      "description": "GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI",
+      "source": "./",
+      "skills": [
+        "./skills/gh-enrich-pr-description"
+      ]
     }
   ]
 }
