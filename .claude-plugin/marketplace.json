@@ -25,6 +25,14 @@
       "skills": [
         "./skills/gh-enrich-pr-description"
       ]
+    },
+    {
+      "name": "nats",
+      "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
+      "source": "./",
+      "skills": [
+        "./skills/nats-design-subject"
+      ]
     }
   ]
 }

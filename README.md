@@ -18,6 +18,8 @@ claude plugin install diataxis@trogonstack
 | Plugin | Description |
 |--------|-------------|
 | `diataxis` | Documentation skills following the Diataxis framework — generate READMEs and reorganize docs into tutorials, how-to guides, reference, and explanation sections |
+| `gh` | GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI |
+| `nats` | NATS messaging skills for designing subject hierarchies, naming conventions, and wildcard patterns for scalable pub/sub, request/reply, and streaming architectures |
 
 ## Contributing
 
