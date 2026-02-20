@@ -1,11 +1,11 @@
 {
   "name": "trogonstack",
   "owner": {
-    "name": "TrogonStack",
+    "name": "Straw Hat, LLC",
     "url": "https://github.com/TrogonStack"
   },
   "metadata": {
-    "description": "TrogonStack agent skills",
+    "description": "Straw Hat, LLC agent skills",
     "version": "0.0.1"
   },
   "plugins": [
