@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/TrogonStack/agentskills/compare/v0.2.0...v0.2.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* **plugin:** Remove redundant plugin.json ([#7](https://github.com/TrogonStack/agentskills/issues/7)) ([43bf426](https://github.com/TrogonStack/agentskills/commit/43bf4268cfc843869a0a0aa901c160ad21fc6ced))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/v0.1.0...v0.2.0) (2026-02-13)
 
 
