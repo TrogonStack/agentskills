@@ -1,38 +1,29 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "trogonstack",
+  "description": "Plugins by TrogonStack for Claude Code",
   "owner": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"
   },
-  "metadata": {
-    "description": "TrogonStack agent skills",
-    "version": "0.0.1"
-  },
   "plugins": [
     {
-      "name": "diataxis",
+      "name": "trogonstack-diataxis",
       "description": "Documentation skills following the Diataxis framework for organizing and generating docs into tutorials, how-to guides, reference, and explanation sections",
-      "source": "./",
-      "skills": [
-        "./skills/diataxis-gen-readme",
-        "./skills/diataxis-organize-docs"
-      ]
+      "source": "./plugins/trogonstack-diataxis",
+      "category": "development"
     },
     {
-      "name": "gh",
+      "name": "trogonstack-gh",
       "description": "GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI",
-      "source": "./",
-      "skills": [
-        "./skills/gh-enrich-pr-description"
-      ]
+      "source": "./plugins/trogonstack-gh",
+      "category": "development"
     },
     {
-      "name": "nats",
+      "name": "trogonstack-nats",
       "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
-      "source": "./",
-      "skills": [
-        "./skills/nats-design-subject"
-      ]
+      "source": "./plugins/trogonstack-nats",
+      "category": "development"
     }
   ]
 }
