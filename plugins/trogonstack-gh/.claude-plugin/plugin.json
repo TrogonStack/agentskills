@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-gh",
+  "description": "GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

@@ -1,5 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "include-component-in-tag": true,
+  "extra-files": [
+    {
+      "type": "json",
+      "path": ".claude-plugin/plugin.json",
+      "jsonpath": "$.version"
+    }
+  ],
   "changelog-sections": [
     {
       "type": "feat",
@@ -13,18 +24,14 @@
     }
   ],
   "packages": {
-    ".": {
-      "release-type": "simple",
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": false,
-      "include-component-in-tag": false,
-      "extra-files": [
-        {
-          "type": "json",
-          "path": ".claude-plugin/plugin.json",
-          "jsonpath": "$.version"
-        }
-      ]
+    "plugins/trogonstack-diataxis": {
+      "component": "trogonstack-diataxis"
+    },
+    "plugins/trogonstack-gh": {
+      "component": "trogonstack-gh"
+    },
+    "plugins/trogonstack-nats": {
+      "component": "trogonstack-nats"
     }
   },
   "plugins": [
@@ -32,6 +39,7 @@
       "type": "sentence-case"
     }
   ],
+  "tag-separator": "@",
   "include-v-in-tag": true,
   "draft": false,
   "draft-pull-request": false,
