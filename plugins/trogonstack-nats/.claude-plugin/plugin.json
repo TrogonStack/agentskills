@@ -1,7 +1,7 @@
 {
   "name": "trogonstack-nats",
   "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"
