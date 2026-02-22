@@ -1,7 +1,7 @@
 {
   "name": "trogonstack-diataxis",
   "description": "Documentation skills following the Diataxis framework for organizing and generating docs into tutorials, how-to guides, reference, and explanation sections",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"
