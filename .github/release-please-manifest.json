@@ -1,5 +1,6 @@
 {
   "plugins/trogonstack-diataxis": "0.0.2",
   "plugins/trogonstack-gh": "0.0.2",
-  "plugins/trogonstack-nats": "0.0.2"
+  "plugins/trogonstack-nats": "0.0.2",
+  "plugins/trogonstack-datadog": "0.0.1"
 }

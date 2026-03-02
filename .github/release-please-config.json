@@ -32,6 +32,9 @@
     },
     "plugins/trogonstack-nats": {
       "component": "trogonstack-nats"
+    },
+    "plugins/trogonstack-datadog": {
+      "component": "trogonstack-datadog"
     }
   },
   "plugins": [

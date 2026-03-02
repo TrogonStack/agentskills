@@ -24,6 +24,12 @@
       "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
       "source": "./plugins/trogonstack-nats",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-datadog",
+      "description": "Datadog observability skills for designing dashboards with proper widget selection, layout patterns, and template variables using the pup CLI",
+      "source": "./plugins/trogonstack-datadog",
+      "category": "development"
     }
   ]
 }
