@@ -9,14 +9,7 @@ Use these commit prefixes:
 - `fix:` - Bug fixes (bumps patch version)
 - `chore:` - Maintenance tasks (no version bump)
 
-**Always include the release-please component as the scope** so automated releases target the correct plugin:
-
-| Plugin directory | Scope to use |
-|---|---|
-| `plugins/trogonstack-diataxis` | `trogonstack-diataxis` |
-| `plugins/trogonstack-gh` | `trogonstack-gh` |
-| `plugins/trogonstack-nats` | `trogonstack-nats` |
-| `plugins/trogonstack-datadog` | `trogonstack-datadog` |
+**Always include the release-please component as the scope** when changing a plugin, so automated releases target the correct package. Components are defined in `.github/release-please-config.json`.
 
 Examples:
 ```bash
