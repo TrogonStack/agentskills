@@ -9,7 +9,7 @@ Use these commit prefixes:
 - `fix:` - Bug fixes (bumps patch version)
 - `chore:` - Maintenance tasks (no version bump)
 
-**Always include the release-please component as the scope** when changing a plugin, so automated releases target the correct package. Components are defined in `.github/release-please-config.json`.
+**Always include the release-please component as the scope** when changing a plugin, so automated releases target the correct package. Components are defined in [`.github/release-please-config.json`](.github/release-please-config.json).
 
 Examples:
 ```bash
