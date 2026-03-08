@@ -9,10 +9,19 @@ Use these commit prefixes:
 - `fix:` - Bug fixes (bumps patch version)
 - `chore:` - Maintenance tasks (no version bump)
 
+**Always include the release-please component as the scope** so automated releases target the correct plugin:
+
+| Plugin directory | Scope to use |
+|---|---|
+| `plugins/trogonstack-diataxis` | `trogonstack-diataxis` |
+| `plugins/trogonstack-gh` | `trogonstack-gh` |
+| `plugins/trogonstack-nats` | `trogonstack-nats` |
+| `plugins/trogonstack-datadog` | `trogonstack-datadog` |
+
 Examples:
 ```bash
-git commit -m "feat: add new skill for database migrations"
-git commit -m "fix: correct worktree path handling"
+git commit -m "feat(trogonstack-diataxis): add new skill for database migrations"
+git commit -m "fix(trogonstack-gh): correct worktree path handling"
 git commit -m "chore: update dependencies"
 ```
 
