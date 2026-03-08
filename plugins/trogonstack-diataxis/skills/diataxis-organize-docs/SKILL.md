@@ -49,7 +49,7 @@ docs/
 │   ├── concepts/
 │   ├── decisions/
 │   └── background/
-└── index.md             # Navigation hub
+└── README.md            # Navigation hub
 ```
 
 ## Step 3: Classification Criteria
@@ -164,6 +164,8 @@ explanation/concepts/authentication.md
 ```
 
 ## Step 5: Create Navigation Index
+
+Always use `README.md` as the root navigation file — never `index.md`.
 
 Build a documentation hub that helps users find content by their need:
 
