@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-ask",
+  "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
+  "version": "0.0.0",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

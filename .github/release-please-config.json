@@ -35,6 +35,9 @@
     },
     "plugins/trogonstack-datadog": {
       "component": "trogonstack-datadog"
+    },
+    "plugins/trogonstack-ask": {
+      "component": "trogonstack-ask"
     }
   },
   "plugins": [

@@ -30,6 +30,12 @@
       "description": "Datadog observability skills for designing dashboards with proper widget selection, layout patterns, and template variables using the pup CLI",
       "source": "./plugins/trogonstack-datadog",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-ask",
+      "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
+      "source": "./plugins/trogonstack-ask",
+      "category": "development"
     }
   ]
 }
