@@ -1,6 +1,6 @@
 # NATS Subject Anti-Patterns
 
-This reference documents 8 common mistakes in subject design with detection, fixes, and migration strategies.
+Common mistakes in subject design with detection, fixes, and migration strategies.
 
 **Related references**: For correct patterns see [patterns.md](patterns.md). For security-specific mistakes see [security.md](security.md). For JetStream-specific design see [jetstream.md](jetstream.md).
 
@@ -496,6 +496,87 @@ When fixing anti-patterns, follow this checklist:
 
 ---
 
+## Anti-Pattern 9: Overlapping Wildcard Subscriptions ⚠️ CRITICAL
+
+Two wildcard subscriptions that can match the same subject cause duplicate delivery. This happens when a variable token (like an ID) can equal a fixed structural token, making both patterns match.
+
+**Principle**: Every pair of wildcard subscriptions must be structurally exclusive — no possible value of any variable should make them overlap.
+
+```
+✗ BAD:
+  {prefix}.handler.>  +  {prefix}.*.handler.>
+  → When ID = "handler", both match
+
+✓ GOOD:
+  {prefix}.global.>  +  {prefix}.scoped.*.>
+  → "global" and "scoped" are distinct, overlap impossible
+```
+
+**Prevention**: After defining subscriptions, enumerate all pairs and verify no variable value creates ambiguity. If two patterns share any fixed tokens at the same position, they can overlap.
+
+---
+
+## Anti-Pattern 10: Variable ID Position Across Subject Types
+
+When the same kind of identifier appears at different positions depending on the subject type, parsers need per-type logic and wildcards behave inconsistently.
+
+**Principle**: Identifiers should appear at consistent, predictable positions across all subject types. Use fixed delimiter tokens to anchor them.
+
+```
+✗ BAD:
+  orders.created.order-123         (ID at position 3)
+  orders.order-123.shipped         (ID at position 2)
+
+✓ GOOD:
+  orders.created.order-123         (ID always after action)
+  orders.shipped.order-123
+```
+
+**Prevention**: Define a canonical subject template. Every subject type must place IDs at the same structural depth. If different scopes need IDs (e.g. session ID + request ID), nest them consistently.
+
+---
+
+## Anti-Pattern 11: Bidirectional Protocols Without Direction Markers
+
+When messages flow in both directions (client→server and server→client) on related subjects, the absence of a direction token prevents per-direction permissions, monitoring, and subscription filtering.
+
+**Principle**: Bidirectional protocols need a direction-aware token in the subject hierarchy so each side's traffic is independently addressable.
+
+```
+✗ BAD:
+  orders.order-123.request
+  orders.order-123.response
+
+✓ GOOD:
+  orders.inbound.order-123.create
+  orders.outbound.order-123.update
+```
+
+**Prevention**: If two different systems exchange messages, include their role or direction as a fixed token. This enables NATS authorization rules per direction and clean monitoring dashboards.
+
+---
+
+## Anti-Pattern 12: Structural Markers in User-Controlled Values
+
+When subject parsing relies on fixed marker tokens (like `.session.` or `.agent.`), user-controlled values (prefixes, IDs) containing those same strings cause parsers to latch onto the wrong position.
+
+**Principle**: Parsers must never assume the first (or last) occurrence of a structural marker is the correct one. They must try all occurrences and validate the full structure at each position.
+
+```
+Problem:
+  Pattern:  {prefix}.session.{id}.handler.{method}
+  Subject:  "my.session.app.session.abc.handler.run"
+  → First ".session." is inside the prefix, not the structural position
+
+Fix:
+  Iterate all ".session." occurrences, try parsing at each,
+  accept the first that produces a valid result.
+```
+
+**Prevention**: If dotted prefixes or namespaces are allowed, never use `find()` or `rfind()` alone for structural markers. Use iteration with validation. Add regression tests with structural markers embedded in prefix values.
+
+---
+
 ## Anti-Pattern Prevention
 
 **In Code Review, Check For**:
@@ -506,6 +587,10 @@ When fixing anti-patterns, follow this checklist:
 ✓ Consistent casing (lowercase) and separators (hyphens)
 ✓ Max 5-6 segments per subject
 ✓ Subscriber patterns documented
+✓ No two wildcard subscriptions can match the same subject
+✓ IDs at consistent positions across all subject types
+✓ Direction markers present for bidirectional protocols
+✓ Parsers handle structural markers appearing in prefixes/IDs
 ```
 
 **In Design Phase, Validate**:
@@ -515,5 +600,8 @@ When fixing anti-patterns, follow this checklist:
 ✓ Can I efficiently subscribe to "specific scope only"?
 ✓ Do my subscriber patterns avoid wildcards in the middle?
 ✓ Is my subject format documented for new developers?
+✓ Do any wildcard pairs overlap for any realistic ID value?
+✓ Can I subscribe per-session/per-entity for affinity routing?
+✓ Can NATS permissions cleanly separate read/write per direction?
 ```
 
