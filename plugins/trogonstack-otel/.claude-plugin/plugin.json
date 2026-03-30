@@ -1,7 +1,7 @@
 {
   "name": "trogonstack-otel",
   "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"
