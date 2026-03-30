@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.1.0...trogonstack-ask@v0.1.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* **trogonstack-ask:** Make questioning adaptive instead of pre-planned ([#26](https://github.com/TrogonStack/agentskills/issues/26)) ([85dd3e6](https://github.com/TrogonStack/agentskills/commit/85dd3e69f44052e203ea954744267220beca0023))
+
 ## [0.1.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.0.1...trogonstack-ask@v0.1.0) (2026-03-18)
 
 
