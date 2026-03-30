@@ -36,6 +36,12 @@
       "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
       "source": "./plugins/trogonstack-ask",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-otel",
+      "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions",
+      "source": "./plugins/trogonstack-otel",
+      "category": "development"
     }
   ]
 }

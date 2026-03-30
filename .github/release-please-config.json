@@ -38,6 +38,9 @@
     },
     "plugins/trogonstack-ask": {
       "component": "trogonstack-ask"
+    },
+    "plugins/trogonstack-otel": {
+      "component": "trogonstack-otel"
     }
   },
   "plugins": [

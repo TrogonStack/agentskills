@@ -3,5 +3,6 @@
   "plugins/trogonstack-gh": "0.0.2",
   "plugins/trogonstack-nats": "0.1.0",
   "plugins/trogonstack-datadog": "0.1.0",
-  "plugins/trogonstack-ask": "0.1.1"
+  "plugins/trogonstack-ask": "0.1.1",
+  "plugins/trogonstack-otel": "0.0.1"
 }
