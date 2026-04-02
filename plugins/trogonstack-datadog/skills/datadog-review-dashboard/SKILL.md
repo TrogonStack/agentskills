@@ -71,6 +71,8 @@ Check that every widget title uses the layer-priority prefix system:
 - `D0-N:` for domain (business metrics)
 - The number indicates priority within the layer (`0` = most critical)
 
+**Customer-Facing group and the prefix system**: The Customer-Facing group is a cross-cutting view across layers, not a fourth layer. Widgets inside it retain their source-layer prefix (e.g., `P0: GraphQL Error Rate`, `D0: Purchase Success Rate`, `I0: Healthy Hosts`). The group name itself does not use a layer prefix — it is simply called "Customer-Facing" (or "Triage", "Overview", etc.). Query Value widgets in the Customer-Facing group do not need a prefix since they are big-number status indicators, not timeseries.
+
 Focus on timeseries and query value widgets — these are the primary candidates for alert threshold markers.
 
 ### 3. Audit Alert Thresholds
@@ -122,12 +124,13 @@ For each widget with a threshold:
 
 ### 5. Audit Customer-Facing Section
 
-**Principle**: A dedicated "Customer-Facing" group should exist at the top of the dashboard with 5-8 key metrics for immediate outage identification. The specific metrics should reflect the product's business — not just generic traffic and error rates.
+**Principle**: A dedicated "Customer-Facing" group should exist at the top of the dashboard with 5-8 key metrics for immediate outage identification. The specific metrics should reflect the product's business — not just generic traffic and error rates. This group is a cross-cutting view — its timeseries widgets keep their source-layer prefix (`I`, `P`, or `D`), and its query value widgets need no prefix.
 
 Check:
 - Does a "Customer-Facing" group exist?
 - Is it the first group on the dashboard?
 - Does it contain 5-8 metrics covering: traffic volume, API latency, error rates, key business transactions, and database health?
+- Do timeseries widgets inside the group carry their source-layer prefix (not a new "CF" or unprefixed title)?
 - Can someone determine "are customers affected?" within 5 seconds of opening the dashboard?
 
 **Findings format**:
@@ -219,7 +222,7 @@ Compile all findings into a structured report:
 
 ## Quality Checklist
 
-- [ ] Every widget title uses the layer-priority prefix (`I0:`, `P1:`, `D0:`, etc.)
+- [ ] Every timeseries widget title uses the layer-priority prefix (`I0:`, `P1:`, `D0:`, etc.) — including timeseries inside the Customer-Facing group (exception: query value widgets in Customer-Facing need no prefix)
 - [ ] Every timeseries widget audited for alert threshold markers
 - [ ] Threshold proximity checked (no large gaps between normal values and alert lines)
 - [ ] Customer-Facing group exists with 5-8 key metrics at the top
