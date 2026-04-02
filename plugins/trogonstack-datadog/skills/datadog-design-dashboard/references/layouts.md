@@ -29,9 +29,9 @@ Template variables make one dashboard serve many contexts. Define them before la
 
 | Approach | Strengths | Weaknesses |
 |----------|-----------|------------|
-| **Per-service** | Focused, fast to scan during incidents. Each team owns their dashboard. Customer-Facing section is specific and actionable. Ops reviews can go service-by-service. | More dashboards to maintain. Cross-service correlation requires switching dashboards. |
-| **Consolidated** | Single pane of glass for multiple services. Good for seeing cross-service dependencies. Fewer dashboards to maintain. | Can become overwhelming (100+ metrics). Customer-Facing section becomes diluted. Slower to load and harder to scan during incidents. |
-| **Hybrid** | Per-service dashboards for depth + one top-level dashboard with only the Customer-Facing section from each service. Best of both worlds. | Requires maintaining both levels. Customer-Facing metrics duplicated across dashboards. |
+| **Per-service** | Focused, fast to scan during incidents. Each team owns their dashboard. Business section is specific and actionable. Ops reviews can go service-by-service. | More dashboards to maintain. Cross-service correlation requires switching dashboards. |
+| **Consolidated** | Single pane of glass for multiple services. Good for seeing cross-service dependencies. Fewer dashboards to maintain. | Can become overwhelming (100+ metrics). Business section becomes diluted. Slower to load and harder to scan during incidents. |
+| **Hybrid** | Per-service dashboards for depth + one top-level dashboard with only the Business section from each service. Best of both worlds. | Requires maintaining both levels. Business metrics duplicated across dashboards. |
 
 ---
 
@@ -41,7 +41,7 @@ Organize widgets into collapsible groups. Groups are the primary navigation mech
 
 **Recommended groups** (in order):
 
-1. **Customer-Facing** — 5-8 metrics that answer "are customers affected?" within 5 seconds. Should be the first group. The specific metrics depend on the product. Design so someone with zero service knowledge can spot problems via red indicators.
+1. **Business** — 5-8 `B`-prefixed metrics that answer "are customers affected?" within 5 seconds. Should be the first group. The specific metrics depend on the product. Design so someone with zero service knowledge can spot problems via red indicators.
 2. **Overview** — Service checks, key health indicators, monitor summaries.
 3. **Domain-specific groups** — Organized by the chosen framework (e.g., Rate / Errors / Duration for RED), adapted to the service's actual architecture and concerns.
 
@@ -66,12 +66,12 @@ The most common dashboard type. Monitors a single service's request-level health
 ┌─────────────────────────────────────────────────────┐
 │ Template Variables: env | service | region           │
 ├─────────────────────────────────────────────────────┤
-│ Group: Customer-Facing                               │
+│ Group: Business                                      │
 │ ┌──────────┬──────────┬──────────┬──────────┐       │
-│ │ P0:Req/s │ P0:Errs  │ P0:p99   │ P0:Apdex │       │
+│ │ B0:Req/s │ B0:Errs  │ B0:p99   │ B0:Apdex │       │
 │ │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │       │
 │ ├──────────────────────┬────────────────────┤       │
-│ │ D0: Key txn success  │ I0: DB conn pool   │       │
+│ │ B0: Key txn success  │ B1: DB conn pool   │       │
 │ │ (TS + red threshold) │ (TS + red thresh.) │       │
 │ └──────────────────────┴────────────────────┘       │
 │ 5-8 metrics · zero-knowledge readable               │
@@ -112,7 +112,7 @@ The most common dashboard type. Monitors a single service's request-level health
 └─────────────────────────────────────────────────────┘
 ```
 
-All widget titles use the layer-priority prefix system (`I0:`, `P0:`, `D0:`, etc.) — see [widgets.md](widgets.md) for details.
+All widget titles use the layer-priority prefix system (`I0:`, `P0:`, `D0:`, `B0:`, etc.) — see [widgets.md](widgets.md) for details.
 All timeseries widgets include red alert threshold markers set close to normal traffic.
 
 **Widget count**: 20-24
@@ -128,12 +128,12 @@ Monitors host, container, or VM resource health.
 ┌─────────────────────────────────────────────────────┐
 │ Template Variables: env | host | availability_zone   │
 ├─────────────────────────────────────────────────────┤
-│ Group: Customer-Facing                               │
+│ Group: Business                                      │
 │ ┌──────────┬──────────┬──────────┬──────────┐       │
-│ │P0:Svc Rq │P0:Svc Err│P0:Svc p99│P0:Apdex  │       │
+│ │B0:Svc Rq │B0:Svc Err│B0:Svc p99│B0:Apdex  │       │
 │ │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │       │
 │ ├──────────────────────┬────────────────────┤       │
-│ │ I0: Host avail.      │ I0: Network errors │       │
+│ │ B0: Host avail.      │ B1: Network errors │       │
 │ │ (TS + red threshold) │ (TS + red thresh.) │       │
 │ └──────────────────────┴────────────────────┘       │
 │ 5-8 metrics · zero-knowledge readable               │
@@ -186,12 +186,12 @@ High-level view across multiple services for leadership.
 ┌─────────────────────────────────────────────────────┐
 │ Template Variables: env | team | region               │
 ├─────────────────────────────────────────────────────┤
-│ Group: Customer-Facing                               │
+│ Group: Business                                      │
 │ ┌──────────┬──────────┬──────────┬──────────┐       │
-│ │P0:Uptime │P0:Cst Err│P0:p99 Lat│P0:Traffic│       │
+│ │B0:Uptime │B0:Cst Err│B0:p99 Lat│B0:Traffic│       │
 │ │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │       │
 │ ├──────────────────────┬────────────────────┤       │
-│ │ D0: Revenue txn succ │ D0: Checkout lat   │       │
+│ │ B0: Revenue txn succ │ B0: Checkout lat   │       │
 │ │ (TS + red threshold) │ (TS + red thresh.) │       │
 │ └──────────────────────┴────────────────────┘       │
 │ 5-8 metrics · zero-knowledge readable               │
@@ -242,12 +242,12 @@ Deep-dive dashboard for active incident investigation.
 ┌─────────────────────────────────────────────────────┐
 │ Template Variables: env | service | host | endpoint   │
 ├─────────────────────────────────────────────────────┤
-│ Group: Customer-Facing                               │
+│ Group: Business                                      │
 │ ┌──────────┬──────────┬──────────┬──────────┐       │
-│ │P0:Cst Err│P0:p99 Lat│P0:Req/s  │P0:Apdex  │       │
+│ │B0:Cst Err│B0:p99 Lat│B0:Req/s  │B0:Apdex  │       │
 │ │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │ (QV+bg)  │       │
 │ ├──────────────────────┬────────────────────┤       │
-│ │ D0: Key txn success  │ I0: DB conn pool   │       │
+│ │ B0: Key txn success  │ B1: DB conn pool   │       │
 │ │ (TS + red threshold) │ (TS + red thresh.) │       │
 │ └──────────────────────┴────────────────────┘       │
 │ 5-8 metrics · zero-knowledge readable               │

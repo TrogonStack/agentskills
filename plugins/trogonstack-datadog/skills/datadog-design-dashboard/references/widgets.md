@@ -234,7 +234,8 @@ Every widget title starts with a layer-priority prefix so anyone can immediately
 |--------|-------|---------------|
 | `I` | **Infrastructure** | Load balancers, databases, networks, DNS, CDN, storage — shared infrastructure that the service depends on but doesn't own |
 | `P` | **Platform** | Service-specific platform components from the codebase — gRPC servers, connection pools, cache clients, queue consumers, circuit breakers |
-| `D` | **Domain** | Business and domain metrics — checkout success rate, order throughput, payment completion, delivery latency, user sign-ups |
+| `D` | **Domain** | Technical health of domain processes — saga failures, aggregate timeouts, domain event lag (tech stuff) |
+| `B` | **Business** | Business outcomes — checkout success rate, payment completion, on-time delivery (business stuff) |
 
 ### Priority Numbers
 
@@ -249,13 +250,12 @@ The number after the layer letter indicates priority within that layer. `0` is t
 ### Examples
 
 ```text
-Group: "Customer-Facing"
-  D0: Checkout success rate
-  D0: Order throughput
-  I0: Load balancer 5xx
-  P0: API p99 latency
-  I1: Database connection pool
-  P1: gRPC client errors
+Group: "Business"
+  B0: Checkout success rate
+  B0: Order throughput
+  B1: API p99 latency
+  B1: Customer-visible error rate
+  B2: Failed payment rate
 
 Group: "Rate"
   P0: Requests per second
@@ -263,7 +263,7 @@ Group: "Rate"
 
 Group: "Errors"
   P0: Error rate over time
-  D1: Failed payment rate
+  D1: Order saga failures
   P2: Top errors by endpoint
 
 Group: "Infrastructure"
@@ -279,7 +279,8 @@ When assigning prefixes, use the domain discovery context:
 
 - **I (Infrastructure)**: Would this metric exist even if your code didn't? Load balancer, database engine, OS resources, network — things the ops team manages.
 - **P (Platform)**: Is this about how your code runs? Connection pools your code configures, gRPC channels your code opens, cache hit rates for caches your code uses — the technical platform layer.
-- **D (Domain)**: Does this metric map to a business outcome? Checkout completions, delivery SLA, payment success — things a product manager would understand.
+- **D (Domain)**: Is this technical health of a domain process? Saga step failures, aggregate timeouts, domain event processing lag — tech stuff that a domain engineer cares about.
+- **B (Business)**: Is this a business outcome? Payment success rate, checkout completion, on-time delivery — business stuff that a product manager or customer cares about.
 
 The priority number comes from the ops review order: what do you look at first when paged at 3am? That's `0`.
 
@@ -291,7 +292,7 @@ The priority number comes from the ops review order: what do you look at first w
 
 **Widget titles**: Prefix + sentence case, concise, action-oriented.
 
-- Always start with the layer-priority prefix (`I0:`, `P1:`, `D0:`, etc.)
+- Always start with the layer-priority prefix (`I0:`, `P1:`, `D0:`, `B0:`, etc.)
 - Do not repeat the group title after the prefix
 - Do not repeat the integration name if it is obvious from context
 - Alias all formulas so legends are readable

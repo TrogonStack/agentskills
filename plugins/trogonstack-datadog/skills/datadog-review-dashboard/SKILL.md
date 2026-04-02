@@ -2,8 +2,8 @@
 name: datadog-review-dashboard
 description: >-
   Review existing Datadog dashboards for operational readiness. Audits alert
-  threshold markers, threshold proximity to normal traffic, customer-facing
-  section completeness, and zero-knowledge readability. Uses pup CLI to fetch
+  threshold markers, threshold proximity to normal traffic, business section
+  completeness, and zero-knowledge readability. Uses pup CLI to fetch
   dashboard definitions. Use when auditing dashboards before on-call handoff,
   after dashboard changes, or during operational reviews. Do not use for:
   (1) designing new dashboards from scratch, (2) monitor/alert rule design,
@@ -13,7 +13,7 @@ allowed-tools: AskUserQuestion, Read, Shell
 
 # Review Datadog Dashboard
 
-Audit an existing Datadog dashboard against operational readiness principles. The core principles are: graphs should earn their place with alert thresholds, thresholds should sit close to normal traffic, a customer-facing section should exist, and the dashboard should be readable by someone with zero service knowledge.
+Audit an existing Datadog dashboard against operational readiness principles. The core principles are: graphs should earn their place with alert thresholds, thresholds should sit close to normal traffic, a business section should exist at the top, and the dashboard should be readable by someone with zero service knowledge.
 
 These are guiding principles — not a rigid checklist. Apply judgment based on the product and business context. A context-providing metric (like deployment events) may earn its place without a threshold. A service with unusual traffic patterns may need different proximity rules.
 
@@ -33,7 +33,7 @@ These are guiding principles — not a rigid checklist. Apply judgment based on 
 2. **Business Context** — "Can you tell me what this service does for customers? Are there codebases or docs I can read to understand the product?"
    - Impact: Understanding the domain lets the review focus on whether the right metrics are being tracked, not just whether generic rules are followed
 
-3. **Focus** — "Is there anything specific you want me to focus on? (A) Full review, (B) Alert thresholds only, (C) Customer-facing section, (D) Layout and readability"
+3. **Focus** — "Is there anything specific you want me to focus on? (A) Full review, (B) Alert thresholds only, (C) Business section, (D) Layout and readability"
    - Impact: Determines review scope — default to full review if unspecified
 
 ---
@@ -63,12 +63,13 @@ Catalog every widget in the dashboard:
 
 | Widget Title | Prefix | Type | Group | Has Alert Threshold | Threshold Value | Notes |
 |-------------|--------|------|-------|--------------------:|----------------|-------|
-| ... | I0/P1/D0/— | ... | ... | ... | ... | ... |
+| ... | I0/P1/D0/B0/— | ... | ... | ... | ... | ... |
 
 Check that every widget title uses the layer-priority prefix system:
 - `I0-N:` for infrastructure (load balancers, databases, networks)
 - `P0-N:` for platform (service-specific components from the codebase)
-- `D0-N:` for domain (business metrics)
+- `D0-N:` for domain (technical health of domain processes — tech stuff)
+- `B0-N:` for business (business outcomes — business stuff)
 - The number indicates priority within the layer (`0` = most critical)
 
 Focus on timeseries and query value widgets — these are the primary candidates for alert threshold markers.
@@ -120,32 +121,33 @@ For each widget with a threshold:
 | p99 latency | ~50ms | 500ms | 10x | auto | TOO FAR — lower to 100-150ms, set Y-max to 175ms |
 ```
 
-### 5. Audit Customer-Facing Section
+### 5. Audit Business Section
 
-**Principle**: A dedicated "Customer-Facing" group should exist at the top of the dashboard with 5-8 key metrics for immediate outage identification. The specific metrics should reflect the product's business — not just generic traffic and error rates.
+**Principle**: A dedicated Business (`B`) group should exist at the top of the dashboard with 5-8 key metrics for immediate outage identification. Business metrics are customer-visible outcomes — not infrastructure or domain internals. The specific metrics should reflect the product's business transactions, not generic traffic and error rates.
 
 Check:
-- Does a "Customer-Facing" group exist?
+- Does a Business group exist (named "Business", "B", or equivalent)?
 - Is it the first group on the dashboard?
-- Does it contain 5-8 metrics covering: traffic volume, API latency, error rates, key business transactions, and database health?
+- Do its widgets use the `B0-N:` prefix?
+- Does it contain 5-8 metrics covering: customer-visible success rates, key transaction flows, and SLA-impacting latency?
 - Can someone determine "are customers affected?" within 5 seconds of opening the dashboard?
 
 **Findings format**:
 
 ```markdown
-#### Customer-Facing Section Audit
+#### Business Section Audit
 
 **Status**: MISSING / INCOMPLETE / OK
 
 **Current state**: [Description of what exists]
 
 **Recommended metrics** (if missing or incomplete):
-1. Total request rate (are we receiving traffic?)
-2. Customer-facing error rate (are requests failing?)
-3. API p99 latency (are responses slow?)
-4. Key transaction success rate (are critical flows working?)
-5. Database connection pool usage (is the data layer healthy?)
-6. Queue depth or processing lag (is async work backing up?)
+1. B0: Key transaction success rate (are critical flows completing?)
+2. B0: Customer-facing error rate (are requests failing for customers?)
+3. B1: API p99 latency (are responses slow for customers?)
+4. B1: Total request rate (are we receiving traffic?)
+5. B2: Queue depth or processing lag (is async work backing up?)
+6. B2: Key business event throughput (e.g. orders created, payments processed)
 ```
 
 ### 6. Apply Zero-Knowledge Viewer Test
@@ -197,7 +199,7 @@ Compile all findings into a structured report:
 ## Threshold Proximity Audit
 [From step 4]
 
-## Customer-Facing Section Audit
+## Business Section Audit
 [From step 5]
 
 ## Zero-Knowledge Readability Audit
@@ -219,10 +221,10 @@ Compile all findings into a structured report:
 
 ## Quality Checklist
 
-- [ ] Every widget title uses the layer-priority prefix (`I0:`, `P1:`, `D0:`, etc.)
+- [ ] Every widget title uses the layer-priority prefix (`I0:`, `P1:`, `D0:`, `B0:`, etc.)
 - [ ] Every timeseries widget audited for alert threshold markers
 - [ ] Threshold proximity checked (no large gaps between normal values and alert lines)
-- [ ] Customer-Facing group exists with 5-8 key metrics at the top
+- [ ] Business group exists with 5-8 `B`-prefixed metrics at the top
 - [ ] Zero-knowledge viewer test applied (red indicators visible without context)
 - [ ] Query Value widgets checked for conditional formatting (green/yellow/red)
 - [ ] All findings include specific widget names and group references
