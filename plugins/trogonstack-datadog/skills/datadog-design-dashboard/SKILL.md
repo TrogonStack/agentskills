@@ -29,7 +29,7 @@ Before designing, understand what you are building observability for. The metric
 
 **If the user points you to a codebase**: Read it. Look at the entry points, the API routes, the database models, the queue consumers, the external service calls. Understanding the code gives you the context to choose metrics that actually matter — not just generic RED/USE signals.
 
-**If the user describes the business**: Use that context to tailor the Customer-Facing section. An e-commerce service cares about checkout success rates. A messaging service cares about delivery latency. A payment service cares about transaction completion. Generic "request rate" and "error rate" are a starting point, but the real value comes from metrics that map to business outcomes.
+**If the user describes the business**: Use that context to tailor the Business (`B`) section. An e-commerce service cares about checkout success rates. A messaging service cares about delivery latency. A payment service cares about transaction completion. Generic "request rate" and "error rate" are a starting point, but the real value comes from metrics that map to customer-visible outcomes.
 
 **Skip domain discovery if**: You already have deep context about the service from prior conversations or the user has provided detailed specifications.
 
@@ -81,11 +81,11 @@ Using your domain understanding and the chosen framework, design the group struc
 - **[thresholds.md](references/thresholds.md)** — Alert threshold markers, threshold proximity, Y-axis configuration
 
 **Key principles** (not rigid rules — use judgment):
-- **Prefix every widget title** with its layer and priority: `I0:` (most critical infra), `P0:` (most critical platform), `D0:` (most critical domain). See [widgets.md](references/widgets.md) for the full prefix system.
-- Start with a **Customer-Facing** group (5-8 metrics) so someone with zero service knowledge can tell if customers are affected within 5 seconds. Tailor the metrics to the domain.
+- **Prefix every widget title** with its layer and priority: `I0:` (most critical infra), `P0:` (most critical platform), `D0:` (most critical domain), `B0:` (most critical business). See [widgets.md](references/widgets.md) for the full prefix system.
+- Start with a **Business** group (5-8 `B`-prefixed metrics) so someone with zero service knowledge can tell if customers are affected within 5 seconds. Tailor the metrics to the domain.
 - Timeseries widgets should have **alert threshold markers** (red lines) with thresholds close to normal traffic. If a metric doesn't warrant an alert, question whether it belongs — but context-providing metrics can earn their place.
 - Set **Y-axis max** explicitly near the threshold — don't let auto-scaling compress the normal range.
-- Order groups macro-to-micro: customer-facing → overview → domain-specific → infrastructure.
+- Order groups macro-to-micro: business → overview → domain-specific → infrastructure.
 
 ### 4. Write the output
 
@@ -130,12 +130,12 @@ pup metrics list --filter="trace.http.request.*"
 - [ ] Dashboard reflects the actual product and business — metrics tailored to the domain
 - [ ] Dashboard title is concise (no environment, region, or version)
 - [ ] Template variables defined for env, service, and relevant scopes (default `*`)
-- [ ] **Customer-Facing group** with 5-8 metrics tailored to the service's business impact
-- [ ] Groups ordered macro-to-micro (customer-facing → overview → details)
+- [ ] **Business group** with 5-8 `B`-prefixed metrics tailored to the service's customer-visible outcomes
+- [ ] Groups ordered macro-to-micro (business → overview → details)
 - [ ] **Timeseries widgets have alert threshold markers** (red lines) where the metric is alertable
 - [ ] **Thresholds close to normal traffic** — no excessive whitespace
 - [ ] **Zero-knowledge readability** — someone with no service knowledge can spot problems via red indicators
-- [ ] **Widget titles prefixed** with layer and priority (`I0:`, `P1:`, `D0:`, etc.)
+- [ ] **Widget titles prefixed** with layer and priority (`I0:`, `P1:`, `D0:`, `B0:`, etc.)
 - [ ] Widget titles use sentence case, don't repeat group name
 - [ ] Every metric earns its place — if it spikes, someone can act on it
 
