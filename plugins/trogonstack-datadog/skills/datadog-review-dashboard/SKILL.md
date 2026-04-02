@@ -68,8 +68,8 @@ Catalog every widget in the dashboard:
 Check that every widget title uses the layer-priority prefix system:
 - `I0-N:` for infrastructure (load balancers, databases, networks)
 - `P0-N:` for platform (service-specific components from the codebase)
-- `D0-N:` for domain (logical domain units in the system — bounded contexts, aggregates, domain components)
-- `B0-N:` for business (customer-visible outcomes and business transactions)
+- `D0-N:` for domain (technical health of domain processes — tech stuff)
+- `B0-N:` for business (business outcomes — business stuff)
 - The number indicates priority within the layer (`0` = most critical)
 
 Focus on timeseries and query value widgets — these are the primary candidates for alert threshold markers.

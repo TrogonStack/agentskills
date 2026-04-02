@@ -234,8 +234,8 @@ Every widget title starts with a layer-priority prefix so anyone can immediately
 |--------|-------|---------------|
 | `I` | **Infrastructure** | Load balancers, databases, networks, DNS, CDN, storage — shared infrastructure that the service depends on but doesn't own |
 | `P` | **Platform** | Service-specific platform components from the codebase — gRPC servers, connection pools, cache clients, queue consumers, circuit breakers |
-| `D` | **Domain** | Logical domain units in the system — bounded contexts, aggregates, domain components (e.g., order processing pipeline, payment saga, delivery tracking) |
-| `B` | **Business** | Customer-visible outcomes and business transactions — checkout success rate, order throughput, payment completion, delivery latency, user sign-ups |
+| `D` | **Domain** | Technical health of domain processes — saga failures, aggregate timeouts, domain event lag (tech stuff) |
+| `B` | **Business** | Business outcomes — checkout success rate, payment completion, on-time delivery (business stuff) |
 
 ### Priority Numbers
 
@@ -279,8 +279,8 @@ When assigning prefixes, use the domain discovery context:
 
 - **I (Infrastructure)**: Would this metric exist even if your code didn't? Load balancer, database engine, OS resources, network — things the ops team manages.
 - **P (Platform)**: Is this about how your code runs? Connection pools your code configures, gRPC channels your code opens, cache hit rates for caches your code uses — the technical platform layer.
-- **D (Domain)**: Is this about a logical unit in your domain model? An order processing pipeline, a payment saga, a delivery tracking aggregate — things a domain expert would recognize as a bounded context or aggregate.
-- **B (Business)**: Does this metric map to a customer-visible outcome? Checkout completions, delivery SLA, payment success — things a product manager would put on a KPI dashboard.
+- **D (Domain)**: Is this technical health of a domain process? Saga step failures, aggregate timeouts, domain event processing lag — tech stuff that a domain engineer cares about.
+- **B (Business)**: Is this a business outcome? Payment success rate, checkout completion, on-time delivery — business stuff that a product manager or customer cares about.
 
 The priority number comes from the ops review order: what do you look at first when paged at 3am? That's `0`.
 
