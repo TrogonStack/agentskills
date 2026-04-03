@@ -1,6 +1,6 @@
 {
   "name": "trogonstack-datadog",
-  "description": "Datadog observability skills for designing dashboards with proper widget selection, layout patterns, and template variables using the pup CLI",
+  "description": "Datadog observability skills for designing, redesigning, and auditing dashboards with proper widget selection, layout patterns, template variables, and operational readiness validation using the pup CLI",
   "version": "0.1.0",
   "author": {
     "name": "TrogonStack",

@@ -8,17 +8,26 @@ Template variable conventions, group structure patterns, dashboard strategy trad
 
 Template variables make one dashboard serve many contexts. Define them before laying out widgets.
 
-**Standard variables** (include when applicable):
+**`env` is always required.** The remaining variables depend on the dashboard type:
+
+| Dashboard Type | Template Variables |
+|---------------|-------------------|
+| Service Overview (RED), Debugging | `env` · `service` |
+| Infrastructure (USE) | `env` · `host` · `availability_zone` |
+| Executive / Golden Signals | `env` · `team` · `region` |
+
+**Optional variables** (add when relevant to the dashboard type):
 
 | Variable | Tag | Use Case |
 |----------|-----|----------|
-| `env` | `env` | Environment filtering (prod, staging, dev) |
-| `service` | `service` | Service scoping |
 | `region` | `region` | Regional filtering |
 | `availability_zone` | `availability_zone` | AZ-level drill-down |
 | `host` | `host` | Host-level investigation |
+| `endpoint` | `http.url` | Per-route investigation (Debugging dashboards) |
 
-- Start with the broadest scope (`env`) and narrow down
+- For **service dashboards** (RED, Debugging): scope every widget query with `{$service,$env}`
+- For **infrastructure dashboards**: scope queries with `{$host,$env}` or `{$availability_zone,$env}` instead
+- For **executive dashboards**: scope queries with `{$team,$env}` or `{$region,$env}` instead
 - Use `*` as the default value so dashboards load with full scope
 - Never put environment or region in the dashboard title — that is what template variables are for
 - Name variables after the tag they filter on
