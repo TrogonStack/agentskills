@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-eventmodeling",
+  "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

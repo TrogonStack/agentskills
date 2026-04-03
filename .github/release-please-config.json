@@ -41,6 +41,9 @@
     },
     "plugins/trogonstack-otel": {
       "component": "trogonstack-otel"
+    },
+    "plugins/trogonstack-eventmodeling": {
+      "component": "trogonstack-eventmodeling"
     }
   },
   "plugins": [
