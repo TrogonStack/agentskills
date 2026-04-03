@@ -53,6 +53,34 @@ Do not rely on Y-axis auto-scaling. Set `yaxis.max` explicitly to slightly above
 
 ---
 
+## Audit Findings Format
+
+### Alert Threshold Audit
+
+```markdown
+#### Alert Threshold Audit
+
+| Widget | Group | Status | Finding |
+|--------|-------|--------|---------|
+| Requests/s | Rate | MISSING | No threshold marker — add alert line or remove widget |
+| Error rate | Errors | OK | Red line at 5% |
+| CPU usage | Infra | MISSING | No threshold — is this metric alertable? |
+```
+
+### Threshold Proximity Audit
+
+```markdown
+#### Threshold Proximity Audit
+
+| Widget | Normal Range | Threshold | Gap | Y-Axis | Status |
+|--------|-------------|-----------|-----|--------|--------|
+| CPU usage | ~20% | 95% | 75% | auto | TOO FAR — lower to 40-50%, set Y-max to 55% |
+| Error rate | ~0.1% | 5% | ~5% | auto | OK gap — but set Y-max to 6% |
+| p99 latency | ~50ms | 500ms | 10x | auto | TOO FAR — lower to 100-150ms, set Y-max to 175ms |
+```
+
+---
+
 ## Metrics Near Zero
 
 Some metrics hover close to zero under normal conditions (e.g., error counts, retry rates, dead letter queue depth). For these:
