@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.0...trogonstack-datadog@v0.2.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* **trogonstack-datadog:** Add --agent flag to all pup CLI calls ([#36](https://github.com/TrogonStack/agentskills/issues/36)) ([1d41f03](https://github.com/TrogonStack/agentskills/commit/1d41f035df455270b29b3ca79747383acd6b3cc8))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.1.0...trogonstack-datadog@v0.2.0) (2026-04-03)
 
 
