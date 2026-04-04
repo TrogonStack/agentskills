@@ -17,7 +17,7 @@ allowed-tools: AskUserQuestion, Write, Read, Shell
 
 Design a dashboard layout that tells a clear story — from high-level health signals down to granular diagnostics — using proper widget types, group organization, and template variables for reusability.
 
-**Important**: Always check for existing dashboards first with `pup dashboards list`. Do not create a new dashboard if one already exists for the same service or purpose — update the existing one instead. Only create a new dashboard when no relevant one exists or the user explicitly asks for a new one.
+**Important**: Always check for existing dashboards first with `pup dashboards list --agent`. Do not create a new dashboard if one already exists for the same service or purpose — update the existing one instead. Only create a new dashboard when no relevant one exists or the user explicitly asks for a new one.
 
 **Philosophy**: The frameworks, layouts, and widget guides in this skill are starting points — not rigid rules. Every product and business is different. Understand the domain first, then adapt the frameworks to fit. The best dashboards reflect how the business actually works, not how a generic template says they should.
 
@@ -38,7 +38,7 @@ First, determine the mode:
 3. **Data Sources** — "Which Datadog products are involved? Metrics only, APM + Metrics, Logs + Metrics, or full stack?"
 4. **Scope** — "Is this for a single service, a group of services, or infrastructure-wide?"
 5. **Dashboard Strategy** — "One dashboard per service, or a consolidated view?" — share the trade-offs from [references/layouts.md](references/layouts.md) to help them decide. If unsure, ask: "During an outage, does your team investigate one service at a time, or do they need to see all services simultaneously?"
-6. **Existing Dashboard** — "Is there an existing dashboard to audit or redesign?" If yes, fetch with `pup dashboards get <id>` before designing.
+6. **Existing Dashboard** — "Is there an existing dashboard to audit or redesign?" If yes, fetch with `pup dashboards get <id> --agent` before designing.
 
 ### Audit Questions
 
@@ -80,8 +80,8 @@ Before designing, understand what you are building observability for. The metric
 ### 1. Gather existing context
 
 ```bash
-pup dashboards list
-pup dashboards get <dashboard-id>
+pup dashboards list --agent
+pup dashboards get <dashboard-id> --agent
 ```
 
 If auditing an existing dashboard, fetch its definition first and analyze its current structure before redesigning.
@@ -92,10 +92,10 @@ Before designing widgets, check what metrics and tag values actually exist for t
 
 ```bash
 # See what metrics are available for the service
-pup metrics list --filter="<service-name>.*"
+pup metrics list --filter="<service-name>.*" --agent
 
 # Verify the service tag is active and see what metrics are flowing
-pup metrics list --filter="trace.*" --tag-filter="service:<service-name>"
+pup metrics list --filter="trace.*" --tag-filter="service:<service-name>" --agent
 ```
 
 Use the actual metric names and tag values you find here when writing widget queries — do not guess or invent them. If a metric you expect does not appear, flag it to the user before building widgets around it.
@@ -159,15 +159,15 @@ These are guiding principles — not a rigid checklist. Apply judgment based on 
 
 ```bash
 # If given a service name, list all dashboards and identify the relevant one by title
-pup dashboards list
+pup dashboards list --agent
 
 # If given a URL, extract the dashboard ID from the path (e.g., /dashboard/abc-def-ghi/...)
 
 # Get the full dashboard definition (includes the dashboard URL in the response)
-pup dashboards get <dashboard-id>
+pup dashboards get <dashboard-id> --agent
 
 # Verify real metric names exist
-pup metrics list --filter="trace.http.request.*"
+pup metrics list --filter="trace.http.request.*" --agent
 ```
 
 Parse the response to build an inventory of all widgets, groups, and their configurations.
@@ -303,12 +303,12 @@ Compile all findings into a structured report:
 
 ## Quality Principles
 
-- [ ] Widget queries use real metric names verified via `pup metrics list` — no invented metric names
+- [ ] Widget queries use real metric names verified via `pup metrics list --agent` — no invented metric names
 - [ ] Dashboard reflects the actual product and business — metrics tailored to the domain
 - [ ] Dashboard title follows `[service] Purpose` pattern — no "Dashboard" suffix, no environment in the title
 - [ ] `title` field updated in the JSON (not just the filename) — redeploy after any title change
 - [ ] Template variables match the dashboard type — see [references/layouts.md](references/layouts.md)
-- [ ] Widget queries use template variable scopes verified via `pup metrics list` — no hardcoded env, service, or host values; use the variable set appropriate for the dashboard type (see [references/layouts.md](references/layouts.md))
+- [ ] Widget queries use template variable scopes verified via `pup metrics list --agent` — no hardcoded env, service, or host values; use the variable set appropriate for the dashboard type (see [references/layouts.md](references/layouts.md))
 - [ ] **Business group** with 5-8 `B`-prefixed metrics tailored to the service's customer-visible outcomes
 - [ ] Groups ordered macro-to-micro (business → overview → details)
 - [ ] **Every widget title uses the layer-priority prefix** (`I0:`, `P1:`, `D0:`, `B0:`, etc.) — see [references/widgets.md](references/widgets.md)
