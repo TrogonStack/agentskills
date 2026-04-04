@@ -42,6 +42,12 @@
       "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions",
       "source": "./plugins/trogonstack-otel",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-eventmodeling",
+      "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology",
+      "source": "./plugins/trogonstack-eventmodeling",
+      "category": "development"
     }
   ]
 }
