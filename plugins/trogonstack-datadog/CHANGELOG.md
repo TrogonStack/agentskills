@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.1...trogonstack-datadog@v0.2.2) (2026-04-09)
+
+
+### Bug Fixes
+
+* **trogonstack-datadog:** Add B trap guide and platform metric catalog ([#38](https://github.com/TrogonStack/agentskills/issues/38)) ([1faf2a1](https://github.com/TrogonStack/agentskills/commit/1faf2a1867290e1be3b4388b8b3ee50500c45c57))
+
 ## [0.2.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.0...trogonstack-datadog@v0.2.1) (2026-04-04)
 
 
