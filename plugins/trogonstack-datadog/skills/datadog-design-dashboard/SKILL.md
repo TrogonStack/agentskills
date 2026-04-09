@@ -71,6 +71,8 @@ Before designing, understand what you are building observability for. The metric
 
 **Skip domain discovery if**: You already have deep context about the service from prior conversations or the user has provided detailed specifications.
 
+**Gate**: Before designing the Business group, you must be able to name at least 3 domain outcomes specific to this service — in plain language a product manager would recognize. Examples: "order placed", "payment completed", "message delivered". If you cannot name them, ask the user before proceeding. Do not substitute transport-layer metrics (gRPC error rate, HTTP request rate) as placeholders — those are `P`, not `B`. See the B trap in [references/widgets.md](references/widgets.md).
+
 ---
 
 ## Design
@@ -99,6 +101,8 @@ pup metrics list --filter="trace.*" --tag-filter="service:<service-name>" --agen
 ```
 
 Use the actual metric names and tag values you find here when writing widget queries — do not guess or invent them. If a metric you expect does not appear, flag it to the user before building widgets around it.
+
+**This applies to all query types**: metric queries, APM span filters (`operation_name`, `resource_name`, span tags), and log filters. The `**Configuration**` sections in [references/widgets.md](references/widgets.md) describe JSON structure and field constraints only — they are not prescriptive queries. Always verify the actual filter values with `pup` before using them.
 
 ### 3. Choose a framework
 
@@ -213,6 +217,7 @@ Check:
 - Do its widgets use the `B0-N:` prefix?
 - Does it contain 5-8 metrics covering: customer-visible success rates, key transaction flows, and SLA-impacting latency?
 - Can someone determine "are customers affected?" within 5 seconds of opening the dashboard?
+- **B trap check**: For each B-prefixed widget, ask "Can a product manager interpret this without knowing the transport protocol?" If no — gRPC error rate, HTTP request rate, queue depth — it is `P`, not `B`, regardless of where it is placed. Flag and recommend moving to the appropriate platform group.
 
 **Findings format**:
 

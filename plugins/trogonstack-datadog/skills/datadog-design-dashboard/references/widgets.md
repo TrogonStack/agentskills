@@ -194,6 +194,27 @@ Markdown text widget.
 
 ---
 
+## List Stream (Trace / Log)
+
+Live-updating list of trace spans or log entries. JSON widget type: `list_stream`.
+
+**Use for**: Surfacing individual spans for investigation — failed jobs, slow commands, high-lag handler executions.
+
+**Data sources**:
+- `trace_stream` — APM trace spans
+- `logs_stream` — Log entries
+
+**`trace_stream` query schema constraints** — the `query` object for `trace_stream` accepts **only** these fields:
+- `data_source` — must be `"trace_stream"`
+- `indexes` — array, usually `[]`
+- `query_string` — the filter expression
+
+**Do NOT include** `sort`, `storage`, `compute`, or any other fields inside the `query` object for `trace_stream`. The Datadog API will return a 400 validation error. These fields are valid for `logs_stream` but not `trace_stream`.
+
+**Sizing**: Minimum 6 columns, recommended 12 columns (full width).
+
+---
+
 ## Change
 
 Shows the change in a metric value over a time period.
@@ -283,6 +304,97 @@ When assigning prefixes, use the domain discovery context:
 - **B (Business)**: Is this a business outcome? Payment success rate, checkout completion, on-time delivery — business stuff that a product manager or customer cares about.
 
 The priority number comes from the ops review order: what do you look at first when paged at 3am? That's `0`.
+
+### The B trap: transport metrics are not business metrics
+
+The most common misclassification is putting transport-layer health metrics in the Business group. **gRPC error rate, HTTP error rate, and request throughput are `P` — not `B`** — even when they appear in the Business group and even when the service's only interface is gRPC or HTTP.
+
+Ask: **"Can a product manager interpret this without knowing what gRPC or HTTP is?"** If no, it's `P`.
+
+| Looks like B | Actually | Why |
+|---|---|---|
+| gRPC error rate | `P0` | Transport layer — how the code communicates, not what it does |
+| HTTP request rate | `P0` | Transport layer |
+| gRPC apdex | `P0` | Protocol health score, not a business outcome |
+| Oban job error rate | `P0` | Platform job processing |
+| Event handler lag | `D0` | Technical domain process health |
+| Order completion rate | `B0` | Customer action — a PM can interpret this |
+| Checkout success rate | `B0` | Business outcome — directly maps to customer value |
+| Payment processed rate | `B1` | Business transaction throughput |
+
+**Rule**: If you cannot complete the sentence "Customers are affected because ___" using only the metric name, it is not `B`.
+
+### Platform metric catalog
+
+When you encounter metrics in a codebase or Datadog, use this to classify them correctly. This is not a list of widgets to add — it is a guide for recognising what layer a metric belongs to. Only include metrics that actually exist and are relevant to the service being observed.
+
+The signals listed under each component type are examples of what tends to exist, not requirements. Every service is different.
+
+#### Inbound protocol servers (HTTP, gRPC, GraphQL, WebSocket, etc.)
+
+Any server that accepts requests or connections — regardless of protocol. Request rate, error rate, latency, and apdex are always `P` for these. They describe how the transport layer is performing, not what the business is doing.
+
+| Signal | Prefix |
+|--------|--------|
+| Request / connection rate | `P0` |
+| Error rate | `P0` |
+| Latency percentiles | `P0` |
+| Apdex / health score | `P1` |
+| Breakdown by endpoint / operation | `P1` |
+
+#### Outbound clients (HTTP, gRPC, RPC, external APIs)
+
+Calls the service makes to other services or third-party APIs.
+
+| Signal | Prefix |
+|--------|--------|
+| Call rate | `P1` |
+| Error / timeout rate | `P0` |
+| Latency | `P0` |
+
+#### Message queue consumers
+
+Any process consuming from a queue or stream (regardless of broker).
+
+| Signal | Prefix |
+|--------|--------|
+| Processing rate | `P0` |
+| Error / dead-letter rate | `P0` |
+| Processing latency | `P0` |
+| Queue depth / consumer lag | `P0` |
+
+#### Background job processors
+
+Deferred or scheduled work — any job queue or scheduler.
+
+| Signal | Prefix |
+|--------|--------|
+| Execution rate | `P0` |
+| Error / retry rate | `P0` |
+| Latency | `P1` |
+| Queue depth | `P0` |
+
+#### Database and cache clients
+
+The application's access layer — not the database engine or cache server (those are `I`).
+
+| Signal | Prefix |
+|--------|--------|
+| Query / operation latency | `P0` |
+| Connection pool wait time | `P0` |
+| Error rate | `P0` |
+| Cache hit / miss rate | `P1` |
+
+#### Event-driven patterns (CQRS, event sourcing, pub/sub)
+
+Command dispatch, aggregate execution, event handlers — when a service uses an event-driven architecture.
+
+| Signal | Prefix | Notes |
+|--------|--------|-------|
+| Command dispatch rate and error rate | `P0` | |
+| Aggregate execution latency | `P0` | |
+| Event handler throughput and lag | `P0` | Show globally by handler name, not per handler — see anti-patterns in [layouts.md](layouts.md) |
+| Write conflicts / retries | `P1` | |
 
 ---
 
