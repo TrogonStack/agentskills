@@ -3,8 +3,8 @@ name: datadog-design-dashboard
 description: >-
   Design new Datadog dashboards, redesign existing ones, or audit dashboards
   for operational readiness. Covers widget selection, layout organization,
-  template variables, group structure, alert threshold validation, and
-  zero-knowledge readability. Uses pup CLI for inspecting dashboards and
+  template variables, group structure, tab organization, alert threshold
+  validation, and zero-knowledge readability. Uses pup CLI for inspecting dashboards and
   validating designs. Use when designing new dashboards, redesigning existing
   ones, auditing before on-call handoff, or reviewing after dashboard changes.
   Do not use for: (1) Datadog agent installation or configuration,
@@ -124,7 +124,13 @@ Using your domain understanding and the chosen framework, design the group struc
 - **[widgets.md](references/widgets.md)** — Widget selection guide, display options, sizing, naming conventions
 - **[thresholds.md](references/thresholds.md)** — Alert threshold markers, threshold proximity, Y-axis configuration
 
-### 5. Write the design output
+### 5. Consider tabs
+
+If the dashboard has 7+ top-level groups, evaluate whether tabs would reduce scroll fatigue. Read [references/tabs.md](references/tabs.md) for the organization pattern, JSON schema, and common mistakes.
+
+Before adding tabs to an existing dashboard, audit all widget IDs for duplicates — tabs trigger strict uniqueness validation.
+
+### 6. Write the design output
 
 Present the design using this template:
 
@@ -261,7 +267,15 @@ Evaluate:
 | Runbook/ownership note | MISSING | No note widget with team info |
 ```
 
-### 7. Generate audit report
+### 7. Audit tab organization
+
+If the dashboard has 7+ top-level groups, check whether tabs are in use. See [references/tabs.md](references/tabs.md).
+
+- Are related groups consolidated into tabs by observability layer?
+- Do tab names reflect the question they answer (Service Health, Platform, Infrastructure)?
+- Are all top-level widgets assigned to exactly one tab?
+
+### 8. Generate audit report
 
 Compile all findings into a structured report:
 
@@ -333,3 +347,4 @@ Compile all findings into a structured report:
 - **[Layout & Structure](references/layouts.md)** — Template variables, group patterns, dashboard strategy, grid sizing, anti-patterns
 - **[Widgets](references/widgets.md)** — Widget prefix system, types, display options, sizing, naming conventions
 - **[Alert Thresholds](references/thresholds.md)** — Threshold markers, proximity guide, Y-axis configuration
+- **[Tabs](references/tabs.md)** — Dashboard tab organization, JSON schema, `@N` positional references, common mistakes
