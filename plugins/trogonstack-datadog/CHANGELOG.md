@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.2...trogonstack-datadog@v0.3.0) (2026-04-27)
+
+
+### Features
+
+* **trogonstack-datadog:** Add dashboard tab reference ([#41](https://github.com/TrogonStack/agentskills/issues/41)) ([617d7e4](https://github.com/TrogonStack/agentskills/commit/617d7e40e593584cceb585078d07d7d43e79fb65))
+
 ## [0.2.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.1...trogonstack-datadog@v0.2.2) (2026-04-09)
 
 
