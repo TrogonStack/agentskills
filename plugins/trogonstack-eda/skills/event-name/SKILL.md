@@ -162,13 +162,24 @@ Always suffix identifiers with what they reference. Never use bare `id`.
 
 Pick `_at` (for datetime with time) or `_on` (for date only) and be consistent.
 
-### 12. Boolean Fields Use Predicate Form
+### 12. Prefer Enums Over Booleans
+
+Booleans lock you into two states. Enums allow future additions without breaking changes.
+
+| Good (enum) | Bad (boolean) | Why bad |
+|-------------|---------------|---------|
+| `shipping_priority: "standard" \| "expedited"` | `is_expedited: true` | Can't add `"overnight"` later without a new field |
+| `payment_status: "pending" \| "authorized" \| "declined"` | `is_authorized: true` | Can't represent `"pending"` or future states |
+| `discount_type: "none" \| "percentage" \| "fixed"` | `has_discount: true` | Can't distinguish discount types |
+
+Use booleans only when the field is genuinely and permanently binary (e.g., `is_test_order`).
+
+When a boolean is unavoidable, use predicate form:
 
 | Good | Bad |
 |------|-----|
-| `is_expedited` | `expedited` (ambiguous — could be a noun or adjective) |
-| `has_discount` | `discount` (ambiguous — could be the amount) |
-| `was_refunded` | `refunded` (ambiguous in some contexts) |
+| `is_test_order` | `test_order` (ambiguous — could be a noun) |
+| `is_gift` | `gift` (ambiguous — could be the gift itself) |
 
 ### 13. No Computed or Derived Fields in Domain Events
 
