@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-eda",
+  "description": "Event-driven architecture skills for designing event names, schemas, contracts, and catalogs following good practices for domain and integration events",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

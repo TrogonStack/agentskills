@@ -44,6 +44,9 @@
     },
     "plugins/trogonstack-eventmodeling": {
       "component": "trogonstack-eventmodeling"
+    },
+    "plugins/trogonstack-eda": {
+      "component": "trogonstack-eda"
     }
   },
   "plugins": [
