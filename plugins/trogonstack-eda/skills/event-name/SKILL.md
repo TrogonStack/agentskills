@@ -145,7 +145,7 @@ OrderPlaced              ← What
   items: [...]
 ```
 
-If an event is missing Who or When, ask whether it was intentional. System-initiated events may omit Who but should document that the actor is the system itself (e.g., `initiated_by: "scheduler"`).
+**Strongly recommend including all three.** If an event is missing Who or When, flag it and suggest adding them. Events without attribution or timestamps lose forensic and audit value that is nearly impossible to recover later. System-initiated events should still capture the actor explicitly (e.g., `initiated_by: "scheduler"`).
 
 ### 9. Domain Language for Fields Too
 
