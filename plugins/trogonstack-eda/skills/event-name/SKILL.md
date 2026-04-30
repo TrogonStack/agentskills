@@ -104,6 +104,29 @@ Choose one format and apply it consistently across the entire system:
 
 Do not mix formats within a system.
 
+### Avoid Negatives in Event Names
+
+Negative event names usually hide a positive event with a reason. Prefer the positive form with a field explaining the outcome.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `ShipmentFailed { reason: "address_invalid" }` | `OrderNotShipped` | Negative — what DID happen? |
+| `PaymentDeclined { reason: "insufficient_funds" }` | `PaymentNotProcessed` | Negative — why not? |
+| `ApplicationRejected { reason: "..." }` | `ApplicationNotApproved` | Double negative with `Approved` |
+
+If a negative sounds natural in the domain (e.g., `ClaimDenied`), that's fine — it's domain language, not a negation of another event.
+
+### Event Versioning — Keep It Out of the Name
+
+Do not embed version numbers in event names. Use `schema_version` in metadata instead.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `OrderPlaced` + `schema_version: 2` | `OrderPlacedV2` | Pollutes the name, couples consumers to version |
+| `InvoiceIssued` + `schema_version: 3` | `InvoiceIssuedV3` | Every version change requires new consumer routing |
+
+Versioning belongs in the event envelope. The event name describes what happened — that doesn't change when you add a field to the payload.
+
 ## Integration Event Naming — Additional Rules
 
 Integration events cross service boundaries. They carry additional constraints:
@@ -228,7 +251,27 @@ Separate envelope/metadata from the business payload. Metadata fields describe t
 **Domain fields (payload):**
 Everything specific to the business fact: `order_id`, `customer_id`, `total_amount`, `items[]`, etc.
 
-### 15. Consistent Casing for Fields
+### 15. Monetary Amounts Must Include Currency
+
+A bare amount field is incomplete. Always pair with currency or use a composite money object.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `total_amount`, `total_currency` | `total` | Which currency? |
+| `price: { amount: 1999, currency: "USD" }` | `price: 1999` | Ambiguous — cents? dollars? which currency? |
+| `refund_amount`, `refund_currency` | `refund_amount` alone | Loses currency context across services |
+
+For domain events, capture the currency at the time of the fact — currencies can change between events.
+
+### 16. Collection Fields Use Plural, Scalars Use Singular
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `items` (array) | `item` (for an array) | Misleading — suggests a single value |
+| `line_items` (array) | `line_item_list` | Redundant suffix — plural already signals a collection |
+| `shipping_address` (object) | `shipping_addresses` (for one) | Misleading — suggests multiple |
+
+### 17. Consistent Casing for Fields
 
 Pick one and apply it consistently:
 
@@ -245,16 +288,21 @@ When reviewing event definitions, verify:
 2. Event name uses domain language, not CRUD or technical jargon
 3. Event name is specific enough to understand without reading the payload
 4. One event captures one thing that happened
-5. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
-6. Integration events are prefixed with bounded context or service name
-7. Integration events use shared vocabulary, not internal jargon
-8. Field names use domain language, no abbreviations
-9. Identifiers are explicit (`order_id` not `id`)
-10. Temporal fields use `_at` or `_on` suffix with past tense
-11. Boolean fields use predicate form (`is_`, `has_`, `was_`)
-12. Domain event payloads contain no computed or derived fields
-13. Metadata fields are separated from domain fields
-14. Field casing is consistent across the system
+5. No negatives in event names — use positive form with a reason field
+6. No version numbers in event names — use `schema_version` in metadata
+7. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
+8. Integration events are prefixed with bounded context or service name
+9. Integration events use shared vocabulary, not internal jargon
+10. Event includes Who (`_by`) and When (`_at`) fields
+11. Field names use domain language, no abbreviations
+12. Identifiers are explicit (`order_id` not `id`)
+13. Temporal fields use `_at` or `_on` suffix with past tense
+14. Enums preferred over booleans; booleans use predicate form when unavoidable
+15. Monetary amounts include currency
+16. Collection fields are plural, scalar fields are singular
+17. Domain event payloads contain no computed or derived fields
+18. Metadata fields are separated from domain fields
+19. Field casing is consistent across the system
 
 ## Output
 
