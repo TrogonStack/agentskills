@@ -68,7 +68,7 @@ Do NOT create a CHANGELOG.md — release-please manages that automatically.
 
 ### 4. Create README.md
 
-```markdown
+````markdown
 # {plugin-name}
 
 {description}
@@ -76,7 +76,7 @@ Do NOT create a CHANGELOG.md — release-please manages that automatically.
 ```bash
 claude plugin install {plugin-name}@trogonstack
 ```
-```
+````
 
 ### 5. Register in Marketplace
 
