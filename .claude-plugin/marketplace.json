@@ -48,6 +48,12 @@
       "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology",
       "source": "./plugins/trogonstack-eventmodeling",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-eda",
+      "description": "Event-driven architecture skills for designing event names, schemas, contracts, and catalogs following good practices for domain and integration events",
+      "source": "./plugins/trogonstack-eda",
+      "category": "development"
     }
   ]
 }
