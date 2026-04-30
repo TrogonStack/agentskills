@@ -48,6 +48,7 @@ Events record something that already happened. Always use past tense.
 | `PaymentFailed` | `PaymentFailing` | Progressive — not a fact yet |
 | `ItemAddedToCart` | `AddItemToCart` | Imperative |
 | `SubscriptionRenewed` | `RenewSubscription` | Imperative |
+| `OrderPlaced` | `OrderWasPlaced` | Redundant — events are already facts, `Was` adds nothing |
 
 ### 2. Domain Language — Not Technical Jargon
 
