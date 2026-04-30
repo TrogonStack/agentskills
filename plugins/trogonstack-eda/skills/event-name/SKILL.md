@@ -104,6 +104,26 @@ Choose one format and apply it consistently across the entire system:
 
 Do not mix formats within a system.
 
+### No Redundant Suffixes — "Event", "Message", "Notification"
+
+The event name describes what happened. It is already an event by context — appending `Event`, `Message`, or `Notification` adds nothing.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `OrderPlaced` | `OrderPlacedEvent` | Redundant — it's already an event |
+| `PaymentFailed` | `PaymentFailedMessage` | "Message" is a delivery mechanism, not a domain concept |
+| `ShipmentDispatched` | `ShipmentDispatchedNotification` | "Notification" is a side effect, not the fact itself |
+
+### No Infrastructure or Technology in Names
+
+Event names must survive technology migrations. Do not embed broker names, protocols, or infrastructure details.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `OrderPlaced` | `KafkaOrderPlaced` | Coupled to Kafka — what happens when you migrate? |
+| `PaymentCompleted` | `SQSPaymentCompleted` | Coupled to SQS |
+| `UserRegistered` | `RabbitMQUserRegisteredMessage` | Infrastructure + redundant suffix |
+
 ### Avoid Negatives in Event Names
 
 Negative event names usually hide a positive event with a reason. Prefer the positive form with a field explaining the outcome.
@@ -271,7 +291,32 @@ For domain events, capture the currency at the time of the fact — currencies c
 | `line_items` (array) | `line_item_list` | Redundant suffix — plural already signals a collection |
 | `shipping_address` (object) | `shipping_addresses` (for one) | Misleading — suggests multiple |
 
-### 17. Consistent Casing for Fields
+### 17. No Polymorphic Payloads
+
+An event whose payload shape changes based on a `type` or `kind` field is really multiple events. Split them.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `PaymentAuthorized`, `PaymentDeclined` | `PaymentProcessed { result_type: "authorized" \| "declined" }` with different fields per type | Consumers must branch on `result_type` to know the shape — fragile, hard to evolve independently |
+| `ItemBackordered`, `ItemReserved` | `InventoryChecked { outcome: "backordered" \| "reserved" }` with different fields | Two different facts forced into one event |
+
+If every instance of the event has the same fields regardless of a status value, that's fine — it's not polymorphic, it's a field with valid values.
+
+### 18. PII and Sensitive Data — Use Indirection
+
+Events are immutable. PII stored directly in events is nearly impossible to delete (GDPR right to erasure, CCPA). Reference sensitive data by ID instead of inlining it.
+
+| Good | Bad | Why bad |
+|------|-----|---------|
+| `customer_id: "cust-123"` | `customer_email: "alice@example.com"` | Can't erase the email from an immutable event |
+| `shipping_address_id: "addr-456"` | `shipping_address: { street: "...", city: "..." }` | Address baked into immutable history |
+| `payment_method_id: "pm-789"` | `card_number: "4111..."` | Sensitive financial data in an immutable log |
+
+Store PII in a mutable store keyed by ID. Events reference the ID. When deletion is requested, delete from the mutable store — events remain intact without leaking personal data.
+
+Flag any PII found directly in event payloads and suggest replacing with an identifier reference.
+
+### 19. Consistent Casing for Fields
 
 Pick one and apply it consistently:
 
@@ -288,21 +333,25 @@ When reviewing event definitions, verify:
 2. Event name uses domain language, not CRUD or technical jargon
 3. Event name is specific enough to understand without reading the payload
 4. One event captures one thing that happened
-5. No negatives in event names — use positive form with a reason field
-6. No version numbers in event names — use `schema_version` in metadata
-7. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
-8. Integration events are prefixed with bounded context or service name
-9. Integration events use shared vocabulary, not internal jargon
-10. Event includes Who (`_by`) and When (`_at`) fields
-11. Field names use domain language, no abbreviations
-12. Identifiers are explicit (`order_id` not `id`)
-13. Temporal fields use `_at` or `_on` suffix with past tense
-14. Enums preferred over booleans; booleans use predicate form when unavoidable
-15. Monetary amounts include currency
-16. Collection fields are plural, scalar fields are singular
-17. Domain event payloads contain no computed or derived fields
-18. Metadata fields are separated from domain fields
-19. Field casing is consistent across the system
+5. No redundant suffixes (`Event`, `Message`, `Notification`)
+6. No infrastructure or technology in event names
+7. No negatives in event names — use positive form with a reason field
+8. No version numbers in event names — use `schema_version` in metadata
+9. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
+10. Integration events are prefixed with bounded context or service name
+11. Integration events use shared vocabulary, not internal jargon
+12. Event includes Who (`_by`) and When (`_at`) fields
+13. Field names use domain language, no abbreviations
+14. Identifiers are explicit (`order_id` not `id`)
+15. Temporal fields use `_at` or `_on` suffix with past tense
+16. Enums preferred over booleans; booleans use predicate form when unavoidable
+17. No polymorphic payloads — split into separate events
+18. No PII directly in payloads — use identifier references
+19. Monetary amounts include currency
+20. Collection fields are plural, scalar fields are singular
+21. Domain event payloads contain no computed or derived fields
+22. Metadata fields are separated from domain fields
+23. Field casing is consistent across the system
 
 ## Output
 
