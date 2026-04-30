@@ -129,6 +129,24 @@ Integration events form a public contract. Use terms that consumers across teams
 
 ## Field Naming Rules
 
+### The What, Who, When Principle
+
+Every event should capture three things:
+
+- **What** happened — the event name itself (`OrderPlaced`, `ClaimApproved`)
+- **Who** caused it — `_by` suffix fields (`placed_by`, `approved_by`)
+- **When** it happened — `_at` suffix fields (`placed_at`, `approved_at`)
+
+```
+OrderPlaced              ← What
+  placed_by: "customer-123"   ← Who
+  placed_at: "2026-04-30T..."  ← When
+  order_id: "order-456"
+  items: [...]
+```
+
+If an event is missing Who or When, ask whether it was intentional. System-initiated events may omit Who but should document that the actor is the system itself (e.g., `initiated_by: "scheduler"`).
+
 ### 9. Domain Language for Fields Too
 
 Fields describe facts captured about the event. Use business language.
