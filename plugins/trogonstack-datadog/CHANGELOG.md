@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.0...trogonstack-datadog@v0.3.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* Use YAML list syntax for allowed-tools ([#47](https://github.com/TrogonStack/agentskills/issues/47)) ([67aaca2](https://github.com/TrogonStack/agentskills/commit/67aaca2837287564a6bde1a29d486b736a6b6254))
+
 ## [0.3.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.2.2...trogonstack-datadog@v0.3.0) (2026-04-27)
 
 
