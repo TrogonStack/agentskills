@@ -7,7 +7,9 @@ description: >-
   stream design before implementation. Do not use for: designing the initial
   event model structure (use eventmodeling-designing-event-models) or
   general architectural validation (use eventmodeling-validating-event-models).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Optimizing Stream Design

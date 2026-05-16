@@ -6,7 +6,9 @@ description: >-
   after defining inputs/outputs. Do not use for: planning feature slice
   implementation order (use eventmodeling-slicing-event-models) or defining
   command/read model boundaries (use eventmodeling-designing-event-models).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Applying Conway's Law

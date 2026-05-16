@@ -9,7 +9,11 @@ description: >-
   setup, (2) client library implementation or connection code, (3) debugging
   connectivity or performance issues, (4) choosing between NATS and other
   messaging systems.
-allowed-tools: AskUserQuestion, Write, Read, Shell
+allowed-tools:
+  - AskUserQuestion
+  - Write
+  - Read
+  - Shell
 ---
 
 # Design NATS Subject Hierarchy

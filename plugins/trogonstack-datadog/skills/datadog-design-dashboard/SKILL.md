@@ -10,7 +10,11 @@ description: >-
   Do not use for: (1) Datadog agent installation or configuration,
   (2) monitor/alert rule design, (3) APM instrumentation or tracing setup,
   (4) log pipeline configuration.
-allowed-tools: AskUserQuestion, Write, Read, Shell
+allowed-tools:
+  - AskUserQuestion
+  - Write
+  - Read
+  - Shell
 ---
 
 # Design Datadog Dashboard

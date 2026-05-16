@@ -6,7 +6,9 @@ description: >-
   Do not use for: identifying read models or outputs (use
   eventmodeling-identifying-outputs) or elaborating behavior specifications
   (use eventmodeling-elaborating-scenarios).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Identifying Inputs

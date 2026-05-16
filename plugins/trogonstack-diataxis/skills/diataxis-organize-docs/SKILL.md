@@ -1,7 +1,9 @@
 ---
 name: diataxis-organize-docs
 description: Reorganize documentation into the Diataxis framework structure. Splits existing docs into tutorials, how-to guides, reference, and explanation sections.
-allowed-tools: Read, Write
+allowed-tools:
+  - Read
+  - Write
 ---
 
 # Diataxis Documentation Organization

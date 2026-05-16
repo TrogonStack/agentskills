@@ -1,7 +1,9 @@
 ---
 name: diataxis-gen-readme
 description: Generate a README introduction following the Diataxis 4-paragraph structure for product documentation.
-allowed-tools: Read, Write
+allowed-tools:
+  - Read
+  - Write
 ---
 
 Generate a README introduction following this 4-paragraph structure, replacing the placeholder text with content specific to the product:

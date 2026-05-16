@@ -5,7 +5,10 @@ description: >-
   clarification. Each question includes the intention behind it and current
   assumptions. Use when the user wants to be interviewed about a topic, gather
   requirements, or needs help thinking through a problem step by step.
-allowed-tools: Read, Write, AskUserQuestion
+allowed-tools:
+  - Read
+  - Write
+  - AskUserQuestion
 ---
 
 # Ask Question

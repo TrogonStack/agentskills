@@ -7,7 +7,9 @@ description: >-
   architectural validation (use eventmodeling-validating-event-models) or
   verifying field completeness across the model (use
   eventmodeling-checking-completeness).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Elaborating Scenarios

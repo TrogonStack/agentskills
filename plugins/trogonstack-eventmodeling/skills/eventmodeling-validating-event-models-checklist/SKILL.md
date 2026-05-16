@@ -7,7 +7,8 @@ description: >-
   completing event modeling steps. Do not use for: reviewing incomplete or
   in-progress models (use eventmodeling-validating-event-models), or for
   elaborating new scenarios (use eventmodeling-elaborating-scenarios).
-allowed-tools: Write
+allowed-tools:
+  - Write
 ---
 
 # Event Model Validation Checklist Skill

@@ -9,7 +9,9 @@ description: >-
   eventmodeling-applying-conways-law) or planning before the event model is
   complete (complete the full model first using
   eventmodeling-orchestrating-event-modeling).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Slicing Event Models

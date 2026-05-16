@@ -6,7 +6,8 @@ description: >-
   brainstorming events. Do not use for: brainstorming new events (use
   eventmodeling-brainstorming-events) or designing command/read model
   architecture (use eventmodeling-designing-event-models).
-allowed-tools: Write
+allowed-tools:
+  - Write
 ---
 
 # Plotting Events

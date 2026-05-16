@@ -20,7 +20,10 @@ Every skill has two parts: YAML frontmatter and a markdown body.
 ---
 name: my-skill-name
 description: One-line description explaining when to use this skill and what it produces.
-allowed-tools: Read, Write, Shell
+allowed-tools:
+  - Read
+  - Write
+  - Shell
 ---
 ```
 
@@ -368,7 +371,9 @@ description: >-
   to improve test quality, or before a major release. Do not use
   for writing tests (use a test-writing skill instead) or for
   linting/style checks.
-allowed-tools: Read, Shell
+allowed-tools:
+  - Read
+  - Shell
 ---
 ```
 
