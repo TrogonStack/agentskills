@@ -8,7 +8,8 @@ description: >-
   code generation. Do not use for: the structured 23-check production checklist
   (use eventmodeling-validating-event-models-checklist) or field-level
   completeness verification (use eventmodeling-checking-completeness).
-allowed-tools: Write
+allowed-tools:
+  - Write
 ---
 
 # Validating Event Models

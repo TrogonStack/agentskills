@@ -9,7 +9,9 @@ description: >-
   eventmodeling-elaborating-scenarios for Step 7), validating an
   already-completed model (use eventmodeling-validating-event-models), or
   modernizing legacy systems (use eventmodeling-integrating-legacy-systems).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Orchestrating Event Modeling

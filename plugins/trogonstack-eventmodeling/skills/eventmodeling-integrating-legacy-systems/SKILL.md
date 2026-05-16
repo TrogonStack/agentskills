@@ -7,7 +7,9 @@ description: >-
   existing legacy constraints (use eventmodeling-orchestrating-event-modeling)
   or translating inbound events from external APIs (use
   eventmodeling-translating-external-events).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Integrating Legacy Systems

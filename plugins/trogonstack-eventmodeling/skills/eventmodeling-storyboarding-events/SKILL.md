@@ -6,7 +6,9 @@ description: >-
   after sequencing events. Do not use for: identifying commands or processor
   actions (use eventmodeling-identifying-inputs) or designing read models
   (use eventmodeling-identifying-outputs).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Storyboarding Events

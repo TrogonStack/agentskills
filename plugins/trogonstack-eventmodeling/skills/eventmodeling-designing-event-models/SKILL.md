@@ -8,7 +8,9 @@ description: >-
   scratch (use eventmodeling-brainstorming-events), optimizing stream sizing
   or snapshotting (use eventmodeling-optimizing-stream-design), or translating
   external system events (use eventmodeling-translating-external-events).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Designing Event Models

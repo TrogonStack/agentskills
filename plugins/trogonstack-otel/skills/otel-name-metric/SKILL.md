@@ -7,7 +7,11 @@ description: >-
   metric naming consistency. Do not use for: (1) span or trace naming, (2) OTel
   collector configuration, (3) SDK installation or setup, (4) alerting or
   dashboard design.
-allowed-tools: AskUserQuestion, Write, Read, Shell
+allowed-tools:
+  - AskUserQuestion
+  - Write
+  - Read
+  - Shell
 ---
 
 # Review or Create OpenTelemetry Metric Names

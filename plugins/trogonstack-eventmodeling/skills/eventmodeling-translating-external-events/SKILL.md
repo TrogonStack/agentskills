@@ -7,7 +7,9 @@ description: >-
   modernizing legacy systems using the side-car pattern (use
   eventmodeling-integrating-legacy-systems) or designing command handlers for
   the translated events (use eventmodeling-designing-event-models).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Translating External Events

@@ -5,7 +5,9 @@ description: >-
   what data flows back to UI and Processors. Use after defining inputs. Do not
   use for: identifying commands or inputs (use eventmodeling-identifying-inputs)
   or verifying field completeness (use eventmodeling-checking-completeness).
-allowed-tools: AskUserQuestion, Write
+allowed-tools:
+  - AskUserQuestion
+  - Write
 ---
 
 # Identifying Outputs

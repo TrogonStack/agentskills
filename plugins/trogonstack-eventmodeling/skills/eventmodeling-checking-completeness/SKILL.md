@@ -6,7 +6,8 @@ description: >-
   all scenarios defined. Do not use for: architectural validation against event sourcing
   principles (use eventmodeling-validating-event-models) or elaborating
   Given-When-Then specs (use eventmodeling-elaborating-scenarios).
-allowed-tools: Write
+allowed-tools:
+  - Write
 ---
 
 # Checking Completeness
