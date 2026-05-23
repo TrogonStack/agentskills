@@ -184,28 +184,29 @@ Analytics SaaS serving 100 customers. Each tenant has events, queries, reports. 
 ### Subject Architecture
 
 ```
-{tenant}.{domain}.{action}.{scope}.{id}
+Account: {tenant}
+Subject: {domain}.{action}.{scope}.{id}
 
 Tenant A (ACME Corp):
-- acme-corp.events.ingested.2026-01-24.event-123
-- acme-corp.queries.created.2026-01-24.query-456
-- acme-corp.reports.generated.2026-01-24.report-789
+- account acme-corp: events.ingested.2026-01-24.event-123
+- account acme-corp: queries.created.2026-01-24.query-456
+- account acme-corp: reports.generated.2026-01-24.report-789
 
 Tenant B (StartUp Inc):
-- startup-inc.events.ingested.2026-01-24.event-101
-- startup-inc.queries.created.2026-01-24.query-202
+- account startup-inc: events.ingested.2026-01-24.event-101
+- account startup-inc: queries.created.2026-01-24.query-202
 ```
 
 ### Subscriber Paths
 
 ```
 Tenant-scoped:
-ACME Dashboard: acme-corp.>
-ACME Query Engine: acme-corp.queries.created.>
+ACME Dashboard: >
+ACME Query Engine: queries.created.>
 
 Cross-tenant (admin only):
-Platform Monitor: analytics.>
-Usage Tracker: analytics.usage.daily.>
+Platform Monitor account: analytics.>
+Usage Tracker account: analytics.usage.daily.>
 ```
 
 ### Analytics Aggregation Flow
@@ -214,10 +215,10 @@ This is the unique challenge for multi-tenant SaaS — how to aggregate across t
 
 ```
 Individual tenant events:
-acme-corp.events.ingested.2026-01-24.event-123
-startup-inc.events.ingested.2026-01-24.event-456
+account acme-corp: events.ingested.2026-01-24.event-123
+account startup-inc: events.ingested.2026-01-24.event-456
 
-  ↓ Aggregator service (reads all tenants, writes analytics)
+  ↓ Aggregator service (imports explicit tenant exports, writes analytics)
 
 Aggregated analytics (admin only):
 analytics.usage.acme-corp.events-per-day
@@ -228,13 +229,14 @@ analytics.cost.all-tenants.monthly-revenue
 ### GDPR Compliance via Region Filtering
 
 ```
-{tenant}.{domain}.{action}.{region}.{id}
+Account: {tenant}
+Subject: {domain}.{action}.{region}.{id}
 
-EU customers: startup-inc.*.*.eu-central.>
-US customers: startup-inc.*.*.us-*.>
+EU customers: events.*.eu-central.> in the tenant account
+US customers: events.*.us-*.> in the tenant account
 ```
 
-For authorization configuration see [security.md](security.md) Pattern 1 (Tenant Isolation) and Pattern 4 (Cross-Tenant Analytics). For stream-per-tenant setup see [jetstream.md](jetstream.md) Pattern 3.
+For authorization configuration see [security.md](security.md) Pattern 1 (Tenant Isolation with NATS Accounts) and Pattern 4 (Cross-Tenant Analytics). For account-scoped stream setup see [jetstream.md](jetstream.md) Pattern 3.
 
 ---
 
@@ -322,10 +324,13 @@ Multi-tenant platform where AI agents autonomously process tasks. Each tenant ha
 ### Subject Architecture
 
 ```
-agents.{action}.{tenant}.{agent-id}.{task-id}
-agents.capabilities.{tenant}.{agent-type}
-agents.collaborate.{tenant}.{session-id}.{agent-id}
-platform.monitoring.{tenant}.{metric}
+Account: {tenant}
+agents.{action}.{agent-id}.{task-id}
+agents.capabilities.{agent-type}
+agents.collaborate.{session-id}.{agent-id}
+
+Platform account:
+monitoring.{tenant}.{metric}
 ```
 
 ### Multi-Agent Workflow
@@ -336,24 +341,24 @@ This is the unique value of the agentic AI pattern — orchestrated multi-step t
 User Request (Tenant ACME): "Implement OAuth2 in our API"
 
 Orchestrator publishes:
-agents.task-assigned.tenant-acme.agent-planning-1.task-001
+agents.task-assigned.agent-planning-1.task-001
   → Planning Agent analyzes requirements
 
 Planning Agent collaborates:
-agents.collaborate.tenant-acme.session-001.agent-planning-1
+agents.collaborate.session-001.agent-planning-1
   → Requests code agents for implementation
 
 Orchestrator fans out:
-agents.task-assigned.tenant-acme.agent-code-1.task-002
-agents.task-assigned.tenant-acme.agent-code-2.task-003
+agents.task-assigned.agent-code-1.task-002
+agents.task-assigned.agent-code-2.task-003
   → Code agents implement + test in parallel
 
 Code agents report:
-agents.task-completed.tenant-acme.agent-code-1.task-002
-agents.task-completed.tenant-acme.agent-code-2.task-003
+agents.task-completed.agent-code-1.task-002
+agents.task-completed.agent-code-2.task-003
 
 Orchestrator routes to review:
-agents.task-assigned.tenant-acme.agent-review-1.task-004
+agents.task-assigned.agent-review-1.task-004
   → Review agent checks quality → done
 ```
 
@@ -361,26 +366,26 @@ agents.task-assigned.tenant-acme.agent-review-1.task-004
 
 ```
 Agent Task Queue:
-Agent LLM-1: agents.task-assigned.tenant-acme.agent-llm-1.>
+Agent LLM-1: agents.task-assigned.agent-llm-1.>
 
 Inter-Agent Collaboration:
-All agents in session: agents.collaborate.tenant-acme.session-001.>
+All agents in session: agents.collaborate.session-001.>
 
 Orchestrator Tracking:
-Completions: agents.task-completed.tenant-acme.>
-Failures: agents.task-failed.tenant-acme.>
+Completions: agents.task-completed.>
+Failures: agents.task-failed.>
 
 Capability Discovery:
-All agents: agents.capabilities.tenant-acme.>
+All agents: agents.capabilities.>
 
 Platform Monitoring:
-Admin: platform.monitoring.>
+Admin: monitoring.>
 ```
 
 ### Message Example
 
 ```json
-Subject: agents.task-assigned.tenant-acme.agent-llm-1.task-abc-123
+Subject: agents.task-assigned.agent-llm-1.task-abc-123
 Headers:
   X-Priority: high
   X-Deadline: 2026-01-24T14:00:00Z
@@ -399,6 +404,8 @@ Payload: {
 }
 ```
 
+Tenant identity comes from the account/JWT, not the normal task subject. Put the tenant ID back into subjects only for exported platform telemetry or a documented shared-account fallback.
+
 For tenant isolation authorization see [security.md](security.md) Pattern 5 (AI Agent Sandbox Isolation). For JetStream stream setup see [jetstream.md](jetstream.md) Pattern 3.
 
 ---
@@ -409,6 +416,6 @@ For tenant isolation authorization see [security.md](security.md) Pattern 5 (AI 
 |----------|---|---|---|---|---|
 | Microservices | 4 | 3-10 | 50-100 | 10k-100k/sec | 30d-7y |
 | IoT | 4 | 1 (many dimensions) | 20-50 | 1M+/sec | 1-7 days |
-| Multi-Tenant SaaS | 5 | 3-8 | 50-200 | 100k-1M/sec | 30-90d |
+| Multi-Tenant SaaS | 4 | 3-8 | 50-200 | 100k-1M/sec | 30-90d |
 | Event Sourcing | 4 | 5-20 | 100+ | 10k-100k/sec | forever |
-| Agentic AI | 5 | 2-3 | 100-1000+ | 10k-100k/sec | 30-365d |
+| Agentic AI | 4 | 2-3 | 100-1000+ | 10k-100k/sec | 30-365d |

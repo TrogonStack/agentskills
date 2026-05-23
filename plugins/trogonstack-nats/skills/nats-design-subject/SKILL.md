@@ -4,11 +4,12 @@ description: >-
   Design NATS subject hierarchies for messaging patterns (pub/sub, request/reply,
   streaming). Apply naming conventions, segmentation strategies, and wildcard
   patterns to create scalable subject architectures. Use when designing NATS
-  messaging systems, planning multi-tenant communication, or auditing existing
-  subject hierarchies. Do not use for: (1) NATS server configuration or cluster
-  setup, (2) client library implementation or connection code, (3) debugging
-  connectivity or performance issues, (4) choosing between NATS and other
-  messaging systems.
+  messaging systems, choosing account-vs-subject namespace boundaries for
+  multi-tenant communication, designing export/import subjects, or auditing
+  existing subject hierarchies. Do not use for: (1) NATS server or account
+  provisioning, (2) cluster setup, (3) client library implementation or
+  connection code, (4) debugging connectivity or performance issues, (5)
+  choosing between NATS and other messaging systems.
 allowed-tools:
   - AskUserQuestion
   - Write
@@ -18,7 +19,7 @@ allowed-tools:
 
 # Design NATS Subject Hierarchy
 
-Design a subject architecture that subscribers can efficiently navigate using wildcards, with proper segment ordering, tenant isolation, and growth path.
+Design a subject architecture that subscribers can efficiently navigate using wildcards, with proper segment ordering, account-aware tenant isolation, and growth path.
 
 ## Interview Phase
 
@@ -35,14 +36,14 @@ Design a subject architecture that subscribers can efficiently navigate using wi
 1. **Scope** — "Is this greenfield design or migrating existing subjects?"
    - Impact: Migration needs anti-pattern audit first (see [references/anti-patterns.md](references/anti-patterns.md))
 
-2. **Multi-Tenancy & Scale** — "Do you need: (A) Single tenant, (B) Multi-tenant with isolation, (C) Massive scale with regions/shards?"
-   - Impact: Determines whether tenant prefix is needed and segmentation depth
+2. **Multi-Tenancy & Scale** — "Do you need: (A) Single tenant, (B) Account-per-tenant isolation, (C) Shared account with subject prefixes, (D) Massive scale with regions/shards?"
+   - Impact: Determines whether tenant identity belongs in the NATS account boundary, the subject, or both
 
 3. **Messaging Patterns** — "Which patterns do you use? (A) Pub/Sub only, (B) Request/Reply, (C) Streaming/JetStream, (D) All/mix?"
    - Impact: JetStream needs stream-aware subject design; request/reply has its own conventions
 
-4. **Security** — "Do you need subject-based authorization or tenant isolation?"
-   - Impact: Determines whether tenant/role prefixes are needed and permission boundaries
+4. **Security** — "Do you need account-level isolation, subject-based authorization, or both?"
+   - Impact: Determines account boundaries, exports/imports, tenant prefixes, and permission boundaries
 
 5. **Persistence** — "Do you need JetStream persistence or core NATS only?"
    - Impact: Determines stream/consumer subject design and retention considerations
@@ -52,7 +53,7 @@ Design a subject architecture that subscribers can efficiently navigate using wi
 ## When to Use
 
 - Designing a new NATS messaging system
-- Planning multi-tenant subject isolation
+- Planning account-aware multi-tenant subject isolation
 - Organizing device telemetry or event streams
 - Setting up request/reply patterns across microservices
 - Defining event subject structure for event-sourced systems
@@ -71,7 +72,9 @@ Design a subject architecture that subscribers can efficiently navigate using wi
 
 ### 1. Identify Domain Boundaries
 
-List all business domains involved (orders, payments, inventory, etc.). Each domain becomes a top-level subject segment.
+List all NATS account boundaries and business domains involved. For strict multi-tenancy, use one account per tenant first; then design short, domain-first subjects inside each account.
+
+Use subject tenant prefixes only when accounts are intentionally unavailable or when designing a shared/platform surface that must carry tenant provenance.
 
 ### 2. Choose a Pattern
 
@@ -81,8 +84,9 @@ Match the user's scenario to a pattern:
 |----------|---------|---------|
 | **Simple Domain** | `{domain}.{action}.{scope}` | `orders.created.us-west` |
 | **Multi-Region** | `{domain}.{action}.{region}.{id}` | `devices.telemetry.us-east.sensor-456` |
-| **Multi-Tenant SaaS** | `{tenant}.{domain}.{action}.{id}` | `acme-corp.analytics.processed.report-123` |
-| **Multi-Tenant AI** | `agents.{action}.{tenant}.{agent-id}.{task-id}` | `agents.task-assigned.tenant-abc.agent-xyz.task-123` |
+| **Multi-Tenant SaaS** | Account per tenant, subjects: `{domain}.{action}.{id}` | `analytics.processed.report-123` in account `acme-corp` |
+| **Shared Account Fallback** | `{tenant}.{domain}.{action}.{id}` | `acme-corp.analytics.processed.report-123` |
+| **Multi-Tenant AI** | Account per tenant, subjects: `agents.{action}.{agent-id}.{task-id}` | `agents.task-assigned.agent-xyz.task-123` in account `tenant-abc` |
 | **Request/Reply** | `{service}.request` / `{service}.reply` | `orders.request` / `orders.reply` |
 | **Event Sourcing** | `{aggregate}.{action}.v{version}.{id}` | `orders.order.created.v1.order-123` |
 
@@ -90,7 +94,7 @@ For full pattern details with subscriber paths and scaling guidance, read [refer
 
 ### 3. Order Segments Strategically
 
-Apply these rules when ordering segments left-to-right:
+Apply these rules when ordering subject segments left-to-right inside the selected account:
 
 - **Broad to specific**: Domain → Action → Scope → Identifier
 - **Low-cardinality left, high-cardinality right**: Regions (few values) before IDs (millions of values)
@@ -127,19 +131,24 @@ Design subjects for subscribers, not publishers. Subscribers determine how you o
 
 If the user needs tenant isolation or role-based access:
 
-- Tenant ID as first segment enables subject-based authorization (`acme-corp.>`)
-- Separate admin subjects from user operations (`_admin.>` for platform ops)
+- Prefer NATS Accounts for tenant isolation; each tenant gets its own subject namespace
+- Use exports/imports for cross-account federation instead of assuming cross-tenant visibility
+- Use tenant IDs in subjects only for shared-account fallbacks or platform aggregation surfaces
+- Separate admin/platform subjects from user operations (`_admin.>` or platform account subjects)
 - Apply least-privilege permissions per service
 
-For authorization patterns and tenant isolation examples, read [references/security.md](references/security.md).
+For account-based tenancy, authorization patterns, and tenant isolation examples, read [references/security.md](references/security.md).
 
 ### 6. Design JetStream Streams (if persistence needed)
 
 If the user needs JetStream:
 
-- One stream per domain (or per tenant for isolation)
+- Treat JetStream streams, consumers, and KV buckets as account-scoped resources
+- Reuse stream/KV names across tenant accounts when the topology is identical
+- Use one stream per domain inside each tenant account
+- Use per-tenant streams in one shared account only as a fallback
 - Consumer filters for fine-grained routing
-- Retention policies per domain (financial: years, telemetry: days)
+- Account and domain retention limits (financial: years, telemetry: days)
 - Keep to 4-6 subject segments — use consumer filters instead of deeper hierarchies
 
 For stream design, consumer patterns, and migration from core NATS, read [references/jetstream.md](references/jetstream.md).
@@ -167,13 +176,13 @@ Subscriber paths:
 [Repeat for each domain]
 
 ## Multi-Tenancy Model
-[How tenant isolation works via subjects, if applicable]
+[NATS Accounts, exports/imports, or shared-account subject prefixes]
 
 ## Security Model
 [Authorization rules per role/service, if applicable]
 
 ## JetStream Streams
-[Stream definitions and consumer filters, if applicable]
+[Account-scoped stream definitions and consumer filters, if applicable]
 
 ## Quality Validation
 [Run checklist below]
@@ -284,7 +293,7 @@ Don't read all references upfront — use them progressively as the workflow req
 - [ ] Naming consistent (all lowercase, hyphens, no underscores)
 - [ ] Documented subscriber wildcard paths for each domain
 - [ ] No subjects deeper than 6 segments
-- [ ] Multi-tenancy isolation is clear (tenant ID positioning documented)
+- [ ] Multi-tenancy boundary is clear (account-per-tenant, shared-account prefix fallback, or both)
 - [ ] Security subjects defined for admin/monitoring access
 - [ ] No conflicting patterns (e.g., `orders.created.123` vs `orders.123.created`)
 - [ ] High-cardinality decision documented (why ID placement chosen)
@@ -323,7 +332,7 @@ nats server check connection --account <account-name>
 ## Reference Documentation
 
 - **[Patterns](references/patterns.md)**: 6 hierarchy patterns with subscriber paths and scaling guidance
-- **[Anti-Patterns](references/anti-patterns.md)**: 8 common mistakes with detection, fixes, and migration strategies
+- **[Anti-Patterns](references/anti-patterns.md)**: common mistakes with detection, fixes, and migration strategies
 - **[Security & Multi-Tenancy](references/security.md)**: Authorization patterns and tenant isolation
 - **[JetStream Design](references/jetstream.md)**: Stream filters, consumer subjects, and retention policies
 - **[Use Cases](references/use-cases.md)**: Complete examples for microservices, IoT, SaaS, event sourcing, agentic AI
