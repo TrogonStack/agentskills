@@ -125,70 +125,77 @@ consumer: {
 
 ---
 
-## Pattern 3: Multi-Tenant Streams
+## Pattern 3: Account-Scoped Multi-Tenant Streams
 
-**Use when**: Multi-tenant SaaS, separate streams per tenant, complete isolation.
+**Use when**: Multi-tenant SaaS, strict tenant isolation, account-scoped JetStream/KV, per-tenant limits, or identical stream topology across tenants.
+
+Prefer one NATS account per tenant. Streams and KV buckets are account-scoped, so each tenant can reuse the same stream names without putting the tenant into every subject.
 
 **Stream Naming**:
 ```nats
+# Account: acme-corp
 stream: {
-  name: "tenant-acme-corp"            # One stream per tenant
-  subjects: ["acme-corp.>"]
+  name: "orders"
+  subjects: ["orders.>"]
 }
 
+# Account: startup-inc
 stream: {
-  name: "tenant-startup-inc"
-  subjects: ["startup-inc.>"]
+  name: "orders"
+  subjects: ["orders.>"]
 }
 
+# Account: big-enterprise
 stream: {
-  name: "tenant-big-enterprise"
-  subjects: ["big-enterprise.>"]
+  name: "orders"
+  subjects: ["orders.>"]
 }
 ```
 
 **Subjects**:
 ```
-# Tenant A
-acme-corp.orders.created.us-west.order-123
-acme-corp.payments.authorized.us-west.payment-456
+# Tenant A account
+orders.created.us-west.order-123
+payments.authorized.us-west.payment-456
 
-# Tenant B
-startup-inc.orders.created.eu-central.order-789
-startup-inc.payments.authorized.eu-central.payment-101
+# Tenant B account
+orders.created.eu-central.order-789
+payments.authorized.eu-central.payment-101
 
-# Tenant C
-big-enterprise.orders.created.us-east.order-abc
-big-enterprise.payments.authorized.us-east.payment-def
+# Tenant C account
+orders.created.us-east.order-abc
+payments.authorized.us-east.payment-def
 ```
 
 **Consumers (Tenant-Scoped)**:
 ```nats
-# Tenant A - Orders only
-stream: "tenant-acme-corp"
+# Tenant A account - Orders only
+stream: "orders"
 consumer: {
-  name: "acme-orders-consumer"
-  filter_subject: "acme-corp.orders.>"
+  name: "orders-consumer"
+  filter_subject: "orders.>"
 }
 
-# Tenant B - Payments only
-stream: "tenant-startup-inc"
+# Tenant B account - Orders only
+stream: "orders"
 consumer: {
-  name: "startup-payments-consumer"
-  filter_subject: "startup-inc.payments.>"
+  name: "orders-consumer"
+  filter_subject: "orders.>"
 }
 ```
 
 **Advantages**:
-- Complete tenant isolation
+- Complete account-level tenant isolation
 - Different retention per tenant
 - Different redundancy per tenant
+- Native account resource limits
 - Easy to add/remove tenants
 - Per-tenant backups
 
 **Scaling Considerations**:
-- With 100 tenants = 100 streams (scalable with modern hardware)
-- With 1000 tenants = consider sharding or hierarchical streams
+- With 100 tenants and one `orders` stream each = 100 account-scoped stream instances
+- With 1000 tenants = consider account placement, sharding, and account resource limits
+- Use shared-account tenant prefixes only when account-per-tenant is not available
 
 ---
 
@@ -352,22 +359,24 @@ Output: orders.region-eu-central.created.order-456
 
 ## Pattern 7: Multi-Tenant Stream Isolation
 
-**Scenario**: SaaS with multi-tenant streams where subjects are tenant-prefixed.
+**Scenario**: SaaS with strict tenant isolation and a repeated stream topology per tenant.
 
 **Stream Design**:
 ```nats
-# Option A: One stream per tenant (recommended)
+# Recommended: same stream names in separate tenant accounts
+# Account: acme-corp
 stream: {
-  name: "tenant-acme-corp"
-  subjects: ["acme-corp.>"]           # All acme events
+  name: "orders"
+  subjects: ["orders.>"]
 }
 
+# Account: startup-inc
 stream: {
-  name: "tenant-startup-inc"
-  subjects: ["startup-inc.>"]
+  name: "orders"
+  subjects: ["orders.>"]
 }
 
-# Option B: Single stream, multiple tenants
+# Fallback: one shared account with tenant-prefixed subjects
 stream: {
   name: "all-tenants"
   subjects: [
@@ -378,16 +387,17 @@ stream: {
 }
 ```
 
-**Consumer (Option A - Recommended)**:
+**Consumer (Recommended)**:
 ```nats
-stream: "tenant-acme-corp"
+# Connected to account acme-corp
+stream: "orders"
 consumer: {
-  name: "acme-orders"
-  filter_subject: "acme-corp.orders.>"
+  name: "order-created"
+  filter_subject: "orders.created.>"
 }
 ```
 
-**Consumer (Option B - Less Recommended)**:
+**Consumer (Fallback)**:
 ```nats
 stream: "all-tenants"
 consumer: {
@@ -396,11 +406,14 @@ consumer: {
 }
 ```
 
-**Recommendation**: Option A (one stream per tenant) is better:
-- Easier scaling
-- Tenant isolation
+**Recommendation**: Account-scoped streams are better:
+- Account-level isolation
+- Native account limits
+- Same stream/KV names per tenant account
 - Different retention per tenant
-- Better disaster recovery
+- Better disaster recovery and account movement
+
+Use the shared-account fallback only when NATS Accounts are not available or when a platform projection intentionally combines tenants.
 
 ---
 
@@ -594,4 +607,3 @@ Consumer: filter_subject: "orders.created.>"
 ```
 
 **No subject changes needed** if your subjects are well-designed!
-

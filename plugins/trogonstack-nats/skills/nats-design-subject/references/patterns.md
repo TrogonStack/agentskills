@@ -61,49 +61,63 @@ orders.>.us-west.>          # All order actions in US West (less efficient)
 
 ---
 
-## Pattern 3: Multi-Tenant Pattern (4-6 Segments)
+## Pattern 3: Account-Scoped Multi-Tenant Pattern
 
-**Use when**: SaaS platform, multi-tenant app, shared infrastructure.
+**Use when**: SaaS platform, multi-tenant app, strict tenant isolation, account-scoped auth, account-scoped JetStream/KV, or native quota boundaries.
+
+Prefer one NATS account per tenant. Subjects inside each tenant account stay short because the account is the isolation boundary.
 
 ```
-{tenant}.{domain}.{action}.{id}
+Account: {tenant}
+Subject: {domain}.{action}.{id}
 
 Examples:
-- acme-corp.orders.created.order-123
-- acme-corp.orders.updated.order-456
-- startup-inc.analytics.processed.report-789
-- startup-inc.users.registered.user-101
+- account acme-corp: orders.created.order-123
+- account acme-corp: orders.updated.order-456
+- account startup-inc: analytics.processed.report-789
+- account startup-inc: users.registered.user-101
 ```
 
 **Subscriber Paths**:
 ```nats
-acme-corp.>                     # All events for tenant (admin dashboard)
-acme-corp.orders.>              # All order events for tenant
-acme-corp.orders.created.>      # All order creations for tenant
+>                     # All events in the connected tenant account
+orders.>              # All order events in this tenant account
+orders.created.>      # All order creations in this tenant account
 ```
 
 **Authorization** (with NATS auth):
 ```
 User from acme-corp:
-  Publish: acme-corp.>
-  Subscribe: acme-corp.>
+  Account: acme-corp
+  Publish: orders.>, analytics.>, users.>
+  Subscribe: orders.>, analytics.>, users.>
 
 User from startup-inc:
-  Publish: startup-inc.>
-  Subscribe: startup-inc.>
+  Account: startup-inc
+  Publish: orders.>, analytics.>, users.>
+  Subscribe: orders.>, analytics.>, users.>
 
-Admin user:
-  Publish: >
-  Subscribe: >
+Platform analytics:
+  Import explicit streams/services from tenant accounts
+  Publish aggregate results to a platform account subject
 ```
 
 **Best For**: Multi-tenant SaaS, white-label platforms, shared NATS clusters.
 
-**Variation with Region** (5 segments):
+**Variation with Region**:
 ```
-{tenant}.{domain}.{action}.{region}.{id}
+{domain}.{action}.{region}.{id}
 
-acme-corp.orders.created.us-west.order-123
+orders.created.us-west.order-123
+```
+
+**Shared Account Fallback**:
+
+Use a tenant prefix only when all tenants intentionally share one NATS account or when an exported/platform subject needs tenant provenance.
+
+```
+{tenant}.{domain}.{action}.{id}
+acme-corp.orders.created.order-123
 ```
 
 ---
@@ -243,22 +257,33 @@ shipping.{action}.{id}
 
 ---
 
-### Strategy 2: Tenant-Based (Multi-Tenancy)
+### Strategy 2: Account-Based (NATS Multi-Tenancy)
 
-Organize by tenant with domains nested:
+Organize tenants as NATS accounts. Keep tenant identity out of normal subjects inside the tenant account:
+
+```
+Account: acme-corp
+orders.{action}.{id}
+payments.{action}.{id}
+inventory.{action}.{id}
+```
+
+**When**: SaaS platforms, multi-tenant apps, strict isolation, per-tenant JetStream/KV, native quotas.
+
+**Subscribers**:
+- `>` - All events visible in the connected account
+- `orders.>` - Orders in the connected account
+- `payments.>` - Payments in the connected account
+
+**Authorization**: NATS account identity provides the tenant boundary. Use subject permissions inside the account for least privilege.
+
+**Shared Account Fallback**:
 
 ```
 {tenant}.{domain}.{action}.{id}
 ```
 
-**When**: SaaS platforms, multi-tenant apps.
-
-**Subscribers**:
-- `acme-corp.>` - All events for ACME Corp
-- `acme-corp.orders.>` - ACME Corp orders
-- `startup-inc.orders.>` - StartUp Inc orders
-
-**Authorization**: Tenant prefix enables subject-based auth.
+Use this only when account-per-tenant is not available or for exported/platform subjects that must encode tenant provenance.
 
 ---
 
@@ -374,22 +399,24 @@ Regional Dashboard (EU): >.eu-central.>
 
 ### Multi-Tenant SaaS Platform
 
-Combines: Tenant-based + Domain-based + Regional
+Combines: Account-based tenancy + domain-based + regional
 
 ```
-acme-corp.orders.created.us-west.order-123
-acme-corp.analytics.processed.report-456
-startup-inc.orders.created.eu-central.order-789
-startup-inc.analytics.processed.report-101
+Account acme-corp:
+orders.created.us-west.order-123
+analytics.processed.report-456
+
+Account startup-inc:
+orders.created.eu-central.order-789
+analytics.processed.report-101
 ```
 
 **Subscribers**:
 ```
-ACME Corp Admin Dashboard: acme-corp.>
-StartUp Inc Admin: startup-inc.>
-Orders Service: >.orders.>
-Analytics Service: >.analytics.>
-Regional Monitor (US West): >.>.us-west.>
+Tenant Admin Dashboard: >
+Orders Service: orders.>
+Analytics Service: analytics.>
+Regional Monitor (US West): orders.*.us-west.>
 ```
 
 ---
@@ -432,29 +459,33 @@ Filter: devices.telemetry.>.sensor-456.>
 
 ### Multi-Tenant Agentic AI Platform
 
-Combines: Tenant-based + Agent-centric + Task-based
+Combines: Account-based tenancy + agent-centric + task-based subjects
 
 ```
-agents.task-assigned.tenant-abc.agent-xyz.task-123
-agents.task-completed.tenant-abc.agent-xyz.task-123
-agents.capabilities.tenant-abc.llm-agent
-agents.collaborate.tenant-abc.session-456.agent-xyz
-platform.monitoring.all-tenants.agent-health
-platform.monitoring.tenant-abc.agent-metrics
+Account: tenant-abc
+agents.task-assigned.agent-xyz.task-123
+agents.task-completed.agent-xyz.task-123
+agents.capabilities.llm-agent
+agents.collaborate.session-456.agent-xyz
+
+Platform account:
+monitoring.all-tenants.agent-health
+monitoring.tenant-abc.agent-metrics
 ```
 
 **Subscribers**:
 ```
-AI Agent (xyz) for tenant-abc: agents.>.tenant-abc.agent-xyz.>
-All agents in tenant-abc: agents.>.tenant-abc.>
-Platform Monitor: platform.monitoring.>
-LLM agent capability discovery: agents.capabilities.tenant-abc.llm-agent
+AI Agent (xyz) in tenant account: agents.*.agent-xyz.>
+All tenant agents: agents.>
+Platform Monitor: monitoring.>
+LLM agent capability discovery: agents.capabilities.llm-agent
 ```
 
-**Security via Subjects**:
-- Tenant A's agents: `agents.>.tenant-a.>` (cannot see tenant-b)
-- Tenant B's agents: `agents.>.tenant-b.>` (cannot see tenant-a)
-- Admin monitor: `platform.monitoring.>`
+**Security via Accounts**:
+- Tenant A's agents connect to tenant-a account
+- Tenant B's agents connect to tenant-b account
+- Platform monitoring imports explicit streams/services from tenant accounts
+- Tenant IDs appear only on platform/export subjects that aggregate across accounts
 
 ---
 
@@ -464,8 +495,7 @@ LLM agent capability discovery: agents.capabilities.tenant-abc.llm-agent
 |---------|----------|-----------|-------------|--------------|
 | Simple | Learning, single domain | Low | 100k events/sec | Good |
 | Multi-Region | Global systems | Medium | 1M+ events/sec | Good |
-| Multi-Tenant | SaaS, shared infra | Medium-High | 1M+ events/sec | Excellent |
+| Multi-Tenant | SaaS, account isolation | Medium-High | 1M+ events/sec | Excellent |
 | Request/Reply | Sync services | Low | 10k req/sec | Good |
 | Event Sourcing | CQRS, event-sourced | Medium | 100k events/sec | Good |
 | Temporal | IoT, time-series | High | 10M+ events/sec | Good |
-

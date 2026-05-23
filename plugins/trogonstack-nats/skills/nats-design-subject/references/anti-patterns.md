@@ -577,12 +577,35 @@ Fix:
 
 ---
 
+## Anti-Pattern 13: Subject Prefix as Primary Tenant Boundary
+
+Using `{tenant}.>` as the main isolation boundary in a system that needs strict multi-tenancy leaves all tenants in one subject namespace. A bad permission pattern or broad service credential can leak data across tenants.
+
+**Principle**: Use NATS Accounts as the tenant boundary when isolation, account-scoped auth, native quotas, JetStream, or KV matter. Use tenant subject prefixes only for shared-account fallbacks or platform/export subjects that need tenant provenance.
+
+```
+✗ RISKY DEFAULT:
+  acme-corp.a2a.gateway.support-bot.message.send
+  startup-inc.a2a.gateway.support-bot.message.send
+  → Both tenants share one account and depend on ACL correctness
+
+✓ BETTER:
+  account acme-corp: a2a.gateway.support-bot.message.send
+  account startup-inc: a2a.gateway.support-bot.message.send
+  → Same subject, separate account namespaces
+```
+
+**Prevention**: Before adding a tenant token to the subject, decide whether the tenant should be a NATS account. If cross-tenant discovery, audit, or federation is required, model it with explicit exports/imports and platform-account subjects.
+
+---
+
 ## Anti-Pattern Prevention
 
 **In Code Review, Check For**:
 ```
-✓ All subjects start with domain
-✓ Action/event type is always L2 (or L3 for multi-tenant)
+✓ Subjects start with domain inside tenant accounts
+✓ Tenant tokens appear only for shared-account fallbacks or platform/export subjects
+✓ Action/event type is always L2 unless a fixed namespace token is required
 ✓ No IDs or UUIDs before action/scope
 ✓ Consistent casing (lowercase) and separators (hyphens)
 ✓ Max 5-6 segments per subject
@@ -603,5 +626,5 @@ Fix:
 ✓ Do any wildcard pairs overlap for any realistic ID value?
 ✓ Can I subscribe per-session/per-entity for affinity routing?
 ✓ Can NATS permissions cleanly separate read/write per direction?
+✓ If this is multi-tenant, did I choose Accounts before subject prefixes?
 ```
-

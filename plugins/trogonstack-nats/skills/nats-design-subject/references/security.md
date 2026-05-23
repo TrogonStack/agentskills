@@ -1,8 +1,19 @@
-# NATS Subject-Based Security and Multi-Tenancy
+# NATS Accounts, Subject-Based Security, and Multi-Tenancy
 
-This reference covers authorization patterns, tenant isolation, and security best practices using NATS subject hierarchies.
+This reference covers account-based tenant isolation, subject authorization, and security best practices for NATS subject hierarchies.
 
 **Related references**: For subject hierarchy patterns see [patterns.md](patterns.md). For JetStream stream-level isolation see [jetstream.md](jetstream.md). For common security mistakes see [anti-patterns.md](anti-patterns.md).
+
+## Account-First Rule
+
+NATS Accounts are the native multi-tenancy boundary. Each account has its own subject namespace, users, account-scoped JetStream resources, and resource limits. Cross-account traffic should be explicit through exports/imports.
+
+Use account-per-tenant when the system needs strict tenant isolation, account-scoped auth/JWTs, native quotas, tenant-local JetStream streams, or tenant-local KV buckets.
+
+Use tenant prefixes in subjects only when:
+- All tenants intentionally share one NATS account
+- A platform/export subject needs tenant provenance after data leaves the tenant account
+- A migration cannot introduce accounts yet
 
 ## Subject-Based Authorization Basics
 
@@ -40,7 +51,88 @@ Matches:
 
 ---
 
-## Pattern 1: Tenant Isolation with Prefix
+## Pattern 1: Tenant Isolation with NATS Accounts (Default)
+
+**Account and Subject Format**:
+```
+Account: {tenant}
+Subject: {domain}.{action}.{scope}.{id}
+```
+
+**Examples**:
+```
+Account acme-corp:
+orders.created.us-west.order-123
+orders.shipped.us-west.order-456
+payments.authorized.us-west.payment-101
+
+Account startup-inc:
+orders.created.eu-central.order-789
+payments.authorized.eu-central.payment-101
+```
+
+**Authorization Configuration**:
+
+```nats
+# ACME Corp user in account acme-corp
+user acme-admin {
+  username: "admin@acme-corp.com"
+  permissions {
+    publish {
+      allow: ["orders.>", "payments.>"]
+    }
+    subscribe {
+      allow: ["orders.>", "payments.>"]
+    }
+  }
+}
+
+# StartUp Inc user in account startup-inc
+user startup-admin {
+  username: "admin@startup-inc.com"
+  permissions {
+    publish {
+      allow: ["orders.>", "payments.>"]
+    }
+    subscribe {
+      allow: ["orders.>", "payments.>"]
+    }
+  }
+}
+
+# Platform admin lives in a platform account and imports only approved tenant exports
+user platform-admin {
+  username: "platform-admin"
+  permissions {
+    publish {
+      allow: ["monitoring.>", "analytics.>"]
+    }
+    subscribe {
+      allow: ["monitoring.>", "analytics.>"]
+    }
+  }
+}
+```
+
+**Effectiveness**: Excellent. Account-level isolation means tenant subjects are not globally visible.
+
+**Pros**:
+- Stronger isolation than subject prefixes
+- Shorter tenant-local subjects
+- Account-scoped users, JWTs, JetStream, KV, and quotas
+- Built on NATS native permissions
+- Cross-tenant traffic is opt-in through exports/imports
+
+**Cons**:
+- Requires account lifecycle management
+- Cross-tenant analytics/federation needs explicit exports/imports
+- Shared platform services must define import/export contracts
+
+---
+
+## Pattern 1b: Shared Account Tenant Prefix (Fallback)
+
+**Use when**: Account-per-tenant is unavailable, or a shared/platform account needs tenant provenance in subjects.
 
 **Subject Format**:
 ```
@@ -50,65 +142,20 @@ Matches:
 **Examples**:
 ```
 acme-corp.orders.created.us-west.order-123
-acme-corp.orders.shipped.us-west.order-456
 startup-inc.orders.created.eu-central.order-789
-startup-inc.payments.authorized.eu-central.payment-101
 ```
 
-**Authorization Configuration**:
-
+**Authorization**:
 ```nats
-# ACME Corp user
-user acme-admin {
-  username: "admin@acme-corp.com"
+user acme-user {
   permissions {
-    publish {
-      allow: ["acme-corp.>"]      # Can only publish to own tenant
-    }
-    subscribe {
-      allow: ["acme-corp.>"]      # Can only subscribe to own tenant
-    }
-  }
-}
-
-# StartUp Inc user
-user startup-admin {
-  username: "admin@startup-inc.com"
-  permissions {
-    publish {
-      allow: ["startup-inc.>"]    # Can only publish to own tenant
-    }
-    subscribe {
-      allow: ["startup-inc.>"]    # Can only subscribe to own tenant
-    }
-  }
-}
-
-# Platform admin (multi-tenant)
-user platform-admin {
-  username: "platform-admin"
-  permissions {
-    publish {
-      allow: [">"]                # Can publish anywhere
-    }
-    subscribe {
-      allow: [">"]                # Can subscribe anywhere
-    }
+    publish { allow: ["acme-corp.>"] }
+    subscribe { allow: ["acme-corp.>"] }
   }
 }
 ```
 
-**Effectiveness**: ✓ Excellent. Complete tenant isolation with prefix-based auth.
-
-**Pros**:
-- Simple to understand
-- Direct authorization mapping
-- Built on NATS native permissions
-- Easy to add/remove tenants
-
-**Cons**:
-- Admin operations need separate subjects (see Pattern 3)
-- Cross-tenant analytics harder (see Pattern 3)
+**Effectiveness**: Useful fallback, but weaker than accounts because all tenants still share one subject namespace.
 
 ---
 
@@ -116,50 +163,50 @@ user platform-admin {
 
 **Subject Format**:
 ```
-{tenant}.{role}.{domain}.{action}.{scope}.{id}
+{role}.{domain}.{action}.{scope}.{id}
 ```
 
 **Examples**:
 ```
-acme-corp.admin.orders.created.us-west.order-123
-acme-corp.user.orders.status.us-west.order-456
-acme-corp.service.orders.shipped.us-west.order-789
+admin.orders.created.us-west.order-123
+user.orders.status.us-west.order-456
+service.orders.shipped.us-west.order-789
 ```
 
 **Authorization**:
 ```nats
-# Admin user (full access within tenant)
+# Admin user (full access within connected account)
 user acme-admin {
   permissions {
     publish {
-      allow: ["acme-corp.admin.>", "acme-corp.user.>"]
+      allow: ["admin.>", "user.>"]
     }
     subscribe {
-      allow: ["acme-corp.admin.>", "acme-corp.user.>"]
+      allow: ["admin.>", "user.>"]
     }
   }
 }
 
-# Regular user (limited to user tier)
+# Regular user (limited to user tier in connected account)
 user acme-user {
   permissions {
     publish {
-      allow: ["acme-corp.user.orders.>"]    # Only user-level order operations
+      allow: ["user.orders.>"]
     }
     subscribe {
-      allow: ["acme-corp.user.orders.>"]
+      allow: ["user.orders.>"]
     }
   }
 }
 
-# Internal service (full access)
+# Internal service (full access in connected account)
 user acme-service {
   permissions {
     publish {
-      allow: ["acme-corp.service.>"]
+      allow: ["service.>"]
     }
     subscribe {
-      allow: ["acme-corp.>"]                 # Subscribe to all tiers
+      allow: [">"]
     }
   }
 }
@@ -175,66 +222,67 @@ user acme-service {
 **Cons**:
 - More complex subject hierarchy (6-7 segments)
 - Harder for subscribers to navigate (see Anti-Pattern 3 in anti-patterns.md)
+- Often better modeled as account users and permissions without putting role in the subject
 
 ---
 
-## Pattern 3: Separate Admin Subjects for Multi-Tenancy
+## Pattern 3: Separate Platform/Admin Subjects
 
 **Subject Format**:
 ```
-# Tenant-scoped (normal operations)
-{tenant}.{domain}.{action}.{scope}.{id}
+# Tenant account (normal operations)
+{domain}.{action}.{scope}.{id}
 
-# Admin/monitoring (platform-wide, separate root)
+# Platform account (monitoring/audit after import/export)
 _admin.{operation}.{tenant}.{resource}.{details}
-platform.monitoring.{tenant}.{metric}
+monitoring.{tenant}.{metric}
 ```
 
 **Examples**:
 ```
-# User-facing operations
-acme-corp.orders.created.us-west.order-123
-startup-inc.orders.shipped.eu-central.order-456
+# User-facing operations in tenant accounts
+account acme-corp: orders.created.us-west.order-123
+account startup-inc: orders.shipped.eu-central.order-456
 
-# Admin operations (monitoring, platform ops)
+# Platform operations in platform account
 _admin.audit.acme-corp.orders.created.order-123
 _admin.audit.startup-inc.orders.shipped.order-456
 
-platform.monitoring.acme-corp.event-count
-platform.monitoring.startup-inc.event-latency
+monitoring.acme-corp.event-count
+monitoring.startup-inc.event-latency
 ```
 
 **Authorization**:
 ```nats
-# Tenant user (normal operations only)
+# Tenant user in account acme-corp (normal operations only)
 user acme-user {
   permissions {
     publish {
-      allow: ["acme-corp.>"]
+      allow: ["orders.>"]
     }
     subscribe {
-      allow: ["acme-corp.>"]
+      allow: ["orders.>"]
     }
   }
 }
 
-# Platform admin (admin and monitoring only)
+# Platform admin in platform account (admin and monitoring only)
 user platform-admin {
   permissions {
     publish {
-      allow: ["_admin.>", "platform.monitoring.>"]
+      allow: ["_admin.>", "monitoring.>"]
     }
     subscribe {
-      allow: ["_admin.>", "platform.monitoring.>"]
+      allow: ["_admin.>", "monitoring.>"]
     }
   }
 }
 
-# System service (publishes audit logs and metrics)
+# System service in platform account (publishes audit logs and metrics)
 user system-service {
   permissions {
     publish {
-      allow: ["_admin.>", "platform.monitoring.>"]
+      allow: ["_admin.>", "monitoring.>"]
     }
     subscribe {
       allow: []
@@ -249,10 +297,11 @@ user system-service {
 - Tenant subjects remain simple (4-5 segments)
 - Admin operations completely separate
 - Platform observability isolated
+- Tenant accounts do not need broad platform-admin credentials
 
 **Cons**:
 - Two parallel subject hierarchies to maintain
-- Audit trails in separate subjects from operations
+- Exports/imports or mirror/source topology must be maintained
 
 ---
 
@@ -262,19 +311,19 @@ user system-service {
 
 **Subject Format**:
 ```
-# Tenant-specific operations
-{tenant}.{domain}.{action}.{scope}.{id}
+# Tenant account operations
+{domain}.{action}.{scope}.{id}
 
-# Analytics aggregation (admin-only)
+# Platform account analytics aggregation (admin-only)
 analytics.all-tenants.{metric}.{dimension}
 analytics.{tenant}.{metric}.{dimension}
 ```
 
 **Examples**:
 ```
-# User operations (tenant-isolated)
-acme-corp.orders.created.us-west.order-123
-startup-inc.orders.created.eu-central.order-789
+# User operations in tenant accounts
+account acme-corp: orders.created.us-west.order-123
+account startup-inc: orders.created.eu-central.order-789
 
 # Analytics (aggregated)
 analytics.all-tenants.total-orders.created
@@ -291,8 +340,8 @@ analytics.all-tenants.top-customers.by-spend
 ┌─────────────────────────────┐
 │ Tenant Events               │
 ├─────────────────────────────┤
-│ acme-corp.orders.created.>  │
-│ startup-inc.orders.created >│
+│ acme-corp account: orders.>│
+│ startup account: orders.>  │
 └────────────┬────────────────┘
              │ (read)
        ┌─────┴──────┐
@@ -316,9 +365,7 @@ user aggregator-service {
       allow: ["analytics.>"]              # Write to analytics
     }
     subscribe {
-      allow: ["acme-corp.orders.>",
-              "startup-inc.orders.>",
-              "other-tenant.orders.>"]   # Read all tenant order events
+      allow: ["orders.>"]                 # In each imported tenant stream scope
     }
   }
 }
@@ -369,93 +416,95 @@ user platform-admin {
 
 **Subject Format**:
 ```
-agents.{action}.{tenant}.{agent-id}.{details}
-agents.capabilities.{tenant}.{agent-type}
-agents.collaborate.{tenant}.{session}.{agent-id}
-platform.monitoring.all-tenants.agent-health
-platform.monitoring.{tenant}.agent-metrics
+Tenant account:
+agents.{action}.{agent-id}.{details}
+agents.capabilities.{agent-type}
+agents.collaborate.{session}.{agent-id}
+
+Platform account:
+monitoring.all-tenants.agent-health
+monitoring.{tenant}.agent-metrics
 ```
 
 **Examples**:
 ```
-# Agent operations (tenant-isolated)
-agents.task-assigned.tenant-acme.agent-llm-1.task-abc
-agents.task-completed.tenant-acme.agent-llm-1.task-abc
-agents.task-assigned.tenant-startup.agent-code-1.task-xyz
-agents.task-completed.tenant-startup.agent-code-1.task-xyz
+# Tenant ACME account
+agents.task-assigned.agent-llm-1.task-abc
+agents.task-completed.agent-llm-1.task-abc
 
-# Capability discovery (tenant-scoped)
-agents.capabilities.tenant-acme.llm
-agents.capabilities.tenant-acme.code
-agents.capabilities.tenant-startup.llm
+# Tenant Startup account
+agents.task-assigned.agent-code-1.task-xyz
+agents.task-completed.agent-code-1.task-xyz
 
-# Agent collaboration (within tenant)
-agents.collaborate.tenant-acme.session-123.agent-llm-1
-agents.collaborate.tenant-acme.session-123.agent-code-1
+# Capability discovery and collaboration inside a tenant account
+agents.capabilities.llm
+agents.capabilities.code
+agents.collaborate.session-123.agent-llm-1
+agents.collaborate.session-123.agent-code-1
 
-# Platform monitoring (admin only)
-platform.monitoring.all-tenants.agent-health
-platform.monitoring.all-tenants.task-success-rate
-platform.monitoring.tenant-acme.agent-metrics
-platform.monitoring.tenant-acme.error-rate
+# Platform monitoring after explicit imports
+monitoring.all-tenants.agent-health
+monitoring.all-tenants.task-success-rate
+monitoring.tenant-acme.agent-metrics
+monitoring.tenant-acme.error-rate
 ```
 
 **Authorization**:
 ```nats
-# Agent in Tenant A (complete isolation)
+# Agent in Tenant A account
 user agent-tenant-acme {
   permissions {
     publish {
-      allow: ["agents.task-assigned.tenant-acme.>",
-              "agents.task-completed.tenant-acme.>",
-              "agents.collaborate.tenant-acme.>"]
+      allow: ["agents.task-assigned.>",
+              "agents.task-completed.>",
+              "agents.collaborate.>"]
     }
     subscribe {
-      allow: ["agents.task-assigned.tenant-acme.>",
-              "agents.task-completed.tenant-acme.>",
-              "agents.capabilities.tenant-acme.>",
-              "agents.collaborate.tenant-acme.>"]
+      allow: ["agents.task-assigned.>",
+              "agents.task-completed.>",
+              "agents.capabilities.>",
+              "agents.collaborate.>"]
     }
   }
 }
 
-# Agent in Tenant B (isolated from Tenant A)
+# Agent in Tenant B account; same subject permissions, different account boundary
 user agent-tenant-startup {
   permissions {
     publish {
-      allow: ["agents.task-assigned.tenant-startup.>",
-              "agents.task-completed.tenant-startup.>",
-              "agents.collaborate.tenant-startup.>"]
+      allow: ["agents.task-assigned.>",
+              "agents.task-completed.>",
+              "agents.collaborate.>"]
     }
     subscribe {
-      allow: ["agents.task-assigned.tenant-startup.>",
-              "agents.task-completed.tenant-startup.>",
-              "agents.capabilities.tenant-startup.>",
-              "agents.collaborate.tenant-startup.>"]
+      allow: ["agents.task-assigned.>",
+              "agents.task-completed.>",
+              "agents.capabilities.>",
+              "agents.collaborate.>"]
     }
   }
 }
 
-# Platform monitoring (admin)
+# Platform monitoring in platform account
 user platform-monitor {
   permissions {
     publish {
-      allow: ["platform.monitoring.>"]
+      allow: ["monitoring.>"]
     }
     subscribe {
-      allow: ["platform.monitoring.>"]
+      allow: ["monitoring.>"]
     }
   }
 }
 
-# System orchestrator (manages agents)
+# System orchestrator in one tenant account; cross-tenant orchestration uses exports/imports
 user system-orchestrator {
   permissions {
     publish {
-      allow: ["agents.>", "platform.monitoring.>"]
+      allow: ["agents.>"]
     }
     subscribe {
-      allow: ["agents.>", "platform.monitoring.>"]
+      allow: ["agents.>"]
     }
   }
 }
@@ -464,17 +513,17 @@ user system-orchestrator {
 **Security Model**:
 ```
 Tenant A Agents:
-✓ Can publish/subscribe to: agents.*.tenant-acme.>
-✗ Cannot see: agents.*.tenant-startup.>
-✗ Cannot see: platform.monitoring.>
+✓ Can publish/subscribe to: agents.> in tenant-a account
+✗ Cannot see tenant-b account subjects
+✗ Cannot see platform monitoring account unless explicitly imported
 
 Tenant B Agents:
-✓ Can publish/subscribe to: agents.*.tenant-startup.>
-✗ Cannot see: agents.*.tenant-acme.>
-✗ Cannot see: platform.monitoring.>
+✓ Can publish/subscribe to: agents.> in tenant-b account
+✗ Cannot see tenant-a account subjects
+✗ Cannot see platform monitoring account unless explicitly imported
 
 Platform Admin:
-✓ Can see all agent activity
+✓ Can see explicitly exported agent activity
 ✓ Can see metrics and health
 ✓ Cannot directly control agents (separate admin service)
 ```
@@ -482,15 +531,14 @@ Platform Admin:
 **Effectiveness**: ✓ Excellent for agentic AI platforms.
 
 **Pros**:
-- Complete tenant isolation at subject level
+- Complete tenant isolation at account level
 - Platform visibility without tenant access
 - Inter-agent collaboration within tenant
 - Scales to many agents and tenants
 
 **Cons**:
-- More complex subject hierarchy
-- Requires careful permission management
-- Audit trail needs separate subjects
+- Requires account and export/import lifecycle management
+- Audit trail needs platform account subjects
 
 ---
 
@@ -498,32 +546,33 @@ Platform Admin:
 
 **Scenario**: Single NATS cluster serves dev, staging, and production. Complete isolation needed.
 
-**Subject Format**:
+**Account and Subject Format**:
 ```
-{environment}.{tenant}.{domain}.{action}.{scope}.{id}
+Account: {environment}.{tenant}
+Subject: {domain}.{action}.{scope}.{id}
 ```
 
 **Examples**:
 ```
-dev.acme-corp.orders.created.us-west.order-123
-staging.acme-corp.orders.created.us-west.order-456
-prod.acme-corp.orders.created.us-west.order-789
+account dev.acme-corp: orders.created.us-west.order-123
+account staging.acme-corp: orders.created.us-west.order-456
+account prod.acme-corp: orders.created.us-west.order-789
 
-dev.startup-inc.orders.created.eu-central.order-abc
-staging.startup-inc.orders.created.eu-central.order-def
-prod.startup-inc.orders.created.eu-central.order-ghi
+account dev.startup-inc: orders.created.eu-central.order-abc
+account staging.startup-inc: orders.created.eu-central.order-def
+account prod.startup-inc: orders.created.eu-central.order-ghi
 ```
 
 **Authorization**:
 ```nats
-# Dev team (dev environment only)
+# Dev team connects to dev accounts only
 user dev-team {
   permissions {
     publish {
-      allow: ["dev.>"]
+      allow: [">"]
     }
     subscribe {
-      allow: ["dev.>"]
+      allow: [">"]
     }
   }
 }
@@ -532,10 +581,10 @@ user dev-team {
 user staging-team {
   permissions {
     publish {
-      allow: ["staging.>"]
+      allow: [">"]
     }
     subscribe {
-      allow: ["staging.>"]
+      allow: [">"]
     }
   }
 }
@@ -544,22 +593,22 @@ user staging-team {
 user prod-team {
   permissions {
     publish {
-      allow: ["prod.>"]
+      allow: [">"]
     }
     subscribe {
-      allow: ["prod.>"]
+      allow: [">"]
     }
   }
 }
 
-# CI/CD (can promote between environments)
+# CI/CD gets explicit credentials/imports for each environment account it promotes
 user ci-cd {
   permissions {
     publish {
-      allow: ["dev.>", "staging.>", "prod.>"]
+      allow: [">"]
     }
     subscribe {
-      allow: ["dev.>", "staging.>", "prod.>"]
+      allow: [">"]
     }
   }
 }
@@ -568,13 +617,13 @@ user ci-cd {
 **Effectiveness**: ✓ Good for environment isolation.
 
 **Pros**:
-- Single cluster, fully isolated environments
-- Subject-based auth prevents cross-environment leakage
+- Single cluster, fully isolated environment accounts
+- Account-based auth prevents cross-environment leakage
 - Easy to promote from dev → staging → prod
 
 **Cons**:
-- Adds subject layer (more segments)
-- Complex permissions for multi-role users
+- Requires account lifecycle for each environment/tenant pair
+- CI/CD needs carefully scoped credentials or imports
 
 ---
 
@@ -671,14 +720,15 @@ user security-team {
 
 When designing multi-tenant subject architecture:
 
-- [ ] **Tenant Isolation**: Tenant prefix prevents cross-tenant access?
+- [ ] **Tenant Isolation**: Tenant account boundary prevents cross-tenant access?
+- [ ] **Shared Account Justification**: Any tenant prefix fallback has an explicit reason?
+- [ ] **Exports/Imports**: Cross-account traffic is explicit and least-privilege?
 - [ ] **Least Privilege**: Each user/service has minimum permissions?
 - [ ] **Admin Subjects**: Admin operations separate from user operations?
 - [ ] **Audit Trail**: All sensitive operations logged to audit subjects?
-- [ ] **Environment Separation**: Dev/staging/prod isolated by subject?
+- [ ] **Environment Separation**: Dev/staging/prod isolated by account or documented fallback?
 - [ ] **Role-Based**: Roles clearly separated (user/service/admin)?
 - [ ] **Denial Rules**: Explicit deny rules for sensitive subjects?
 - [ ] **Monitoring**: Platform metrics isolated from tenant operations?
 - [ ] **Credential Rotation**: Plan for credential management?
 - [ ] **Documentation**: Permission matrix documented for audit?
-
