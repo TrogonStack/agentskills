@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.1.1...trogonstack-nats@v0.1.2) (2026-05-23)
+
+
+### Bug Fixes
+
+* **nats:** Prefer account tenancy ([#54](https://github.com/TrogonStack/agentskills/issues/54)) ([e2c90ef](https://github.com/TrogonStack/agentskills/commit/e2c90ef2bd06deb71bcee8d3917000e8424753ea))
+
 ## [0.1.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.1.0...trogonstack-nats@v0.1.1) (2026-05-16)
 
 
