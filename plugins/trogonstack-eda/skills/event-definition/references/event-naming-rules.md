@@ -1,6 +1,6 @@
 # Event Naming Rules
 
-Use this reference when the default event-name skill needs examples or edge-case guidance for event names.
+Use this reference when the default event-definition skill needs examples or edge-case guidance for event names.
 
 ## Past Tense
 

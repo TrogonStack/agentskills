@@ -1,6 +1,6 @@
 # Field Naming Rules
 
-Use this reference when the default event-name skill needs examples or edge-case guidance for event payload fields.
+Use this reference when the default event-definition skill needs examples or edge-case guidance for event payload fields.
 
 ## What, Who, When
 

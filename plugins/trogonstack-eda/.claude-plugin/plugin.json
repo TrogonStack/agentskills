@@ -1,6 +1,6 @@
 {
   "name": "trogonstack-eda",
-  "description": "Event-driven architecture skills for designing event names, schemas, contracts, and catalogs following good practices for domain and integration events",
+  "description": "Event-driven architecture skills for designing event definitions, schemas, contracts, and catalogs following good practices for domain and integration events",
   "version": "0.1.0",
   "author": {
     "name": "TrogonStack",
