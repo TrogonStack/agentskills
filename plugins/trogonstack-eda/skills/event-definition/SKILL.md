@@ -1,16 +1,15 @@
 ---
-name: event-name
+name: event-definition
 description: >-
-  Review or create event names and payload field names following
-  event-driven architecture conventions. Covers both domain events
-  (event-sourcing) and integration events (cross-service). Validates
-  tense, specificity, field naming, and metadata placement. Use when
-  designing new events, reviewing existing event definitions, or
-  auditing naming consistency across an event catalog. Do not use for:
-  (1) event schema evolution or versioning strategy (use event-design-contract),
-  (2) full event payload design (use event-design-domain-schema or
-  event-design-integration-schema), (3) event modeling workflows
-  (use trogonstack-eventmodeling skills).
+  Review or create event definitions for event-driven architecture.
+  Covers event names, payload field names, event_type identity, stream
+  naming boundaries, and record metadata/context/payload placement for
+  both domain events (event-sourcing) and integration events (cross-service).
+  Use when designing a new event definition, reviewing an existing event
+  definition, or auditing event definition consistency across a catalog.
+  Do not use for full event modeling workflows (use trogonstack-eventmodeling
+  skills), event schema evolution or migration strategy, or event store
+  implementation design.
 allowed-tools:
   - AskUserQuestion
   - Write
@@ -18,9 +17,9 @@ allowed-tools:
   - Bash
 ---
 
-# Review or Create Event Names
+# Review or Create Event Definitions
 
-Review or create event names and payload field names for event-driven systems. Keep the default pass focused on naming, field placement, and the quality gate; load references only when a decision needs examples, detailed criteria, or deeper modeling guidance.
+Review or create event definitions for event-driven systems. Keep the default pass focused on event identity, naming, field placement, record boundaries, and the quality gate; load references only when a decision needs examples, detailed criteria, or deeper modeling guidance.
 
 ## Progressive Disclosure
 
@@ -33,7 +32,7 @@ Read these references only when the task needs that depth:
 
 ## Core Principle
 
-An event name declares **what happened** as a fact. A payload field name declares **what business fact was captured** about that event.
+An event definition declares **what happened**, **how it is identified**, and **which business facts were captured**.
 
 Keep three layers distinct:
 
@@ -45,13 +44,13 @@ Do not push generic causality, tracing, persistence, or transport facts into the
 
 ## Interview
 
-Before reviewing or creating names, establish:
+Before reviewing or creating event definitions, establish:
 
 1. **Domain or integration?** Domain events live inside a bounded context and are the source of truth for state. Integration events cross service boundaries and form a public contract.
 2. **What business process or workflow does this event belong to?**
 3. **What conventions already exist in the codebase?** If there is an event catalog, read it first and follow it unless it violates these rules.
 
-If the user provides event names to review, skip to the review. If the user asks to design new events, gather the business context first.
+If the user provides event definitions to review, skip to the review. If the user asks to design new event definitions, gather the business context first.
 
 ## Event Naming Rules
 
