@@ -54,6 +54,12 @@
       "description": "Event-driven architecture skills for designing event names, schemas, contracts, and catalogs following good practices for domain and integration events",
       "source": "./plugins/trogonstack-eda",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-product-requirements",
+      "description": "Skills for writing and reviewing Product Requirements Documents (PRDs) and Feature Requirements Documents (FRDs)",
+      "source": "./plugins/trogonstack-product-requirements",
+      "category": "development"
     }
   ]
 }

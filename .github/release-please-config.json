@@ -47,6 +47,9 @@
     },
     "plugins/trogonstack-eda": {
       "component": "trogonstack-eda"
+    },
+    "plugins/trogonstack-product-requirements": {
+      "component": "trogonstack-product-requirements"
     }
   },
   "plugins": [
