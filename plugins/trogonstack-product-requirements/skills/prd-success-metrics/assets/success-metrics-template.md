@@ -4,16 +4,19 @@
 - **Last updated:** <YYYY-MM-DD>
 
 ## Primary outcome metric
+
 | Metric | Baseline | Target | Timeframe | Source |
 |--------|----------|--------|-----------|--------|
 | <metric> | <value> | <value> | <when> | <event / query / dashboard> |
 
 ## Leading indicators
+
 | Metric | Baseline | Target | Timeframe | Source |
 |--------|----------|--------|-----------|--------|
 | <metric> | <value> | <value> | <when> | <source> |
 
 ## Guardrail metrics (must not regress)
+
 | Metric | Current | Threshold | Source |
 |--------|---------|-----------|--------|
 | <metric> | <value> | <max acceptable> | <source> |

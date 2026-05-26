@@ -102,7 +102,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/success-metrics.pr
 
 **Good**
 
-```
+```md
 ## Primary outcome metric
 | Metric | Baseline | Target | Timeframe | Source |
 |--------|----------|--------|-----------|--------|
@@ -131,7 +131,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/success-metrics.pr
 
 **Bad**
 
-```
+```md
 ## Primary outcome metric
 - Engagement
 - Activation

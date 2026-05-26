@@ -90,7 +90,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/business-problem.p
 
 **Good**
 
-```
+```markdown
 ## The Problem
 Mid-market sales reps at companies of 200–2000 employees who manage 30–80 active
 deals at once in Salesforce spend 45–60 minutes per day re-entering deal notes
@@ -119,7 +119,7 @@ forecast accuracy to keep declining into Q4 board reviews and to lose another
 
 **Bad**
 
-```
+```markdown
 ## The Problem
 Our users find the current experience frustrating and want something better.
 

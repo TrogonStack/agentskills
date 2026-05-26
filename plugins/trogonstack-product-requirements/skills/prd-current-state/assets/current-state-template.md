@@ -15,6 +15,7 @@
 - <tool / product / process>: <why it falls short>
 
 ## Cost of the status quo
+
 | Cost | Measure | Source |
 |------|---------|--------|
 | <time / errors / revenue / toil> | <number with unit> | <how known> |

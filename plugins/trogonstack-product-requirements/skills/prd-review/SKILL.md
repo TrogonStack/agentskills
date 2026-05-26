@@ -35,7 +35,7 @@ Resolve the `projectid` before reading:
 
 Expected layout:
 
-```
+```text
 .trogonai/project/{projectid}/prd/
 ├── business-problem.prd.md
 ├── current-state.prd.md

@@ -87,7 +87,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/personas.prd.md` u
 
 **Good**
 
-```
+```markdown
 ## Primary: Mid-market Account Executive
 - **Context:** Works from a laptop between back-to-back Zoom calls; 30–80 active opportunities; reports to a Sales Manager who runs weekly pipeline review.
 - **Job to be done:** "End the day knowing every deal moved forward, without spending the evening typing notes."
@@ -110,7 +110,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/personas.prd.md` u
 
 **Bad**
 
-```
+```markdown
 ## Primary: Sales user
 - **Context:** Uses our product.
 - **Job to be done:** Sell more.

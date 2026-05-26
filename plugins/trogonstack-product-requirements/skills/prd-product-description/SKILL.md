@@ -54,7 +54,7 @@ Ask until all are answered:
 3. **Major components**: the named pieces that make up the product (e.g., onboarding flow, ingestion pipeline, dashboard, notification engine). Three to seven is typical; if there are more than ten, group them.
 4. **How the pieces fit together**: a simple flow describing input → processing → output, or the path a user takes through the surfaces. A short ASCII or text diagram is welcome; do not require formal modeling here.
 5. **Primary user flow**: the happy-path scenario for the primary persona in three to seven steps.
-6. **Boundaries (what the product is NOT**) adjacent surfaces, capabilities, or use cases that someone might assume are in but are not. This is the cheapest place to prevent scope creep.
+6. **Boundaries (what the product is NOT)**: adjacent surfaces, capabilities, or use cases that someone might assume are in but are not. This is the cheapest place to prevent scope creep.
 
 Push back on:
 
@@ -97,7 +97,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/product-descriptio
 
 **Good**
 
-```
+```markdown
 ## One-liner
 A mid-market AE can capture a deal update in under 30 seconds after a Zoom call,
 so Salesforce stays current without evening data entry.
@@ -126,7 +126,7 @@ so Salesforce stays current without evening data entry.
 
 **Bad**
 
-```
+```markdown
 ## One-liner
 A platform for sales productivity.
 

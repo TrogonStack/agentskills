@@ -157,7 +157,7 @@ If refining an existing FRD, call out likely downstream Blueprint or Work Order 
 
 **Good**
 
-```
+```markdown
 REQ-CHK-003: Payment Confirmation
 
 User Story: As a customer, I want to receive confirmation after my payment is processed, so that I can know my order was placed successfully.
@@ -170,7 +170,7 @@ Acceptance Criteria:
 
 **Bad** (reject this shape)
 
-```
+```markdown
 REQ-CHK-003: Payment Confirmation
 
 User Story: As a user, I want payment to work.

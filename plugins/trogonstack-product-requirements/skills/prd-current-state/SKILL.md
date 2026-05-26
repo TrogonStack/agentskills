@@ -80,7 +80,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/current-state.prd.
 
 **Good**
 
-```
+```markdown
 ## How the job gets done today
 1. Rep finishes a Zoom call. Notes are in Zoom chat, a physical notebook, or both.
 2. Rep opens Salesforce, finds the right opportunity, copy-pastes notes into the Activity log.
@@ -101,7 +101,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/current-state.prd.
 
 **Bad**
 
-```
+```markdown
 ## How the job gets done today
 1. Users use Salesforce.
 2. They enter their notes.

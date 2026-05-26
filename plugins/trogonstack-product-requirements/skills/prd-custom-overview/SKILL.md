@@ -97,7 +97,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/{slug}.prd.md` usi
 
 **Good**
 
-```
+```markdown
 # Rollout Strategy
 
 ## Purpose
@@ -113,7 +113,7 @@ The first cohort is limited to existing mid-market customers with Salesforce and
 
 **Bad**
 
-```
+```markdown
 # Misc Notes
 
 This document has everything we did not put elsewhere. It includes rollout,

@@ -142,7 +142,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/technical-requirem
 
 **Good**
 
-```
+```md
 ## Performance
 | User action | Metric | Target | Conditions |
 |-------------|--------|--------|------------|
@@ -170,7 +170,7 @@ Write the complete file to `.trogonai/project/{projectid}/prd/technical-requirem
 
 **Bad**
 
-```
+```md
 ## Performance
 - Should be fast.
 

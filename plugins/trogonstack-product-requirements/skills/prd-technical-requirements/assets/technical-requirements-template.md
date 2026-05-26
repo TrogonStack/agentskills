@@ -4,6 +4,7 @@
 - **Last updated:** <YYYY-MM-DD>
 
 ## Performance
+
 | User action | Metric | Target | Conditions |
 |-------------|--------|--------|------------|
 | <action> | p95 latency | <ms> | <hardware / network> |
@@ -31,6 +32,7 @@
 - Audit logging: <scope>
 
 ## Integrations
+
 | System | Direction | Contract | Failure semantics |
 |--------|-----------|----------|-------------------|
 | <name> | in / out | <API / event / file> | <retry / dead-letter / fail-open> |

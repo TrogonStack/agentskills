@@ -79,7 +79,7 @@ Before writing, read back every requirement and where it lands. Get explicit con
 
 After a SPLIT or NEST under a parent:
 
-```
+```text
 .trogonai/project/{projectid}/frd/{parent-slug}/
 ├── index.frd.md
 ├── {child-1-slug}.frd.md
