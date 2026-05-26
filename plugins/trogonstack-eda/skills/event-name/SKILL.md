@@ -24,7 +24,15 @@ Review or create event names and payload field names that follow event-driven ar
 
 ## Core Principle
 
-An event name declares **what happened** as a fact. A field name declares **what was captured** about that fact. Everything else — who emitted it, which service, which environment — belongs in metadata or envelope, not in the event name or field names.
+An event name declares **what happened** as a fact. A payload field name declares **what business fact was captured** about that event.
+
+Keep three layers distinct:
+
+- **Record metadata**: event-store facts such as `event_id`, `stream_id`, `stream_version`, and `recorded_at`
+- **Event context/envelope**: generic event-sourcing facts such as `event_type`, `actor_id`, `on_behalf_of`, `occurred_at`, `correlation_id`, and `causation_id`
+- **Payload**: domain facts such as `order_id`, `owner_id`, `approved_by`, `effective_at`, and `expires_at`
+
+Do not push generic causality, tracing, persistence, or transport facts into the domain payload. Do keep actor and time fields in the payload when they are part of the domain rule.
 
 ## Interview
 
@@ -136,16 +144,63 @@ Negative event names usually hide a positive event with a reason. Prefer the pos
 
 If a negative sounds natural in the domain (e.g., `ClaimDenied`), that's fine — it's domain language, not a negation of another event.
 
-### Event Versioning — Keep It Out of the Name
+### Event Type Is The Schema Discriminator
 
-Do not embed version numbers in event names. Use `schema_version` in metadata instead.
+Use one canonical discriminator for routing and decoding.
+
+Persisted `event_type` should be self-identifying for the domain/event schema contract. Short names are acceptable as local code aliases, but the durable value should not depend on parsing the stream name.
+
+For protobuf-style contracts, prefer an event type or type URL that maps directly to the wire contract. Do not assume the stream namespace version is the same thing as the event schema revision.
 
 | Good | Bad | Why bad |
 |------|-----|---------|
-| `OrderPlaced` + `schema_version: 2` | `OrderPlacedV2` | Pollutes the name, couples consumers to version |
-| `InvoiceIssued` + `schema_version: 3` | `InvoiceIssuedV3` | Every version change requires new consumer routing |
+| `trogon.cron.jobs.v1.JobPaused` | `JobPaused` + `schema_version: 1` | Splits one discriminator across two fields |
+| `type.googleapis.com/acme.orders.v1.OrderPlacedV2` | `type.googleapis.com/acme.orders.v2.OrderPlaced` | Bumps the stream namespace when only the event schema changed |
+| `billing.v1.InvoiceIssued` | `InvoiceIssued` with no schema identity | Ambiguous across producers and decoders |
 
-Versioning belongs in the event envelope. The event name describes what happened — that doesn't change when you add a field to the payload.
+Do not carry both a versioned `event_type` and a separate `schema_version` when both encode the same schema version.
+
+Use a separate `schema_version`, schema registry id, descriptor, or type URL only when `event_type` is intentionally an unversioned semantic label and another field is required to select the decoder.
+
+Keep `event_type` stable for compatible additive changes. Use a revision such as `OrderPlacedV2` only when the event schema or semantic contract changes incompatibly.
+
+Distinguish stream version from event schema revision:
+
+- **Stream version** identifies the stream family, namespace, routing contract, or compatibility boundary.
+- **Event schema revision** identifies the shape of one event inside that stream.
+
+If only one event schema changes, keep the stream namespace stable and revise the event type: `stream: acme.orders.v1`, `event_type: type.googleapis.com/acme.orders.v1.OrderPlacedV2`. Do not use `type.googleapis.com/acme.orders.v2.OrderPlaced` for a single event shape change.
+
+Bump the stream namespace only when the stream contract itself changes, such as routing, partitioning, stream identity, ordering semantics, or compatibility for the event family.
+
+### Stream Names Are Storage Addresses
+
+Stream names do not need to repeat the full event type or schema identity. Once `event_type` is self-identifying, keep stream names compact, readable, and focused on storage concerns:
+
+- tenant or account partition
+- aggregate/resource identity
+- short stable domain code when it is documented
+- backend routing or ordering needs
+
+Good:
+
+```text
+stream_name: tenant/tenant_123/orders/order_456
+event_type:  acme.orders.v1.OrderPlacedV2
+metadata:
+  tenant_id: tenant_123
+```
+
+Use shorter codes such as `tenant/tenant_123/ord/order_456` only when they are documented and useful to operators.
+
+Bad because schema identity leaks into storage layout:
+
+```text
+stream_name: tenants/tenant_123/acme.orders.v1.OrderPlacedV2/orders/order_456
+event_type:  OrderPlacedV2
+```
+
+Keep tenant, environment, region, or shard values out of `event_type`. Put them in the stream name/subject for routing and in metadata/context when consumers need them without parsing the stream.
 
 ## Integration Event Naming — Additional Rules
 
@@ -174,21 +229,34 @@ Integration events form a public contract. Use terms that consumers across teams
 
 ### The What, Who, When Principle
 
-Every event should capture three things:
+Every persisted event record should capture three things:
 
-- **What** happened — the event name itself (`OrderPlaced`, `ClaimApproved`)
-- **Who** caused it — `_by` suffix fields (`placed_by`, `approved_by`)
-- **When** it happened — `_at` suffix fields (`placed_at`, `approved_at`)
+- **What** happened — `event_type` or the typed event name (`OrderPlaced`, `ClaimApproved`)
+- **Which actor** initiated it — event context such as `actor_id`
+- **When** it happened — event context such as `occurred_at`
 
+Generic Who and When belong in event context, not automatically in payload fields:
+
+```text
+RecordedEvent
+  event_type: "trogon.cron.jobs.v1.JobPaused"
+  context:
+    actor_id: "users/usr_123"
+    occurred_at: "2026-04-30T10:00:00Z"
+  payload:
+    job_id: "jobs/job_456"
 ```
-OrderPlaced              ← What
-  placed_by: "customer-123"   ← Who
-  placed_at: "2026-04-30T..."  ← When
-  order_id: "order-456"
-  items: [...]
+
+Use payload `_by`, `_at`, or `_on` fields only when the actor or time is part of the domain fact:
+
+```text
+ClaimApproved
+  claim_id: "claim-123"
+  approved_by: "adjusters/adj_456"
+  effective_at: "2026-05-01T00:00:00Z"
 ```
 
-**Strongly recommend including all three.** If an event is missing Who or When, flag it and suggest adding them. Events without attribution or timestamps lose forensic and audit value that is nearly impossible to recover later. System-initiated events should still capture the actor explicitly (e.g., `initiated_by: "scheduler"`).
+Flag missing Who or When at the record/context level first. Flag missing payload `_by` or `_at` fields only when that actor or timestamp is itself a domain fact.
 
 ### 9. Domain Language for Fields Too
 
@@ -219,9 +287,9 @@ Always suffix identifiers with what they reference. Never use bare `id`.
 | `placed_at` | `place_time` | Not past tense |
 | `shipped_on` | `ship_date` | Not past tense |
 | `confirmed_at` | `confirmation_timestamp` | Verbose, inconsistent |
-| `occurred_at` | `timestamp` | Generic, unclear what time it refers to |
+| `occurred_at` in context | `timestamp` | Generic, unclear what time it refers to |
 
-Pick `_at` (for datetime with time) or `_on` (for date only) and be consistent.
+Pick `_at` (for datetime with time) or `_on` (for date only) and be consistent. Keep generic occurrence time in context; keep business times such as `effective_at`, `expires_at`, `scheduled_for`, or `starts_at` in payload.
 
 ### 12. Prefer Enums Over Booleans
 
@@ -254,24 +322,84 @@ Domain events capture raw facts. Computed values belong in read models.
 
 This rule does NOT apply to integration events — integration events may include pre-computed values to avoid forcing consumers to replicate business logic.
 
-### 14. Metadata vs Domain Fields
+### 14. Event Record Layers
 
-Separate envelope/metadata from the business payload. Metadata fields describe the event itself, not the business fact.
+Separate record metadata, event context, and business payload.
 
-**Metadata (envelope):**
-- `event_id` — unique identifier for this event instance
-- `event_type` — the event name (redundant with deserialization but useful for routing)
-- `occurred_at` — when the business fact happened
-- `recorded_at` — when the event was persisted (may differ from occurred_at)
-- `correlation_id` — ties related events across a workflow
-- `causation_id` — the command or event that caused this event
-- `source` — originating service/context (integration events)
-- `schema_version` — payload schema version
+**Record metadata:**
+- `event_id` — unique identifier for this stored event
+- `stream_id` — compact storage stream name or id that contains the event
+- `stream_version` — event position in that stream
+- `recorded_at` — when the event store persisted the event
+
+**Event context/envelope:**
+- `event_type` — canonical routing and decoding discriminator
+- `actor_id` — actor associated with the command or event context
+- `on_behalf_of` — actor represented by another actor, when delegated
+- `occurred_at` — when the producer says the event happened
+- `correlation_id` — ties events across one workflow
+- `causation_id` — command or event that caused this event
+- `source` — originating service/context for integration events
 
 **Domain fields (payload):**
-Everything specific to the business fact: `order_id`, `customer_id`, `total_amount`, `items[]`, etc.
+Everything specific to the business fact: `order_id`, `customer_id`, `owner_id`, `approved_by`, `effective_at`, `total_amount`, `items[]`, etc.
 
-### 15. Monetary Amounts Must Include Currency
+Use this test for each field:
+
+```text
+Is this field needed to express or enforce the business fact?
+```
+
+If yes, keep it in the payload. If it is generic causality, tracing, workflow identity, transport, or persistence context, keep it outside the payload.
+
+Do not duplicate generic context in payload once readers can access event context. During migration, duplicated fields such as `added_by`, `added_at`, `paused_by`, or `paused_at` may remain until consumers can rely on context.
+
+### 15. Actor Context Enforcement
+
+Do not rely on event authors remembering to add actor and timestamp fields.
+
+The command execution or append boundary must require typed context:
+
+```text
+DomainEvent + CommandContext -> RecordedEvent
+```
+
+`CommandContext` or `EventContext` should carry required fields such as `actor_id`, `occurred_at`, `correlation_id`, and `causation_id`.
+
+Review for these enforcement points:
+
+- append APIs cannot persist bare payloads without context
+- raw `RecordedEvent` construction is hidden from application code
+- required context fields are non-optional or validated before append
+- system work uses explicit actors such as `systems/cron` or `services/scheduler`
+
+Payload `_by` and `_at` checks are migration or domain-fact checks. They are not the primary proof of actor context once typed context exists.
+
+### 16. Ownership And Authorization
+
+`context.actor_id` is not ownership.
+
+Use `actor_id` as the actor attempting the command. Validate ownership or permission against aggregate state, a policy service, or a read model before emitting events.
+
+Keep actor relationships in payload when they are business facts:
+
+- `owner_id`
+- `grantee`
+- `approved_by`
+- `assigned_to`
+- `tenant_id`
+
+If ownership can change over time, model that explicitly with events such as `OwnershipTransferred` or `PermissionGranted`.
+
+### 17. Deterministic Handler Inputs
+
+Event handlers and projections should consume immutable `RecordedEvent` data.
+
+Pure handlers should not call clocks, random ID generators, actor lookup, or authorization services during replay. Tests should build fixed recorded-event fixtures with stable record metadata, context, and payload.
+
+If processing time is needed, record it as handler/runtime metadata such as `processed_at`, not by mutating the original event.
+
+### 18. Monetary Amounts Must Include Currency
 
 A bare amount field is incomplete. Always pair with currency or use a composite money object.
 
@@ -283,7 +411,7 @@ A bare amount field is incomplete. Always pair with currency or use a composite 
 
 For domain events, capture the currency at the time of the fact — currencies can change between events.
 
-### 16. Collection Fields Use Plural, Scalars Use Singular
+### 19. Collection Fields Use Plural, Scalars Use Singular
 
 | Good | Bad | Why bad |
 |------|-----|---------|
@@ -291,7 +419,7 @@ For domain events, capture the currency at the time of the fact — currencies c
 | `line_items` (array) | `line_item_list` | Redundant suffix — plural already signals a collection |
 | `shipping_address` (object) | `shipping_addresses` (for one) | Misleading — suggests multiple |
 
-### 17. No Polymorphic Payloads
+### 20. No Polymorphic Payloads
 
 An event whose payload shape changes based on a `type` or `kind` field is really multiple events. Split them.
 
@@ -302,7 +430,7 @@ An event whose payload shape changes based on a `type` or `kind` field is really
 
 If every instance of the event has the same fields regardless of a status value, that's fine — it's not polymorphic, it's a field with valid values.
 
-### 18. PII and Sensitive Data — Use Indirection
+### 21. PII and Sensitive Data — Use Indirection
 
 Events are immutable. PII stored directly in events is nearly impossible to delete (GDPR right to erasure, CCPA). Reference sensitive data by ID instead of inlining it.
 
@@ -316,7 +444,7 @@ Store PII in a mutable store keyed by ID. Events reference the ID. When deletion
 
 Flag any PII found directly in event payloads and suggest replacing with an identifier reference.
 
-### 19. Consistent Casing for Fields
+### 22. Consistent Casing for Fields
 
 Pick one and apply it consistently:
 
@@ -336,22 +464,29 @@ When reviewing event definitions, verify:
 5. No redundant suffixes (`Event`, `Message`, `Notification`)
 6. No infrastructure or technology in event names
 7. No negatives in event names — use positive form with a reason field
-8. No version numbers in event names — use `schema_version` in metadata
-9. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
-10. Integration events are prefixed with bounded context or service name
-11. Integration events use shared vocabulary, not internal jargon
-12. Event includes Who (`_by`) and When (`_at`) fields
-13. Field names use domain language, no abbreviations
-14. Identifiers are explicit (`order_id` not `id`)
-15. Temporal fields use `_at` or `_on` suffix with past tense
-16. Enums preferred over booleans; booleans use predicate form when unavoidable
-17. No polymorphic payloads — split into separate events
-18. No PII directly in payloads — use identifier references
-19. Monetary amounts include currency
-20. Collection fields are plural, scalar fields are singular
-21. Domain event payloads contain no computed or derived fields
-22. Metadata fields are separated from domain fields
-23. Field casing is consistent across the system
+8. Persisted `event_type` is self-identifying for the domain/event schema contract
+9. Event type uses one canonical schema discriminator; do not duplicate the same version in both `event_type` and `schema_version`
+10. Event type revisions such as `OrderPlacedV2` are reserved for incompatible schema or semantic changes
+11. Naming format (PascalCase, dot.delimited, etc.) is consistent across the system
+12. Integration events are prefixed with bounded context or service name
+13. Integration events use shared vocabulary, not internal jargon
+14. Event captures Who and When through typed event context, or through payload fields only when the actor or time is part of the domain fact
+15. Field names use domain language, no abbreviations
+16. Identifiers are explicit (`order_id` not `id`)
+17. Temporal fields use `_at` or `_on` suffix with past tense
+18. Enums preferred over booleans; booleans use predicate form when unavoidable
+19. No polymorphic payloads — split into separate events
+20. No PII directly in payloads — use identifier references
+21. Monetary amounts include currency
+22. Collection fields are plural, scalar fields are singular
+23. Domain event payloads contain no computed or derived fields
+24. Record metadata, event context, and payload fields are separated
+25. Generic causality, occurrence time, correlation, causation, and persistence metadata are not duplicated in payload once typed context is available
+26. Stream names are compact readable storage addresses, not the source of schema identity
+27. Tenant, environment, region, and shard values are outside `event_type` and present in metadata/context when consumers need them
+28. Ownership or authorization is validated against domain state or policy, not inferred from `actor_id`
+29. Event handlers can be tested with immutable recorded-event fixtures
+30. Field casing is consistent across the system
 
 ## Output
 
@@ -360,3 +495,4 @@ Provide:
 - Suggested corrections for any violations
 - Domain vs integration classification if not already clear
 - Field naming corrections with rationale
+- Payload vs context classification for disputed actor, time, causality, and schema identity fields
