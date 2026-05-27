@@ -1,0 +1,22 @@
+name: validate-plugins
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**"
+      - ".claude-plugin/marketplace.json"
+      - ".github/release-please-config.json"
+      - ".github/release-please-manifest.json"
+      - "scripts/validate-plugins.mjs"
+      - ".github/workflows/validate-plugins.yml"
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate plugin registrations
+        run: node scripts/validate-plugins.mjs
