@@ -1,0 +1,38 @@
+name: SKILL.md Frontmatter Lint
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**/SKILL.md"
+  push:
+    branches:
+      - main
+    paths:
+      - "plugins/**/SKILL.md"
+
+permissions:
+  contents: read
+
+jobs:
+  lint-description:
+    name: Reject multi-line YAML descriptions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SKILL.md descriptions are single-line
+        run: |
+          set -e
+          # skills.sh meta-tag generator does not parse YAML scalar styles
+          # (vercel-labs/skills#433), so multi-line frontmatter descriptions
+          # render the literal indicator (e.g. `>-`) instead of the text.
+          bad=$(grep -rnE '^description:[[:space:]]*([>|]|$)' plugins/ --include=SKILL.md || true)
+          if [ -n "$bad" ]; then
+            echo "::error::SKILL.md descriptions must be a single-line plain or quoted string."
+            echo "::error::See vercel-labs/skills#433 — skills.sh does not parse YAML folded/literal scalars."
+            echo ""
+            echo "Offending files:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "All SKILL.md descriptions are single-line."
