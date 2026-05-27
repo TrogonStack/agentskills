@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-brainstorming-events
-description: >-
-  Step 1 of Event Modeling - Brainstorm all domain events from requirements.
-  Extract every state-changing event the system could have. Use when starting
-  event modeling from requirements or a new domain. Do not use for: arranging
-  events in sequence (use eventmodeling-plotting-events), designing commands
-  or read models (use eventmodeling-designing-event-models), or when a complete
-  event list already exists.
+description: "Step 1 of Event Modeling - Brainstorm all domain events from requirements. Extract every state-changing event the system could have. Use when starting event modeling from requirements or a new domain. Do not use for: arranging events in sequence (use eventmodeling-plotting-events), designing commands or read models (use eventmodeling-designing-event-models), or when a complete event list already exists."
 allowed-tools:
   - AskUserQuestion
   - Write

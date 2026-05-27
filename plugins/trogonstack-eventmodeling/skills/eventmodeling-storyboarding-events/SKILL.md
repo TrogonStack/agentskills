@@ -1,11 +1,6 @@
 ---
 name: eventmodeling-storyboarding-events
-description: >-
-  Step 3 of Event Modeling - Create UI storyboards/mockups showing what users
-  see at each step. Capture all data fields needed from user perspective. Use
-  after sequencing events. Do not use for: identifying commands or processor
-  actions (use eventmodeling-identifying-inputs) or designing read models
-  (use eventmodeling-identifying-outputs).
+description: "Step 3 of Event Modeling - Create UI storyboards/mockups showing what users see at each step. Capture all data fields needed from user perspective. Use after sequencing events. Do not use for: identifying commands or processor actions (use eventmodeling-identifying-inputs) or designing read models (use eventmodeling-identifying-outputs)."
 allowed-tools:
   - AskUserQuestion
   - Write

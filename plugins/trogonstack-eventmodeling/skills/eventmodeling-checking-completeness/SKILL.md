@@ -1,11 +1,6 @@
 ---
 name: eventmodeling-checking-completeness
-description: >-
-  Step 8 of Event Modeling - Completeness Check. Verify every field has origin
-  and destination. Ensure complete event model before code generation. Use after
-  all scenarios defined. Do not use for: architectural validation against event sourcing
-  principles (use eventmodeling-validating-event-models) or elaborating
-  Given-When-Then specs (use eventmodeling-elaborating-scenarios).
+description: "Step 8 of Event Modeling - Completeness Check. Verify every field has origin and destination. Ensure complete event model before code generation. Use after all scenarios defined. Do not use for: architectural validation against event sourcing principles (use eventmodeling-validating-event-models) or elaborating Given-When-Then specs (use eventmodeling-elaborating-scenarios)."
 allowed-tools:
   - Write
 ---

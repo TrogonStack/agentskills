@@ -1,11 +1,6 @@
 ---
 name: eventmodeling-identifying-inputs
-description: >-
-  Step 4 of Event Modeling - Identify Commands/Inputs from UI and Processor
-  actions. Map user actions to commands and data. Use after storyboarding UI.
-  Do not use for: identifying read models or outputs (use
-  eventmodeling-identifying-outputs) or elaborating behavior specifications
-  (use eventmodeling-elaborating-scenarios).
+description: "Step 4 of Event Modeling - Identify Commands/Inputs from UI and Processor actions. Map user actions to commands and data. Use after storyboarding UI. Do not use for: identifying read models or outputs (use eventmodeling-identifying-outputs) or elaborating behavior specifications (use eventmodeling-elaborating-scenarios)."
 allowed-tools:
   - AskUserQuestion
   - Write

@@ -1,11 +1,6 @@
 ---
 name: eventmodeling-applying-conways-law
-description: >-
-  Step 6 of Event Modeling - Apply Conway's Law with swimlanes. Organize events
-  into autonomous system parts that different teams can independently own. Use
-  after defining inputs/outputs. Do not use for: planning feature slice
-  implementation order (use eventmodeling-slicing-event-models) or defining
-  command/read model boundaries (use eventmodeling-designing-event-models).
+description: "Step 6 of Event Modeling - Apply Conway's Law with swimlanes. Organize events into autonomous system parts that different teams can independently own. Use after defining inputs/outputs. Do not use for: planning feature slice implementation order (use eventmodeling-slicing-event-models) or defining command/read model boundaries (use eventmodeling-designing-event-models)."
 allowed-tools:
   - AskUserQuestion
   - Write

@@ -1,14 +1,6 @@
 ---
 name: eventmodeling-orchestrating-event-modeling
-description: >-
-  Orchestrates complete event modeling workflow from requirements to code
-  generation. Models architecture as UI/Processor → Command → Event → Read
-  Model. Use when modeling a domain end-to-end from requirements. Do not use
-  for: executing a single step in isolation (invoke the named step skill
-  directly, e.g., eventmodeling-brainstorming-events for Step 1 or
-  eventmodeling-elaborating-scenarios for Step 7), validating an
-  already-completed model (use eventmodeling-validating-event-models), or
-  modernizing legacy systems (use eventmodeling-integrating-legacy-systems).
+description: "Orchestrates complete event modeling workflow from requirements to code generation. Models architecture as UI/Processor → Command → Event → Read Model. Use when modeling a domain end-to-end from requirements. Do not use for: executing a single step in isolation (invoke the named step skill directly, e.g., eventmodeling-brainstorming-events for Step 1 or eventmodeling-elaborating-scenarios for Step 7), validating an already-completed model (use eventmodeling-validating-event-models), or modernizing legacy systems (use eventmodeling-integrating-legacy-systems)."
 allowed-tools:
   - AskUserQuestion
   - Write

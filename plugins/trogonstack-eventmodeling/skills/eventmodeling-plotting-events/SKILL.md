@@ -1,11 +1,6 @@
 ---
 name: eventmodeling-plotting-events
-description: >-
-  Step 2 of Event Modeling - Arrange events chronologically in logical narrative
-  sequence. Create timeline showing event flow and dependencies. Use after
-  brainstorming events. Do not use for: brainstorming new events (use
-  eventmodeling-brainstorming-events) or designing command/read model
-  architecture (use eventmodeling-designing-event-models).
+description: "Step 2 of Event Modeling - Arrange events chronologically in logical narrative sequence. Create timeline showing event flow and dependencies. Use after brainstorming events. Do not use for: brainstorming new events (use eventmodeling-brainstorming-events) or designing command/read model architecture (use eventmodeling-designing-event-models)."
 allowed-tools:
   - Write
 ---

@@ -1,13 +1,6 @@
 ---
 name: eventmodeling-validating-event-models
-description: >-
-  Step 9 of Event Modeling - Validate event-sourced models for completeness,
-  consistency, and event sourcing principles. Ensures events are immutable facts,
-  state projections are deterministic, and commands are pure. Identifies gaps and
-  suggests improvements before code generation. Use when reviewing models before
-  code generation. Do not use for: the structured 23-check production checklist
-  (use eventmodeling-validating-event-models-checklist) or field-level
-  completeness verification (use eventmodeling-checking-completeness).
+description: "Step 9 of Event Modeling - Validate event-sourced models for completeness, consistency, and event sourcing principles. Ensures events are immutable facts, state projections are deterministic, and commands are pure. Identifies gaps and suggests improvements before code generation. Use when reviewing models before code generation. Do not use for: the structured 23-check production checklist (use eventmodeling-validating-event-models-checklist) or field-level completeness verification (use eventmodeling-checking-completeness)."
 allowed-tools:
   - Write
 ---

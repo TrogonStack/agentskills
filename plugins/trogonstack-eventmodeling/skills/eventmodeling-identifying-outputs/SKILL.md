@@ -1,10 +1,6 @@
 ---
 name: eventmodeling-identifying-outputs
-description: >-
-  Step 5 of Event Modeling - Identify Outputs/Read Models from events. Show
-  what data flows back to UI and Processors. Use after defining inputs. Do not
-  use for: identifying commands or inputs (use eventmodeling-identifying-inputs)
-  or verifying field completeness (use eventmodeling-checking-completeness).
+description: "Step 5 of Event Modeling - Identify Outputs/Read Models from events. Show what data flows back to UI and Processors. Use after defining inputs. Do not use for: identifying commands or inputs (use eventmodeling-identifying-inputs) or verifying field completeness (use eventmodeling-checking-completeness)."
 allowed-tools:
   - AskUserQuestion
   - Write
