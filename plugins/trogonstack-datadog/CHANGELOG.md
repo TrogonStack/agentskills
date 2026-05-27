@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.1...trogonstack-datadog@v0.3.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* Inline SKILL.md descriptions for skills.sh rendering ([#62](https://github.com/TrogonStack/agentskills/issues/62)) ([5fa537a](https://github.com/TrogonStack/agentskills/commit/5fa537a46e74f30406abaccffc170fd855c08f0f))
+
 ## [0.3.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.0...trogonstack-datadog@v0.3.1) (2026-05-16)
 
 
