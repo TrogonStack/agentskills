@@ -1,13 +1,6 @@
 ---
 name: eventmodeling-designing-event-models
-description: >-
-  Designs event-sourced domain models. Maps business processes to immutable
-  events and state projections. Events are the source of truth; state is
-  derived from events for command validation. Use when designing event streaming
-  architectures from domain analysis. Do not use for: brainstorming events from
-  scratch (use eventmodeling-brainstorming-events), optimizing stream sizing
-  or snapshotting (use eventmodeling-optimizing-stream-design), or translating
-  external system events (use eventmodeling-translating-external-events).
+description: "Designs event-sourced domain models. Maps business processes to immutable events and state projections. Events are the source of truth; state is derived from events for command validation. Use when designing event streaming architectures from domain analysis. Do not use for: brainstorming events from scratch (use eventmodeling-brainstorming-events), optimizing stream sizing or snapshotting (use eventmodeling-optimizing-stream-design), or translating external system events (use eventmodeling-translating-external-events)."
 allowed-tools:
   - AskUserQuestion
   - Write

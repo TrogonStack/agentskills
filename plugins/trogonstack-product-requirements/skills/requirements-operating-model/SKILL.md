@@ -1,13 +1,6 @@
 ---
 name: requirements-operating-model
-description: >-
-  Apply the shared Requirements operating model across product-requirements
-  skills: Requirements / Blueprints / Work Orders boundaries,
-  single source-of-truth ownership, TrogonStack ask-question-compatible
-  clarification, Product Overview / FRD scope, feature hierarchy, and
-  downstream impact. Use alongside PRD or FRD writing, review, split, or
-  getting-started work when cross-document consistency, ambiguity, or module
-  handoff matters.
+description: "Apply the shared Requirements operating model across product-requirements skills: Requirements / Blueprints / Work Orders boundaries, single source-of-truth ownership, TrogonStack ask-question-compatible clarification, Product Overview / FRD scope, feature hierarchy, and downstream impact. Use alongside PRD or FRD writing, review, split, or getting-started work when cross-document consistency, ambiguity, or module handoff matters."
 allowed-tools:
   - AskUserQuestion
   - Read

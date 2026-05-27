@@ -1,15 +1,6 @@
 ---
 name: nats-design-subject
-description: >-
-  Design NATS subject hierarchies for messaging patterns (pub/sub, request/reply,
-  streaming). Apply naming conventions, segmentation strategies, and wildcard
-  patterns to create scalable subject architectures. Use when designing NATS
-  messaging systems, choosing account-vs-subject namespace boundaries for
-  multi-tenant communication, designing export/import subjects, or auditing
-  existing subject hierarchies. Do not use for: (1) NATS server or account
-  provisioning, (2) cluster setup, (3) client library implementation or
-  connection code, (4) debugging connectivity or performance issues, (5)
-  choosing between NATS and other messaging systems.
+description: "Design NATS subject hierarchies for messaging patterns (pub/sub, request/reply, streaming). Apply naming conventions, segmentation strategies, and wildcard patterns to create scalable subject architectures. Use when designing NATS messaging systems, choosing account-vs-subject namespace boundaries for multi-tenant communication, designing export/import subjects, or auditing existing subject hierarchies. Do not use for: (1) NATS server or account provisioning, (2) cluster setup, (3) client library implementation or connection code, (4) debugging connectivity or performance issues, (5) choosing between NATS and other messaging systems."
 allowed-tools:
   - AskUserQuestion
   - Write

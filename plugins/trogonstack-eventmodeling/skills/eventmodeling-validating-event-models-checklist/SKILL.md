@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-validating-event-models-checklist
-description: >-
-  Validate event-sourced CQRS models against 16 architectural checks across
-  7 phases. Identifies anti-patterns and confirms compliance with event sourcing
-  principles. Use when reviewing event models for production readiness or after
-  completing event modeling steps. Do not use for: reviewing incomplete or
-  in-progress models (use eventmodeling-validating-event-models), or for
-  elaborating new scenarios (use eventmodeling-elaborating-scenarios).
+description: "Validate event-sourced CQRS models against 16 architectural checks across 7 phases. Identifies anti-patterns and confirms compliance with event sourcing principles. Use when reviewing event models for production readiness or after completing event modeling steps. Do not use for: reviewing incomplete or in-progress models (use eventmodeling-validating-event-models), or for elaborating new scenarios (use eventmodeling-elaborating-scenarios)."
 allowed-tools:
   - Write
 ---

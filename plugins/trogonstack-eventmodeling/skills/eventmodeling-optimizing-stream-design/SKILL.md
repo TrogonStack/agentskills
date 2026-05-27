@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-optimizing-stream-design
-description: >-
-  Design event streams with proper stream identity to keep streams appropriately
-  sized, avoid unnecessary snapshotting, and balance performance with simplicity.
-  Use when concerned about stream length, planning performance, or validating
-  stream design before implementation. Do not use for: designing the initial
-  event model structure (use eventmodeling-designing-event-models) or
-  general architectural validation (use eventmodeling-validating-event-models).
+description: "Design event streams with proper stream identity to keep streams appropriately sized, avoid unnecessary snapshotting, and balance performance with simplicity. Use when concerned about stream length, planning performance, or validating stream design before implementation. Do not use for: designing the initial event model structure (use eventmodeling-designing-event-models) or general architectural validation (use eventmodeling-validating-event-models)."
 allowed-tools:
   - AskUserQuestion
   - Write

@@ -1,15 +1,6 @@
 ---
 name: datadog-design-dashboard
-description: >-
-  Design new Datadog dashboards, redesign existing ones, or audit dashboards
-  for operational readiness. Covers widget selection, layout organization,
-  template variables, group structure, tab organization, alert threshold
-  validation, and zero-knowledge readability. Uses pup CLI for inspecting dashboards and
-  validating designs. Use when designing new dashboards, redesigning existing
-  ones, auditing before on-call handoff, or reviewing after dashboard changes.
-  Do not use for: (1) Datadog agent installation or configuration,
-  (2) monitor/alert rule design, (3) APM instrumentation or tracing setup,
-  (4) log pipeline configuration.
+description: "Design new Datadog dashboards, redesign existing ones, or audit dashboards for operational readiness. Covers widget selection, layout organization, template variables, group structure, tab organization, alert threshold validation, and zero-knowledge readability. Uses pup CLI for inspecting dashboards and validating designs. Use when designing new dashboards, redesigning existing ones, auditing before on-call handoff, or reviewing after dashboard changes. Do not use for: (1) Datadog agent installation or configuration, (2) monitor/alert rule design, (3) APM instrumentation or tracing setup, (4) log pipeline configuration."
 allowed-tools:
   - AskUserQuestion
   - Write

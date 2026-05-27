@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-integrating-legacy-systems
-description: >-
-  Apply Event Modeling to legacy systems using side-car pattern. Freeze old
-  system, extract events, build new features without rewriting. Use when
-  modernizing legacy applications. Do not use for: greenfield systems without
-  existing legacy constraints (use eventmodeling-orchestrating-event-modeling)
-  or translating inbound events from external APIs (use
-  eventmodeling-translating-external-events).
+description: "Apply Event Modeling to legacy systems using side-car pattern. Freeze old system, extract events, build new features without rewriting. Use when modernizing legacy applications. Do not use for: greenfield systems without existing legacy constraints (use eventmodeling-orchestrating-event-modeling) or translating inbound events from external APIs (use eventmodeling-translating-external-events)."
 allowed-tools:
   - AskUserQuestion
   - Write

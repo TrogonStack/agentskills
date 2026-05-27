@@ -1,14 +1,6 @@
 ---
 name: eventmodeling-slicing-event-models
-description: >-
-  Break down complete event models into independently implementable feature
-  slices, identify dependencies, and plan parallel implementation across teams.
-  Use when planning team allocation, identifying MVP scope, or establishing
-  implementation order after completing event modeling. Do not use for:
-  organizational team structure based on Conway's Law (use
-  eventmodeling-applying-conways-law) or planning before the event model is
-  complete (complete the full model first using
-  eventmodeling-orchestrating-event-modeling).
+description: "Break down complete event models into independently implementable feature slices, identify dependencies, and plan parallel implementation across teams. Use when planning team allocation, identifying MVP scope, or establishing implementation order after completing event modeling. Do not use for: organizational team structure based on Conway's Law (use eventmodeling-applying-conways-law) or planning before the event model is complete (complete the full model first using eventmodeling-orchestrating-event-modeling)."
 allowed-tools:
   - AskUserQuestion
   - Write

@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-elaborating-scenarios
-description: >-
-  Step 7 of Event Modeling - Elaborate scenarios using Given-When-Then format.
-  Specify behavior of commands and views. Each spec tied to exactly one command
-  or view. Use after defining systems and boundaries. Do not use for:
-  architectural validation (use eventmodeling-validating-event-models) or
-  verifying field completeness across the model (use
-  eventmodeling-checking-completeness).
+description: "Step 7 of Event Modeling - Elaborate scenarios using Given-When-Then format. Specify behavior of commands and views. Each spec tied to exactly one command or view. Use after defining systems and boundaries. Do not use for: architectural validation (use eventmodeling-validating-event-models) or verifying field completeness across the model (use eventmodeling-checking-completeness)."
 allowed-tools:
   - AskUserQuestion
   - Write

@@ -1,12 +1,6 @@
 ---
 name: eventmodeling-translating-external-events
-description: >-
-  Translate external system events (webhooks, APIs, IoT) into domain events.
-  Map technical data to business concepts. Use when integrating with external
-  systems that emit events your domain needs to react to. Do not use for:
-  modernizing legacy systems using the side-car pattern (use
-  eventmodeling-integrating-legacy-systems) or designing command handlers for
-  the translated events (use eventmodeling-designing-event-models).
+description: "Translate external system events (webhooks, APIs, IoT) into domain events. Map technical data to business concepts. Use when integrating with external systems that emit events your domain needs to react to. Do not use for: modernizing legacy systems using the side-car pattern (use eventmodeling-integrating-legacy-systems) or designing command handlers for the translated events (use eventmodeling-designing-event-models)."
 allowed-tools:
   - AskUserQuestion
   - Write

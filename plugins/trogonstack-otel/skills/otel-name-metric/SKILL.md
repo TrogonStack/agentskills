@@ -1,12 +1,6 @@
 ---
 name: otel-name-metric
-description: >-
-  Review or create OpenTelemetry metric names following semantic conventions.
-  Validates naming format, units, instrument selection, and attribute placement.
-  Use when designing new metrics, reviewing existing instrumentation, or auditing
-  metric naming consistency. Do not use for: (1) span or trace naming, (2) OTel
-  collector configuration, (3) SDK installation or setup, (4) alerting or
-  dashboard design.
+description: "Review or create OpenTelemetry metric names following semantic conventions. Validates naming format, units, instrument selection, and attribute placement. Use when designing new metrics, reviewing existing instrumentation, or auditing metric naming consistency. Do not use for: (1) span or trace naming, (2) OTel collector configuration, (3) SDK installation or setup, (4) alerting or dashboard design."
 allowed-tools:
   - AskUserQuestion
   - Write
