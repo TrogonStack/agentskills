@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.1.2...trogonstack-nats@v0.1.3) (2026-05-27)
+
+
+### Bug Fixes
+
+* Inline SKILL.md descriptions for skills.sh rendering ([#62](https://github.com/TrogonStack/agentskills/issues/62)) ([5fa537a](https://github.com/TrogonStack/agentskills/commit/5fa537a46e74f30406abaccffc170fd855c08f0f))
+
 ## [0.1.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.1.1...trogonstack-nats@v0.1.2) (2026-05-23)
 
 
