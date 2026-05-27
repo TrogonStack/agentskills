@@ -1,10 +1,6 @@
 ---
 name: ask-question
-description: >-
-  Ask structured questions one at a time to gather requirements, context, or
-  clarification. Each question includes the intention behind it and current
-  assumptions. Use when the user wants to be interviewed about a topic, gather
-  requirements, or needs help thinking through a problem step by step.
+description: "Ask structured questions one at a time to gather requirements, context, or clarification. Each question includes the intention behind it and current assumptions. Use when the user wants to be interviewed about a topic, gather requirements, or needs help thinking through a problem step by step."
 allowed-tools:
   - Read
   - Write
