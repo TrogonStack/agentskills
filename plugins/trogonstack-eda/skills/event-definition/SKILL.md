@@ -1,15 +1,6 @@
 ---
 name: event-definition
-description: >-
-  Review or create event definitions for event-driven architecture.
-  Covers event names, payload field names, event_type identity, stream
-  naming boundaries, and record metadata/context/payload placement for
-  both domain events (event-sourcing) and integration events (cross-service).
-  Use when designing a new event definition, reviewing an existing event
-  definition, or auditing event definition consistency across a catalog.
-  Do not use for full event modeling workflows (use trogonstack-eventmodeling
-  skills), event schema evolution or migration strategy, or event store
-  implementation design.
+description: "Review or create event definitions for event-driven architecture. Covers event names, payload field names, event_type identity, stream naming boundaries, and record metadata/context/payload placement for both domain events (event-sourcing) and integration events (cross-service). Use when designing a new event definition, reviewing an existing event definition, or auditing event definition consistency across a catalog. Do not use for full event modeling workflows (use trogonstack-eventmodeling skills), event schema evolution or migration strategy, or event store implementation design."
 allowed-tools:
   - AskUserQuestion
   - Write
