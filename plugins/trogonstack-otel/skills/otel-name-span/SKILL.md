@@ -1,12 +1,6 @@
 ---
 name: otel-name-span
-description: >-
-  Review or create OpenTelemetry span names following semantic conventions.
-  Validates naming, cardinality, attribute placement, and protocol-specific
-  patterns. Use when designing new spans, reviewing existing instrumentation,
-  or auditing span naming consistency. Do not use for: (1) metric naming, (2)
-  OTel collector configuration, (3) SDK installation or setup, (4) alerting or
-  dashboard design.
+description: "Review or create OpenTelemetry span names following semantic conventions. Validates naming, cardinality, attribute placement, and protocol-specific patterns. Use when designing new spans, reviewing existing instrumentation, or auditing span naming consistency. Do not use for: (1) metric naming, (2) OTel collector configuration, (3) SDK installation or setup, (4) alerting or dashboard design."
 allowed-tools:
   - AskUserQuestion
   - Write
