@@ -18,7 +18,7 @@ jobs:
     name: Reject multi-line YAML descriptions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check SKILL.md descriptions are single-line
         run: |

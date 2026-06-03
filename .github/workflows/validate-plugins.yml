@@ -17,6 +17,6 @@ jobs:
   validate-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Validate plugin registrations
         run: node scripts/validate-plugins.mjs
