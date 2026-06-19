@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.1.3...trogonstack-ask@v0.2.0) (2026-06-19)
+
+
+### Features
+
+* **ask:** Persist full Q&A entries with decisions to .qa.md ([#72](https://github.com/TrogonStack/agentskills/issues/72)) ([5248eab](https://github.com/TrogonStack/agentskills/commit/5248eab621f388c5274f65bdf8eb6dc6f1c637ab))
+
 ## [0.1.3](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.1.2...trogonstack-ask@v0.1.3) (2026-05-27)
 
 
