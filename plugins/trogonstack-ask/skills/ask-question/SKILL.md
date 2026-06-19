@@ -4,6 +4,7 @@ description: "Ask structured questions one at a time to gather requirements, con
 allowed-tools:
   - Read
   - Write
+  - Bash
   - AskUserQuestion
 ---
 
@@ -37,4 +38,24 @@ You are a critical thinking partner, not a yes-machine. If my answer reveals a f
 
 ## Session persistence
 
-Before asking the first question, ask the user if they want the Q&A session saved to a file. If they agree, ask for a name and create `<name>.qa.md` immediately. Append each question and answer to it as the conversation progresses.
+Before asking the first question, ask the user for a name for the session and create `<name>.qa.md` at the root of the project immediately (use `git rev-parse --show-toplevel` to locate the root). Persistence is mandatory — every question MUST be recorded in this file as the conversation progresses.
+
+For each exchange, append an entry using this exact format:
+
+```
+## [question number]. [short title]
+
+**Question:** [the question you asked]
+**Intention:** [why you asked it]
+**Assumptions:**
+- [assumption]
+- [assumption]
+
+**Answer:** [the user's answer, verbatim or faithfully summarized]
+**Supersedes:** [question number of the entry this revises — omit this line otherwise]
+```
+
+Rules:
+- Write the entry to the file immediately after the user answers — do not batch.
+- Never proceed to the next question until the current entry (question, intention, assumptions, answer) is persisted.
+- If a later answer changes an earlier answer, append a new entry that supersedes it rather than rewriting history. Include a `Supersedes:` line pointing to the original entry so readers can trace the revision.
