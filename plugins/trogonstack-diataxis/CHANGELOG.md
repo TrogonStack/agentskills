@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-diataxis@v0.0.4...trogonstack-diataxis@v0.1.0) (2026-09-12)
+
+
+### Features
+
+* **trogonstack-diataxis:** Make documentation easier to write and maintain ([#76](https://github.com/TrogonStack/agentskills/issues/76)) ([d839032](https://github.com/TrogonStack/agentskills/commit/d8390325960f98b1454584cd3385b15d45a71bbb))
+
 ## [0.0.4](https://github.com/TrogonStack/agentskills/compare/trogonstack-diataxis@v0.0.3...trogonstack-diataxis@v0.0.4) (2026-05-16)
 
 
