@@ -38,7 +38,15 @@ You are a critical thinking partner, not a yes-machine. If my answer reveals a f
 
 ## Session persistence
 
-Before asking the first question, ask the user for a name for the session and create `<name>.qa.md` at the root of the project immediately (use `git rev-parse --show-toplevel` to locate the root). Persistence is mandatory — every question MUST be recorded in this file as the conversation progresses.
+Choose a short, descriptive kebab-case session name from the topic, goal, and available conversation context. Honor a name the user has already provided. Do not ask the user to choose or approve a filename.
+
+Only if the topic cannot be inferred, ask one question about the missing topic or goal, then derive the name from the answer. This context clarification is the only question allowed before creating the session file; record it and its answer as the first entry immediately after creating the file.
+
+Use `<name>.qa.md` at the project root (use `git rev-parse --show-toplevel` to locate the root). Follow explicit user or repository instructions for the location and filename suffix.
+
+For a new session, check the final target path after applying those location and suffix rules. If it already exists, leave it unchanged and automatically try `<name>-2`, `<name>-3`, and so on with the same location and suffix until an unused path is found. Do not ask for a different filename. Never overwrite an existing transcript.
+
+Reuse an existing transcript only when the user explicitly asks to resume that session; read it before appending new exchanges. Create the new file or open the transcript being resumed before asking any further questions. Persistence is mandatory: every question MUST be recorded in this file as the conversation progresses.
 
 For each exchange, append an entry using this exact format:
 
