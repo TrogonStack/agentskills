@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.2.0...trogonstack-ask@v0.2.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **trogonstack-ask:** Avoid unnecessary session naming interruptions ([#79](https://github.com/TrogonStack/agentskills/issues/79)) ([652bc83](https://github.com/TrogonStack/agentskills/commit/652bc830f283ef171ddd39474cb6f740e8949da9))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-ask@v0.1.3...trogonstack-ask@v0.2.0) (2026-06-19)
 
 
