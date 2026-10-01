@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - "plugins/**/SKILL.md"
+      - "mise.toml"
+      - ".github/workflows/skill-frontmatter.yml"
   push:
     branches:
       - main
     paths:
       - "plugins/**/SKILL.md"
+      - "mise.toml"
+      - ".github/workflows/skill-frontmatter.yml"
 
 permissions:
   contents: read
@@ -36,3 +40,24 @@ jobs:
             exit 1
           fi
           echo "All SKILL.md descriptions are single-line."
+
+  validate-spec:
+    name: Validate skills against the Agent Skills spec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Validate every skill with trg
+        run: |
+          status=0
+          while IFS= read -r skill; do
+            dir=$(dirname "$skill")
+            echo "::group::$dir"
+            trg ai skills validate "$dir" || { echo "::error file=$skill::trg ai skills validate failed"; status=1; }
+            echo "::endgroup::"
+          done < <(find plugins -name SKILL.md -type f | sort)
+          exit $status
