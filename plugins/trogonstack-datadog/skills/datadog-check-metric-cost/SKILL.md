@@ -96,10 +96,11 @@ For each proposed metric, state one of:
 
 When metrics live in an [OpenTelemetry Weaver](https://github.com/open-telemetry/weaver) semantic convention registry, check the registry before generating code from it.
 
-List the metrics it defines. `definition/2` files declare them under `metrics`, and older files declare groups with `type: metric` and a `metric_name`:
+List the metrics it defines, including files in nested folders. `definition/2` files declare them under `metrics`, and older files declare groups with `type: metric` and a `metric_name`:
 
 ```bash
-yq -N '.metrics[]?.name, (.groups[]? | select(.type == "metric") | .metric_name)' <registry>/*.yaml
+find <registry> -type f \( -name '*.yaml' -o -name '*.yml' \) -exec \
+  yq -N '.metrics[]?.name, (.groups[]? | select(.type == "metric") | .metric_name)' {} +
 ```
 
 For each metric:
