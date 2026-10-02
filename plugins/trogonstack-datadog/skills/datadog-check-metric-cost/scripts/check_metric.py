@@ -24,6 +24,7 @@ import yaml
 
 MAPPING_URL = "https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md"
 METRIC_NAME = re.compile(r"^[A-Za-z0-9_.-]+$")
+TABLE_SEPARATOR = re.compile(r"^\|\s*:?-")
 SIMILAR_LIMIT = 10
 
 EX_USAGE = 64
@@ -100,12 +101,12 @@ class MappingTable:
         rows: set[Mapping] = set()
         in_table = False
         for line in markdown.splitlines():
-            if line.startswith("| -"):
+            if TABLE_SEPARATOR.match(line):
                 in_table = True
                 continue
             if not in_table or not line.startswith("|"):
                 continue
-            cells = [cell.strip() for cell in line.split("|")]
+            cells = [cell.strip().strip("`") for cell in line.split("|")]
             if len(cells) < 3:
                 continue
             otel, datadog = cells[1], cells[2]

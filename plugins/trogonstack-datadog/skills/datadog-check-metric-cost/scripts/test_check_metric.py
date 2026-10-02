@@ -38,6 +38,11 @@ def test_parse_returns_nothing_without_a_table():
     assert MappingTable.parse("# No table here").mappings == []
 
 
+def test_parse_accepts_aligned_separators_and_code_spans():
+    page = "| otel | datadog |\n|:---|:---:|\n| `system.cpu.utilization` | `system.cpu.user` |\n"
+    assert MappingTable.parse(page).mappings == [Mapping("system.cpu.utilization", "system.cpu.user")]
+
+
 def test_exact_match_on_either_side():
     assert table().check(MetricName("system.cpu.utilization")).status is DocsStatus.MAPPED
     assert table().check(MetricName("system.cpu.user")).status is DocsStatus.MAPPED
