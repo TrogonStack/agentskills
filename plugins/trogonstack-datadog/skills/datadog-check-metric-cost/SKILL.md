@@ -26,15 +26,15 @@ A name match alone does not make a metric no-cost. The no-cost status comes from
 
 The no-cost families are:
 
-| Area                    | Source                                                                                                                                                                                                                                                                                                                                              |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosts                   | [Host Metrics](https://docs.datadoghq.com/opentelemetry/integrations/host_metrics.md) (`hostmetricsreceiver`)                                                                                                                                                                                                                                       |
-| Containers              | [Docker](https://docs.datadoghq.com/opentelemetry/integrations/docker_metrics.md), [Podman](https://docs.datadoghq.com/opentelemetry/integrations/podman_metrics.md), [Kubernetes](https://docs.datadoghq.com/opentelemetry/integrations/kubernetes_metrics.md)                                                                                     |
-| Runtimes                | [Runtime Metrics](https://docs.datadoghq.com/opentelemetry/integrations/runtime_metrics.md) for Java, .NET, Go, Node.js, and Python, with the matching language integration installed in Datadog                                                                                                                                                                                                                                  |
-| Collector               | [Collector Health Metrics](https://docs.datadoghq.com/opentelemetry/integrations/collector_health_metrics.md)                                                                                                                                                                                                                                       |
-| Web servers and proxies | [Apache](https://docs.datadoghq.com/opentelemetry/integrations/apache_metrics.md), [NGINX](https://docs.datadoghq.com/opentelemetry/integrations/nginx_metrics.md), [IIS](https://docs.datadoghq.com/opentelemetry/integrations/iis_metrics.md), [HAProxy](https://docs.datadoghq.com/opentelemetry/integrations/haproxy_metrics.md)                |
+| Area | Source |
+| --- | --- |
+| Hosts | [Host Metrics](https://docs.datadoghq.com/opentelemetry/integrations/host_metrics.md) (`hostmetricsreceiver`) |
+| Containers | [Docker](https://docs.datadoghq.com/opentelemetry/integrations/docker_metrics.md), [Podman](https://docs.datadoghq.com/opentelemetry/integrations/podman_metrics.md), [Kubernetes](https://docs.datadoghq.com/opentelemetry/integrations/kubernetes_metrics.md) |
+| Runtimes | [Runtime Metrics](https://docs.datadoghq.com/opentelemetry/integrations/runtime_metrics.md) for Java, .NET, Go, Node.js, and Python, with the matching language integration installed in Datadog |
+| Collector | [Collector Health Metrics](https://docs.datadoghq.com/opentelemetry/integrations/collector_health_metrics.md) |
+| Web servers and proxies | [Apache](https://docs.datadoghq.com/opentelemetry/integrations/apache_metrics.md), [NGINX](https://docs.datadoghq.com/opentelemetry/integrations/nginx_metrics.md), [IIS](https://docs.datadoghq.com/opentelemetry/integrations/iis_metrics.md), [HAProxy](https://docs.datadoghq.com/opentelemetry/integrations/haproxy_metrics.md) |
 | Databases and messaging | [MySQL](https://docs.datadoghq.com/opentelemetry/integrations/mysql_metrics.md), [PostgreSQL](https://docs.datadoghq.com/opentelemetry/integrations/postgres_metrics.md), [SQL Server](https://docs.datadoghq.com/opentelemetry/integrations/sqlserver_metrics.md), [Kafka](https://docs.datadoghq.com/opentelemetry/integrations/kafka_metrics.md) |
-| Big data                | [Apache Spark](https://docs.datadoghq.com/opentelemetry/integrations/spark_metrics.md)                                                                                                                                                                                                                                                              |
+| Big data | [Apache Spark](https://docs.datadoghq.com/opentelemetry/integrations/spark_metrics.md) |
 
 The Datadog docs warn that a misconfigured receiver can turn these into custom metrics. Configure receivers as their OpenTelemetry documentation describes.
 
@@ -61,11 +61,11 @@ Datadog bills custom metrics under one of two mutually exclusive models, set by 
 
 Under Timeseries pricing, Datadog counts one custom metric per unique combination of metric name and tag values, including the `host` tag. See [counting custom metrics](https://docs.datadoghq.com/account_management/billing/custom_metrics.md#counting-custom-metrics).
 
-| Datadog type                 | Custom metrics per tag combination                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| COUNT, RATE, GAUGE           | 1                                                                                                             |
+| Datadog type | Custom metrics per tag combination |
+| --- | --- |
+| COUNT, RATE, GAUGE | 1 |
 | HISTOGRAM (Agent, DogStatsD) | 5 by default (`max`, `median`, `avg`, `95percentile`, `count`), more when aggregates or percentiles are added |
-| DISTRIBUTION                 | 5 (`count`, `sum`, `min`, `max`, `avg`), 10 with percentiles enabled                                          |
+| DISTRIBUTION | 5 (`count`, `sum`, `min`, `max`, `avg`), 10 with percentiles enabled |
 
 Delta and cumulative monotonic OTLP sums map to COUNT, cumulative non-monotonic sums and gauges to GAUGE, and histograms to DISTRIBUTION by default. See [OTLP metric types](https://docs.datadoghq.com/metrics/open_telemetry/otlp_metric_types.md).
 
