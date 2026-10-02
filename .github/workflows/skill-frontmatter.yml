@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "plugins/**/SKILL.md"
+      - ".agents/skills/**/SKILL.md"
       - "mise.toml"
       - ".github/workflows/skill-frontmatter.yml"
   push:
@@ -11,6 +12,7 @@ on:
       - main
     paths:
       - "plugins/**/SKILL.md"
+      - ".agents/skills/**/SKILL.md"
       - "mise.toml"
       - ".github/workflows/skill-frontmatter.yml"
 
@@ -59,5 +61,5 @@ jobs:
             echo "::group::$dir"
             trg ai skills validate "$dir" || { echo "::error file=$skill::trg ai skills validate failed"; status=1; }
             echo "::endgroup::"
-          done < <(find plugins -name SKILL.md -type f | sort)
+          done < <(find plugins .agents/skills -name SKILL.md -type f | sort)
           exit $status
