@@ -1,6 +1,6 @@
 # OpenTelemetry to Datadog metrics mapping
 
-Snapshot of the [Metrics Mappings](https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md#metrics-mappings) table, taken 2026-10-02. Datadog collects the OpenTelemetry metrics in the `otel` column at no extra cost. One OpenTelemetry metric can map to several Datadog metrics.
+Snapshot of the [Metrics Mappings](https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md#metrics-mappings) table, taken 2026-10-02. Datadog collects the OpenTelemetry metrics in the `otel` column at no extra cost when they arrive through a supported integration. One OpenTelemetry metric can map to several Datadog metrics.
 
 Regenerate with `scripts/refresh-mapping.sh`.
 
