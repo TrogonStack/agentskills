@@ -14,13 +14,17 @@ Datadog bills every metric that does not come from one of its integrations as a 
 
 ### Look for a no-cost equivalent
 
-Datadog collects metrics from supported OpenTelemetry integrations at no extra cost. A metric is no-cost when it arrives through a supported collection path, such as a receiver that defines it in its `metadata.yaml`, and is listed in the [Metrics Mappings](https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md#metrics-mappings) table. A snapshot of that table is in [references/otel-metrics-mapping.md](references/otel-metrics-mapping.md). Paths are relative to this skill's directory:
+Datadog collects metrics from supported OpenTelemetry integrations at no extra cost. A metric is no-cost when it arrives through a supported collection path, such as a receiver that defines it in its `metadata.yaml`, and is listed in the [Metrics Mappings](https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md#metrics-mappings) table.
+
+Run [scripts/check-metric.sh](scripts/check-metric.sh), relative to this skill's directory, with the proposed names:
 
 ```bash
-grep -i '<term>' references/otel-metrics-mapping.md
+scripts/check-metric.sh <metric>...
 ```
 
-Search by the OpenTelemetry name and by the concept, since the Datadog name often differs (`jvm.memory.used`, `memory`, `goroutine`).
+For each name, it reads the live mapping table and reports an exact match on either the OpenTelemetry or the Datadog side, or the closest mapped metrics. It stops with an error when the table cannot be read, so a failed lookup is never reported as a miss. The closest matches are leads, not verdicts: read them, since the Datadog name often differs from the OpenTelemetry one.
+
+When [pup](https://github.com/DataDog/pup) is authenticated, the script also checks the current org. It reports whether the metric is billed as custom right now, from `datadog.estimated_usage.metrics.custom.by_metric`, and which integration it reports through. This is the authoritative answer for metrics that already flow. It reads the Timeseries pricing usage metrics, so under Metric Name pricing confirm on the usage page instead. Metrics that do not exist yet can only be checked against the docs. Pass `--no-org` to skip the org check, and set `PUP` when pup runs through a wrapper such as `mise exec`.
 
 A name match alone does not make a metric no-cost. The no-cost status comes from the collection path, so an application metric that reuses a mapped name is still custom. When a match exists, enable the integration that produces it instead of defining the metric yourself. A renamed or reshaped copy is billed as custom too.
 
@@ -96,11 +100,10 @@ For each proposed metric, state one of:
 
 When metrics live in an [OpenTelemetry Weaver](https://github.com/open-telemetry/weaver) semantic convention registry, check the registry before generating code from it.
 
-List the metrics it defines, including files in nested folders. `definition/2` files declare them under `metrics`, and older files declare groups with `type: metric` and a `metric_name`:
+Check every metric the registry defines, including files in nested folders. The script reads `definition/2` metrics and older `type: metric` groups, and needs `yq`:
 
 ```bash
-find <registry> -type f \( -name '*.yaml' -o -name '*.yml' \) -exec \
-  yq -N '.metrics[]?.name, (.groups[]? | select(.type == "metric") | .metric_name)' {} +
+scripts/check-metric.sh --registry <registry>
 ```
 
 For each metric:
@@ -111,12 +114,6 @@ For each metric:
 - When it is custom, read the cardinality off the registry: the attributes the metric references, their enum members, and whether each one is `required`, `recommended`, or `opt_in`. Count `opt_in` attributes only if the deployment enables them.
 - For histograms, read the boundaries from `annotations.aggregation.parameters.boundaries` when the registry sets them. They only change the count in `counters` mode.
 
-## Refresh the snapshot
-
-The mapping table changes as Datadog adds integrations. Regenerate the snapshot before relying on a miss:
-
-```bash
-scripts/refresh-mapping.sh
-```
+## Confirm billing
 
 To confirm actual billing, check the usage page. Under Timeseries pricing, the [estimated usage metrics](https://docs.datadoghq.com/account_management/billing/usage_metrics.md) `datadog.estimated_usage.metrics.custom` and `datadog.estimated_usage.metrics.custom.ingested` track custom metric counts.
