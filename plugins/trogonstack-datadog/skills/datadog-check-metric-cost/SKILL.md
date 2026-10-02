@@ -26,6 +26,11 @@ For each name, it reads the live mapping table and reports an exact match on eit
 
 When [pup](https://github.com/DataDog/pup) is authenticated, the script also checks the current org. It reports whether the metric is billed as custom right now, from `datadog.estimated_usage.metrics.custom.by_metric`, and which integration it reports through. This is the authoritative answer for metrics that already flow. It reads the Timeseries pricing usage metrics, so under Metric Name pricing confirm on the usage page instead. Metrics that do not exist yet can only be checked against the docs. Pass `--no-org` to skip the org check, and set `PUP` when pup runs through a wrapper such as `mise exec`. Pass `--json` for output another tool can read.
 
+When pup is not available but the [Datadog MCP server](https://docs.datadoghq.com/bits_ai/mcp_server/) is connected, run the script with `--no-org` and do the org check through the MCP tools instead:
+
+- Query `max:datadog.estimated_usage.metrics.custom.by_metric{metric_name:<metric>}` over the last day with `get_datadog_metric`, as a scalar with the `max` aggregator. A value means the metric is billed as custom, and the value is its custom metric count. No data means it is not counted as custom.
+- Read the metric with `get_datadog_metric_context`. A "metric not found" error means it is not reporting. Otherwise `integration` names the integration it reports through.
+
 A name match alone does not make a metric no-cost. The no-cost status comes from the collection path, so an application metric that reuses a mapped name is still custom. When a match exists, enable the integration that produces it instead of defining the metric yourself. A renamed or reshaped copy is billed as custom too.
 
 The no-cost families are:
