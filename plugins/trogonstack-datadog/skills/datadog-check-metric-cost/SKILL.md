@@ -16,15 +16,15 @@ Datadog bills every metric that does not come from one of its integrations as a 
 
 Datadog collects metrics from supported OpenTelemetry integrations at no extra cost. A metric is no-cost when it arrives through a supported collection path, such as a receiver that defines it in its `metadata.yaml`, and is listed in the [Metrics Mappings](https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md#metrics-mappings) table.
 
-Run [scripts/check-metric.sh](scripts/check-metric.sh), relative to this skill's directory, with the proposed names:
+Run [scripts/check_metric.py](scripts/check_metric.py), relative to this skill's directory, with the proposed names. It runs through [uv](https://docs.astral.sh/uv/), which installs its dependencies:
 
 ```bash
-scripts/check-metric.sh <metric>...
+scripts/check_metric.py <metric>...
 ```
 
 For each name, it reads the live mapping table and reports an exact match on either the OpenTelemetry or the Datadog side, or the closest mapped metrics. It stops with an error when the table cannot be read, so a failed lookup is never reported as a miss. The closest matches are leads, not verdicts: read them, since the Datadog name often differs from the OpenTelemetry one.
 
-When [pup](https://github.com/DataDog/pup) is authenticated, the script also checks the current org. It reports whether the metric is billed as custom right now, from `datadog.estimated_usage.metrics.custom.by_metric`, and which integration it reports through. This is the authoritative answer for metrics that already flow. It reads the Timeseries pricing usage metrics, so under Metric Name pricing confirm on the usage page instead. Metrics that do not exist yet can only be checked against the docs. Pass `--no-org` to skip the org check, and set `PUP` when pup runs through a wrapper such as `mise exec`.
+When [pup](https://github.com/DataDog/pup) is authenticated, the script also checks the current org. It reports whether the metric is billed as custom right now, from `datadog.estimated_usage.metrics.custom.by_metric`, and which integration it reports through. This is the authoritative answer for metrics that already flow. It reads the Timeseries pricing usage metrics, so under Metric Name pricing confirm on the usage page instead. Metrics that do not exist yet can only be checked against the docs. Pass `--no-org` to skip the org check, and set `PUP` when pup runs through a wrapper such as `mise exec`. Pass `--json` for output another tool can read.
 
 A name match alone does not make a metric no-cost. The no-cost status comes from the collection path, so an application metric that reuses a mapped name is still custom. When a match exists, enable the integration that produces it instead of defining the metric yourself. A renamed or reshaped copy is billed as custom too.
 
@@ -100,10 +100,10 @@ For each proposed metric, state one of:
 
 When metrics live in an [OpenTelemetry Weaver](https://github.com/open-telemetry/weaver) semantic convention registry, check the registry before generating code from it.
 
-Check every metric the registry defines, including files in nested folders. The script reads `definition/2` metrics and older `type: metric` groups, and needs `yq`:
+Check every metric the registry defines, including files in nested folders. The script reads `definition/2` metrics and older `type: metric` groups:
 
 ```bash
-scripts/check-metric.sh --registry <registry>
+scripts/check_metric.py --registry <registry>
 ```
 
 For each metric:
