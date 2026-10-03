@@ -80,7 +80,7 @@ Delta and cumulative monotonic OTLP sums map to COUNT, cumulative non-monotonic 
 
 An OTLP histogram exported in the Datadog exporter's `counters` mode also emits one `.bucket` series per bucket, tagged with `lower_bound` and `upper_bound`, so every boundary multiplies the count.
 
-Multiply the per-combination count by the cardinality of every attribute on the metric. Each high-cardinality attribute (IDs, raw paths, free-form strings) multiplies the bill, so drop or bound it before adding the metric.
+Multiply the per-combination count by the number of unique attribute value combinations the metric is expected to emit. Multiplying the cardinality of every attribute gives the worst case, since Datadog counts only the combinations that actually arrive. Each high-cardinality attribute (IDs, raw paths, free-form strings) multiplies the bill, so drop or bound it before adding the metric.
 
 Each paid host adds 100 ingested and 100 indexed custom metrics on Pro, 200 of each on Enterprise, pooled across the whole account. See [allocation](https://docs.datadoghq.com/account_management/billing/custom_metrics.md#allocation).
 

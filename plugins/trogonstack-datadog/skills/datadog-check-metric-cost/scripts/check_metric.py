@@ -32,6 +32,7 @@ USAGE_METRICS = {
 SIMILAR_LIMIT = 10
 
 EX_USAGE = 64
+EX_DATAERR = 65
 EX_NOINPUT = 66
 EX_UNAVAILABLE = 69
 EX_SOFTWARE = 70
@@ -43,6 +44,10 @@ class MetricName:
 
     def __str__(self) -> str:
         return self.value
+
+    @property
+    def valid(self) -> bool:
+        return bool(METRIC_NAME.match(self.value))
 
     @property
     def normalized(self) -> str:
@@ -278,6 +283,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_usage(sys.stderr)
         print("No metrics to check.", file=sys.stderr)
         return EX_USAGE
+    invalid = [str(m) for m in metrics if not m.valid]
+    if invalid:
+        print(f"Not valid metric names: {', '.join(invalid)}", file=sys.stderr)
+        return EX_DATAERR
 
     try:
         table = fetch_mapping_table()

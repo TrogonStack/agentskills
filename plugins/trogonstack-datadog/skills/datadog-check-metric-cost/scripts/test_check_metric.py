@@ -4,7 +4,7 @@
 # ///
 from pathlib import Path
 
-from check_metric import EX_NOINPUT, DocsStatus, Mapping, MappingTable, MetricName, main, registry_metrics
+from check_metric import EX_DATAERR, EX_NOINPUT, DocsStatus, Mapping, MappingTable, MetricName, main, registry_metrics
 
 PAGE = """
 Intro text | with a pipe that is not a table
@@ -55,6 +55,10 @@ def test_parse_ignores_pipes_in_prose_before_the_table():
 
 def test_missing_registry_is_an_error(tmp_path: Path):
     assert main(["--no-org", "--registry", str(tmp_path / "missing")]) == EX_NOINPUT
+
+
+def test_query_syntax_in_a_name_is_rejected():
+    assert main(["--no-org", "app.requests} OR {*"]) == EX_DATAERR
 
 
 def test_exact_match_on_either_side():
