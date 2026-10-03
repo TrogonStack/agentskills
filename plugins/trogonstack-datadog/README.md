@@ -1,6 +1,6 @@
 # trogonstack-datadog
 
-Datadog observability skills for designing, redesigning, and auditing dashboards with proper widget selection, layout patterns, template variables, and operational readiness validation using the pup CLI.
+Datadog observability skills for designing, redesigning, and auditing dashboards with proper widget selection, layout patterns, template variables, and operational readiness validation using the pup CLI, and for checking metrics against Datadog's no-cost metrics before creating custom ones.
 
 ```bash
 claude plugin install trogonstack-datadog@trogonstack
