@@ -24,10 +24,15 @@ import yaml
 
 MAPPING_URL = "https://docs.datadoghq.com/opentelemetry/mapping/metrics_mapping.md"
 METRIC_NAME = re.compile(r"^[A-Za-z0-9_.-]+$")
-TABLE_SEPARATOR = re.compile(r"^\|\s*:?-")
+TABLE_SEPARATOR = re.compile(r"^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$")
+USAGE_METRICS = {
+    "indexed": "datadog.estimated_usage.metrics.custom.by_metric",
+    "ingested": "datadog.estimated_usage.metrics.custom.ingested.by_metric",
+}
 SIMILAR_LIMIT = 10
 
 EX_USAGE = 64
+EX_NOINPUT = 66
 EX_UNAVAILABLE = 69
 EX_SOFTWARE = 70
 
@@ -80,7 +85,8 @@ class DocsResult:
 @dataclass
 class OrgResult:
     status: OrgStatus
-    custom_metrics: float | None = None
+    indexed_custom_metrics: float | None = None
+    ingested_custom_metrics: float | None = None
     integration: str | None = None
     error: str | None = None
 
@@ -104,12 +110,14 @@ class MappingTable:
             if TABLE_SEPARATOR.match(line):
                 in_table = True
                 continue
-            if not in_table or not line.startswith("|"):
+            if "|" not in line:
+                in_table = False
+            if not in_table:
                 continue
-            cells = [cell.strip().strip("`") for cell in line.split("|")]
-            if len(cells) < 3:
+            cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+            if len(cells) < 2:
                 continue
-            otel, datadog = cells[1], cells[2]
+            otel, datadog = cells[0], cells[1]
             if METRIC_NAME.match(otel) and datadog:
                 rows.add(Mapping(otel, datadog))
         return cls(sorted(rows))
@@ -143,6 +151,10 @@ class MappingTable:
         return shared, ratio
 
 
+class PupError(Exception):
+    pass
+
+
 class Pup:
     def __init__(self, command: list[str]) -> None:
         self.command = command
@@ -156,25 +168,26 @@ class Pup:
         except FileNotFoundError:
             return False
 
-    def check(self, name: MetricName) -> OrgResult:
-        usage = self._run(
-            "metrics",
-            "query",
-            "--from",
-            "1d",
-            "--query",
-            f"max:datadog.estimated_usage.metrics.custom.by_metric{{metric_name:{name}}}",
-        )
+    def custom_usage(self, usage_metric: str, name: MetricName) -> float | None:
+        usage = self._run("metrics", "query", "--from", "1d", "--query", f"max:{usage_metric}{{metric_name:{name}}}")
         if usage.returncode != 0:
-            return OrgResult(OrgStatus.ERROR, error=usage.stderr.strip())
+            raise PupError(usage.stderr.strip())
         points = [
             point[1]
             for series in json.loads(usage.stdout).get("series") or []
             for point in series.get("pointlist") or []
             if point[1] is not None
         ]
-        if points:
-            return OrgResult(OrgStatus.CUSTOM, custom_metrics=max(points))
+        return max(points) if points else None
+
+    def check(self, name: MetricName) -> OrgResult:
+        try:
+            indexed = self.custom_usage(USAGE_METRICS["indexed"], name)
+            ingested = self.custom_usage(USAGE_METRICS["ingested"], name)
+        except PupError as error:
+            return OrgResult(OrgStatus.ERROR, error=str(error))
+        if indexed is not None or ingested is not None:
+            return OrgResult(OrgStatus.CUSTOM, indexed_custom_metrics=indexed, ingested_custom_metrics=ingested)
 
         metadata = self._run("metrics", "metadata", "get", str(name))
         if metadata.returncode != 0:
@@ -190,7 +203,7 @@ class Pup:
 def registry_metrics(root: Path) -> list[MetricName]:
     names: set[MetricName] = set()
     for path in sorted([*root.rglob("*.yaml"), *root.rglob("*.yml")]):
-        for document in yaml.safe_load_all(path.read_text()):
+        for document in yaml.safe_load_all(path.read_text(encoding="utf-8")):
             if not isinstance(document, dict):
                 continue
             for metric in document.get("metrics") or []:
@@ -222,7 +235,13 @@ def render_text(report: Report) -> str:
     if org is None:
         return "\n".join(lines)
     if org.status is OrgStatus.CUSTOM:
-        lines.append(f"  org: billed as custom, up to {org.custom_metrics:g} custom metrics in the last day")
+        counts = [
+            f"{count:g} {kind}"
+            for kind, count in (("indexed", org.indexed_custom_metrics), ("ingested", org.ingested_custom_metrics))
+            if count is not None
+        ]
+        lines.append(f"  org: billed as custom, up to {' and '.join(counts)} custom metrics in the last day")
+        lines.append("    Timeseries pricing estimate; under Metric Name pricing, check the usage page")
     elif org.status is OrgStatus.INTEGRATION:
         lines.append(f"  org: reporting through the {org.integration} integration, not counted as custom")
     elif org.status is OrgStatus.NOT_CUSTOM:
@@ -248,6 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-org", action="store_true", help="skip the org check")
     parser.add_argument("--json", action="store_true", help="print results as JSON")
     args = parser.parse_args(argv)
+
+    for root in args.registry:
+        if not root.is_dir():
+            print(f"Registry not found: {root}", file=sys.stderr)
+            return EX_NOINPUT
 
     metrics = sorted({*args.metrics, *(m for root in args.registry for m in registry_metrics(root))})
     if not metrics:

@@ -4,7 +4,7 @@
 # ///
 from pathlib import Path
 
-from check_metric import DocsStatus, Mapping, MappingTable, MetricName, registry_metrics
+from check_metric import EX_NOINPUT, DocsStatus, Mapping, MappingTable, MetricName, main, registry_metrics
 
 PAGE = """
 Intro text | with a pipe that is not a table
@@ -41,6 +41,20 @@ def test_parse_returns_nothing_without_a_table():
 def test_parse_accepts_aligned_separators_and_code_spans():
     page = "| otel | datadog |\n|:---|:---:|\n| `system.cpu.utilization` | `system.cpu.user` |\n"
     assert MappingTable.parse(page).mappings == [Mapping("system.cpu.utilization", "system.cpu.user")]
+
+
+def test_parse_accepts_tables_without_outer_pipes():
+    page = "otel | datadog\n--- | ---\nsystem.cpu.utilization | system.cpu.user\n\nAfter | the table\n"
+    assert MappingTable.parse(page).mappings == [Mapping("system.cpu.utilization", "system.cpu.user")]
+
+
+def test_parse_ignores_pipes_in_prose_before_the_table():
+    page = "Prose | with a pipe\n\n| otel | datadog |\n| --- | --- |\n| a.b | c.d |\n"
+    assert MappingTable.parse(page).mappings == [Mapping("a.b", "c.d")]
+
+
+def test_missing_registry_is_an_error(tmp_path: Path):
+    assert main(["--no-org", "--registry", str(tmp_path / "missing")]) == EX_NOINPUT
 
 
 def test_exact_match_on_either_side():
