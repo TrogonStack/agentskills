@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.2...trogonstack-datadog@v0.4.0) (2026-10-03)
+
+
+### Features
+
+* **trogonstack-datadog:** Check metrics against Datadog's no-cost metrics ([#82](https://github.com/TrogonStack/agentskills/issues/82)) ([1e32111](https://github.com/TrogonStack/agentskills/commit/1e321112b051f609318d7feab8b77cd1827a6b01))
+
 ## [0.3.2](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.1...trogonstack-datadog@v0.3.2) (2026-05-27)
 
 
