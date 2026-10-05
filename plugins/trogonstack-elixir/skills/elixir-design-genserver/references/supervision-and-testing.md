@@ -20,7 +20,7 @@ use GenServer, restart: :transient
 
 - `terminate/2` runs on supervisor shutdown only if the process traps exits (`Process.flag(:trap_exit, true)`) and finishes within the child spec `shutdown` value.
 - Trap exits only when cleanup is required, and set an explicit `shutdown`.
-- Do not rely on `terminate/2` for anything that must happen; a `:kill` skips it.
+- Do not rely on `terminate/2` for anything that must happen; a `:kill` skips it. Tie the resource to a process exit instead; see [resource-lifecycle-ownership.md](resource-lifecycle-ownership.md).
 
 ## State Across Restarts
 

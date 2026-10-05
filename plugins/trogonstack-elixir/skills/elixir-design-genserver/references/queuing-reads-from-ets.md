@@ -66,6 +66,6 @@ end
 
 ## Trade-offs
 
-- The table dies with its owner. Readers get `ArgumentError` during the restart window; rebuild the table in `init/1` or `handle_continue/2`, or have a parent process own it.
+- The table dies with its owner. Readers get `ArgumentError` during the restart window; rebuild the table in `init/1` or `handle_continue/2`, or have a parent process own it. See [resource-lifecycle-ownership.md](resource-lifecycle-ownership.md).
 - A write is visible to readers as soon as `:ets.insert/2` returns, and the `call` returns after that, so the writer reads its own write.
 - For data that almost never changes, `:persistent_term` reads are faster still, but every update triggers a global garbage collection scan. Use it for configuration, not for anything updated at runtime.

@@ -28,6 +28,8 @@ A process earns its place by owning what cannot live in the caller: shared state
 
 Read [references/process-justification.md](references/process-justification.md) when the decision is not obvious, or when reviewing code that uses GenServers as a service layer.
 
+Read [references/resource-lifecycle-ownership.md](references/resource-lifecycle-ownership.md) when a resource must be released when some process exits, or when cleanup depends on callers calling `release` or on `terminate/2`.
+
 Read [references/anti-pattern-database-gatekeeper.md](references/anti-pattern-database-gatekeeper.md) when a GenServer wraps database writes, or is justified as fault tolerance or as a way to avoid race conditions.
 
 ### 2. Every Process Is a Queue

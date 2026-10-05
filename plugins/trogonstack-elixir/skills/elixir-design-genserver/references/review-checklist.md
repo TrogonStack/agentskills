@@ -7,6 +7,11 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 - [ ] The process owns something concrete: shared state, a resource, a lifecycle, or a failure boundary
 - [ ] No stateless operation (DB, HTTP, computation) is routed through it
 
+## Resource Lifecycle ([resource-lifecycle-ownership.md](resource-lifecycle-ownership.md))
+
+- [ ] Resources are released by process exit, not only by an explicit call or `terminate/2`
+- [ ] Resources outside the VM have a boot-time sweep as a backstop
+
 ## Database Writes ([anti-pattern-database-gatekeeper.md](anti-pattern-database-gatekeeper.md))
 
 - [ ] Write correctness comes from constraints, transactions, and locks, not from routing writes through one process

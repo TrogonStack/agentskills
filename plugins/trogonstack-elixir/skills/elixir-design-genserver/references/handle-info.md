@@ -96,7 +96,7 @@ def handle_info({:DOWN, ref, :process, _pid, _reason}, %FeedServerState{} = stat
 end
 ```
 
-Monitor instead of link: a link makes the server die with the subscriber, a monitor only tells it.
+Monitor instead of link: a link makes the server die with the subscriber, a monitor only tells it. When the monitor exists to release a resource, see [resource-lifecycle-ownership.md](resource-lifecycle-ownership.md).
 
 ## Task Results
 
