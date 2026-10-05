@@ -15,7 +15,8 @@
 
 - [ ] Client API wraps every message; message tuples never leak
 - [ ] Callbacks delegate to pure, separately tested functions
-- [ ] `init/1` is fast; slow work runs in `handle_continue/2`
+- [ ] `init/1` is fast; slow work runs in `handle_continue/2`, unless siblings need the state at boot
+- [ ] Persistent dependency failures retry with backoff instead of crash-looping the supervisor
 - [ ] `handle_info/2` has a catch-all clause
 - [ ] Process names never built from untrusted input
 

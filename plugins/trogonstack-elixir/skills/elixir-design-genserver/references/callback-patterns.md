@@ -47,7 +47,8 @@ end
 `init/1` blocks the caller of `start_link`; during boot that is the supervisor and every sibling after it.
 
 - Return `{:ok, state, {:continue, :load}}` and do slow work in `handle_continue/2`.
-- If the server cannot work without the loaded data, let `handle_continue/2` crash so the supervisor restarts it.
+- The supervisor starts the next sibling as soon as `init/1` returns, before `handle_continue/2` finishes. A sibling that calls the server during its own startup waits in the mailbox behind the load and can time out. When siblings need the loaded state at boot, keep loading in `init/1`, or expose an explicit readiness signal (a `ready?/0` call, a `Registry` entry, a `:persistent_term` flag) that they check.
+- Crash from `handle_continue/2` only when a restart can fix the failure. A dependency that stays down (database, remote API) crashes the server repeatedly, exhausts the supervisor's restart intensity (3 restarts in 5 seconds by default), and takes the supervisor and its other children down with it. For those failures, stay up in a degraded state and retry with `Process.send_after/3` and backoff.
 - Return `:ignore` when configuration disables the server.
 
 ## Timeouts and Long Work
