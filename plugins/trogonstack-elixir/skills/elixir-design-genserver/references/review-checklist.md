@@ -17,13 +17,14 @@
 - [ ] Callbacks delegate to pure, separately tested functions
 - [ ] `init/1` is fast; slow work runs in `handle_continue/2`, unless siblings need the state at boot
 - [ ] Persistent dependency failures retry with backoff instead of crash-looping the supervisor
+- [ ] Replies and core results are `:ok`, `{:ok, value}`, or `{:error, error}`, never longer tuples
 - [ ] `handle_info/2` has a catch-all clause
 - [ ] Process names never built from untrusted input
 
 ## Naming ([naming.md](naming.md))
 
 - [ ] Pure core named after a domain concept, not a role (`State`, `Core`, `Logic`, `Impl`)
-- [ ] Process bookkeeping lives in `ServerState` and holds the core as a field
+- [ ] The domain struct is the state; `ServerState` exists only for process-only data or several domain structs
 - [ ] GenServer messages are `<Operation>Request` / `<Operation>Response` structs, not tuples
 - [ ] The pure core never references the Request/Response structs
 

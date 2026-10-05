@@ -6,7 +6,7 @@
 defmodule MyApp.RateLimiter do
   use GenServer
 
-  alias MyApp.RateLimiter.{Bucket, ServerState, TakeRequest, TakeResponse}
+  alias MyApp.RateLimiter.{Bucket, TakeRequest, TakeResponse}
 
   def start_link(opts) do
     {name, opts} = Keyword.pop!(opts, :name)
@@ -19,17 +19,17 @@ defmodule MyApp.RateLimiter do
 
   @impl GenServer
   def init(opts) do
-    {:ok, %ServerState{bucket: Bucket.new(opts)}}
+    {:ok, Bucket.new(opts)}
   end
 
   @impl GenServer
-  def handle_call(%TakeRequest{key: key}, _from, %ServerState{} = state) do
-    case Bucket.take(state.bucket, key) do
+  def handle_call(%TakeRequest{key: key}, _from, %Bucket{} = bucket) do
+    case Bucket.take(bucket, key) do
       {:ok, bucket} ->
-        {:reply, %TakeResponse{allowed?: true}, %ServerState{state | bucket: bucket}}
+        {:reply, {:ok, %TakeResponse{remaining: Bucket.remaining(bucket, key)}}, bucket}
 
-      {:error, :exhausted} ->
-        {:reply, %TakeResponse{allowed?: false}, state}
+      {:error, error} ->
+        {:reply, {:error, error}, bucket}
     end
   end
 end
@@ -39,7 +39,21 @@ end
 - Callbacks delegate to a pure core (`Bucket.take/2`) that knows nothing about the GenServer or its messages.
 - Mark every callback with `@impl GenServer`.
 - Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice.
-- Hold process state in a `ServerState` struct so its shape is documented and enforced.
+- Hold state in a struct so its shape is documented and enforced. The domain struct is the state until process-only data appears; see [naming.md](naming.md).
+
+## Reply Shapes
+
+Every reply, and every result the pure core returns, is one of:
+
+| Shape | When |
+|-------|------|
+| `:ok` | Success with nothing to return |
+| `{:ok, value}` | Success with a value, usually an `<Operation>Response` struct |
+| `{:error, error}` | Failure, with an error struct (`defexception`) |
+
+Never reply with a tuple of more than two elements such as `{:ok, value, extra}` or `{:error, reason, details}`. Put the extra data in the struct. Callers can then handle every operation with the same `case` or `with`, and adding a field never breaks a pattern match.
+
+This rule covers the replies you design. OTP callback return values such as `{:reply, reply, state}` or `{:ok, state, {:continue, term}}` keep the shapes OTP requires.
 
 ## call vs cast vs send
 

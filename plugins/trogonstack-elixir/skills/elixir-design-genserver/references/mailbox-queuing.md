@@ -68,11 +68,11 @@ Symptoms: `GenServer.call` timeouts that rise with load, latency that grows line
      {PartitionSupervisor, child_spec: MyApp.Counter, name: MyApp.Counters}
    ]
 
-   GenServer.call({:via, PartitionSupervisor, {MyApp.Counters, key}}, {:incr, key})
+   GenServer.call({:via, PartitionSupervisor, {MyApp.Counters, key}}, %IncrementRequest{key: key})
    ```
 
 5. **One process per entity.** Use `Registry` + `DynamicSupervisor` when each entity has its own state and lifecycle (a chat room, a device session).
 6. **Pool a scarce resource.** Use a pool (`NimblePool`, `:poolboy`) when the bottleneck is a limited external resource rather than state.
-7. **Shed load.** When the queue cannot be avoided, bound it: check `message_queue_len` or a counter before enqueueing and reject early with `{:error, :overloaded}` instead of letting callers time out.
+7. **Shed load.** When the queue cannot be avoided, bound it: check `message_queue_len` or a counter before enqueueing and reject early with `{:error, %OverloadedError{}}` instead of letting callers time out.
 
 Prefer `call` over `cast` from producers that can outrun the server: the blocked caller is the back-pressure.
