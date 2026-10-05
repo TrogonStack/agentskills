@@ -30,7 +30,7 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 - [ ] Persistent dependency failures retry with backoff instead of crash-looping the supervisor
 - [ ] Replies and core results are `:ok`, `{:ok, value}`, or `{:error, error}`, never longer tuples
 - [ ] Process names never built from untrusted input
-- [ ] Secrets in state are redacted with `format_status/1`
+- [ ] Secrets in state are redacted with `format_status/1` (Elixir 1.17+; `format_status/2` before that)
 
 ## handle_info ([handle-info.md](handle-info.md))
 

@@ -23,27 +23,28 @@ Importing 100,000 rows blocks every lookup until the import ends.
 
 @impl GenServer
 def handle_call(%ImportRequest{rows: rows}, _from, %CatalogServerState{} = state) do
-  if state.import_queue == [], do: send(self(), %ImportNextBatch{})
-  import_queue = state.import_queue ++ rows
-  response = %ImportResponse{pending_rows: length(import_queue)}
+  if :queue.is_empty(state.import_queue), do: send(self(), %ImportNextBatch{})
+  import_queue = Enum.reduce(rows, state.import_queue, &:queue.in/2)
+  response = %ImportResponse{pending_rows: :queue.len(import_queue)}
   {:reply, {:ok, response}, %CatalogServerState{state | import_queue: import_queue}}
 end
 
 @impl GenServer
-def handle_info(%ImportNextBatch{}, %CatalogServerState{import_queue: []} = state) do
-  {:noreply, state}
-end
-
 def handle_info(%ImportNextBatch{}, %CatalogServerState{} = state) do
-  {batch, rest} = Enum.split(state.import_queue, @batch_size)
-  catalog = Enum.reduce(batch, state.catalog, &Catalog.import_row(&2, &1))
-  send(self(), %ImportNextBatch{})
-  {:noreply, %CatalogServerState{state | catalog: catalog, import_queue: rest}}
+  if :queue.is_empty(state.import_queue) do
+    {:noreply, state}
+  else
+    {batch, rest} = :queue.split(min(@batch_size, :queue.len(state.import_queue)), state.import_queue)
+    catalog = Enum.reduce(:queue.to_list(batch), state.catalog, &Catalog.import_row(&2, &1))
+    send(self(), %ImportNextBatch{})
+    {:noreply, %CatalogServerState{state | catalog: catalog, import_queue: rest}}
+  end
 end
 ```
 
 - `send(self(), msg)` puts the message at the back of the mailbox, behind client messages already waiting. That is what lets them interleave.
 - `{:continue, term}` would run before any other message, which defeats the purpose here; see [handle-info.md](handle-info.md#deferring-work-to-yourself).
+- `import_queue` starts as `:queue.new()`. Appending with `++` copies the whole backlog on every import; `:queue` appends and splits without that cost.
 - Only a request that finds the queue empty schedules a batch. A second import joins the queue; scheduling again would start a second chain and double the batch rate.
 - The reply means "accepted", not "imported", and reports the backlog. Progress is new fields on `ImportResponse` or a separate request.
 

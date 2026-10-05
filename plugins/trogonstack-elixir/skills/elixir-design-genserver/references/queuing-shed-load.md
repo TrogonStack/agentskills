@@ -43,28 +43,44 @@ The mailbox check is best-effort: concurrent callers can all see a length below 
 
 ## Hard Bound
 
-Reserve a slot atomically before sending, and release it when the call returns:
+Reserve a slot atomically before sending, release it when the call returns, and give the request a deadline so the server skips work nobody is waiting for:
 
 ```elixir
 @max_in_flight 1_000
+@timeout 5_000
 
 def take(server, admission, %TakeRequest{} = request) do
   if :atomics.add_get(admission, 1, 1) > @max_in_flight do
     :atomics.sub(admission, 1, 1)
     {:error, %OverloadedError{}}
   else
+    deadline = System.monotonic_time(:millisecond) + @timeout
+
     try do
-      GenServer.call(server, request)
+      GenServer.call(server, %TakeRequest{request | deadline: deadline}, @timeout)
     after
       :atomics.sub(admission, 1, 1)
+    end
+  end
+end
+
+@impl GenServer
+def handle_call(%TakeRequest{key: key, deadline: deadline}, _from, %Bucket{} = bucket) do
+  if System.monotonic_time(:millisecond) > deadline do
+    {:noreply, bucket}
+  else
+    case Bucket.take(bucket, key) do
+      {:ok, bucket} -> {:reply, {:ok, %TakeResponse{remaining: Bucket.remaining(bucket, key)}}, bucket}
+      {:error, error} -> {:reply, {:error, error}, bucket}
     end
   end
 end
 ```
 
 - `admission` is `:atomics.new(1, signed: true)`, created once by whoever starts the server and passed to callers, for example through the same place the server name lives.
-- The counter bounds calls in flight (queued plus being handled), which is a hard upper bound on the mailbox for this operation.
-- `after` releases the slot even when the call exits on timeout.
+- The counter bounds callers waiting, not the mailbox. A caller that times out frees its slot while its request stays queued, so the mailbox can briefly hold more than `@max_in_flight` requests.
+- The deadline keeps that overflow cheap: the server drops an expired request without doing the work, and `:noreply` avoids sending a late reply to a caller that already gave up.
+- `System.monotonic_time/1` is per node, so the deadline holds only for a local server.
 
 ## Trade-offs
 

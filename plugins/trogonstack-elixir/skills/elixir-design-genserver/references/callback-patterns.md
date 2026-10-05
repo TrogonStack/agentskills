@@ -84,7 +84,7 @@ This rule covers the replies you design. OTP callback return values such as `{:r
 
 ## Redacting State in Crash Logs
 
-Crash reports and `:sys.get_status/1` print the full state. When it holds secrets (tokens, credentials, personal data), implement `format_status/1` (OTP 25+) to redact them:
+Crash reports and `:sys.get_status/1` print the full state. When it holds secrets (tokens, credentials, personal data), implement `format_status/1` (Elixir 1.17+; earlier versions use the deprecated `format_status/2`) to redact them:
 
 ```elixir
 @impl GenServer
