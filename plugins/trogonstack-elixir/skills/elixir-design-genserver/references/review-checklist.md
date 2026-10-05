@@ -39,6 +39,13 @@
 - [ ] GenServer messages are `<Operation>Request` / `<Operation>Response` structs, not tuples
 - [ ] The pure core never references the Request/Response structs
 
+## Contracts ([request-response.md](request-response.md))
+
+- [ ] Every operation takes a Request struct, even with no fields
+- [ ] Replies carry a Response struct, never a bare list, map, or scalar
+- [ ] Collections sit in a named field of the Response
+- [ ] New fields have defaults; no field callers read was renamed or removed
+
 ## Supervision ([supervision-and-testing.md](supervision-and-testing.md))
 
 - [ ] Restart strategy matches the process lifecycle

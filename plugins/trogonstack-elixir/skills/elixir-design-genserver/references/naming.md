@@ -68,9 +68,9 @@ Prefix the server module with the domain name instead of a bare `.Server`. A con
 Exchange structs with the GenServer instead of tuples like `{:allow?, key}`. Name them `<Operation>Request` and `<Operation>Response`, nested under the public module:
 
 - The pairing stays unambiguous as operations grow: `TakeRequest` and `TakeResponse`, `RefillRequest` and `RefillResponse`.
-- Adding a field does not break pattern matches the way growing a tuple does.
 - The client function takes the request and returns `{:ok, %TakeResponse{}}` or `{:error, error}`.
-- An operation with nothing to return replies `:ok` and needs no Response struct.
+
+For why bare lists and values never appear in replies, and how to grow these structs without breaking callers, see [request-response.md](request-response.md).
 
 Messages the server sends itself (`send/2`, timers) are structs too, for example `%RefillTick{}`; see [handle-info.md](handle-info.md#internal-message-structs).
 

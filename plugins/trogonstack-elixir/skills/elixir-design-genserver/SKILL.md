@@ -42,6 +42,8 @@ Read [references/handle-info.md](references/handle-info.md) when the server send
 
 Read [references/naming.md](references/naming.md) when naming the public module, the pure core, the process state, or the Request/Response structs the GenServer exchanges.
 
+Read [references/request-response.md](references/request-response.md) when designing or changing what a client function takes or returns, especially a reply that holds a list.
+
 ### 4. Supervise and Test
 
 Pick a restart strategy that matches the lifecycle, and test the pure core without processes.

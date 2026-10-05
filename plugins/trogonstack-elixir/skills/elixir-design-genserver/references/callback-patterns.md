@@ -53,6 +53,8 @@ Every reply, and every result the pure core returns, is one of:
 
 Never reply with a tuple of more than two elements such as `{:ok, value, extra}` or `{:error, reason, details}`. Put the extra data in the struct. Callers can then handle every operation with the same `case` or `with`, and adding a field never breaks a pattern match.
 
+Reply with a Response struct rather than a bare list or value, so the reply can grow; see [request-response.md](request-response.md).
+
 This rule covers the replies you design. OTP callback return values such as `{:reply, reply, state}` or `{:ok, state, {:continue, term}}` keep the shapes OTP requires.
 
 ## call vs cast vs send
