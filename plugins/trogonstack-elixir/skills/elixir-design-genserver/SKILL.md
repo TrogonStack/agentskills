@@ -44,16 +44,6 @@ Pick a restart strategy that matches the lifecycle, and test the pure core witho
 
 Read [references/supervision-and-testing.md](references/supervision-and-testing.md) when wiring the child spec, handling cleanup, or writing tests.
 
-## Review Checklist
+## Reviewing an Existing GenServer
 
-- [ ] The process owns something concrete: shared state, a resource, a lifecycle, or a failure boundary
-- [ ] No stateless operation (DB, HTTP, computation) is routed through it
-- [ ] Hot-path throughput fits within `1 / handling_time` of one process, or the work is partitioned
-- [ ] No unbounded casts from producers that can outrun the server
-- [ ] No blocking I/O inside callbacks on a hot path
-- [ ] Client API wraps every message; message tuples never leak
-- [ ] Callbacks delegate to pure, separately tested functions
-- [ ] `init/1` is fast; slow work runs in `handle_continue/2`
-- [ ] `handle_info/2` has a catch-all clause
-- [ ] Restart strategy matches the process lifecycle
-- [ ] Process names never built from untrusted input
+Read [references/review-checklist.md](references/review-checklist.md) when reviewing or auditing GenServer code. Each section links to the reference that explains a failing item.
