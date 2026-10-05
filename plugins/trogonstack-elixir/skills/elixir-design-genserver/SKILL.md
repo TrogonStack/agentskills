@@ -26,6 +26,8 @@ Name what the process owns. If the answer is "the functions in this module", or 
 
 Read [references/process-justification.md](references/process-justification.md) when the decision is not obvious, or when reviewing code that uses GenServers as a service layer.
 
+Read [references/anti-pattern-database-gatekeeper.md](references/anti-pattern-database-gatekeeper.md) when a GenServer wraps database writes, or is justified as fault tolerance or as a way to avoid race conditions.
+
 ### 2. Check the Queue
 
 Estimate arrival rate and handling time on the hot path. A single server tops out at `1 / handling_time` messages per second regardless of core count. If callers can outpace it, the mailbox grows and latency grows with it.

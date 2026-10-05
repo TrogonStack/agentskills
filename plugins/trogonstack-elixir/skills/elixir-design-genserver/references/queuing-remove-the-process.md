@@ -48,4 +48,6 @@ The caller's process runs the query. Concurrency is bounded by the Repo pool, wh
 
 ## Trade-offs
 
-None, as long as the process owned nothing. If removing it breaks something, that something is what the process owns; see [process-justification.md](process-justification.md).
+None, as long as the process owned nothing. If it was built to make writes fault tolerant or race free, see [anti-pattern-database-gatekeeper.md](anti-pattern-database-gatekeeper.md) for what provides those guarantees instead.
+
+If removing it breaks something, that something is what the process owns; see [process-justification.md](process-justification.md).

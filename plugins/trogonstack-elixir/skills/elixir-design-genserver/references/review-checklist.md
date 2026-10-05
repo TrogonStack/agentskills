@@ -5,6 +5,13 @@
 - [ ] The process owns something concrete: shared state, a resource, a lifecycle, or a failure boundary
 - [ ] No stateless operation (DB, HTTP, computation) is routed through it
 
+## Database Writes ([anti-pattern-database-gatekeeper.md](anti-pattern-database-gatekeeper.md))
+
+- [ ] Write correctness comes from constraints, transactions, and locks, not from routing writes through one process
+- [ ] No writes that must survive a crash go through `cast` or a mailbox
+- [ ] State does not cache rows that other code also writes
+- [ ] Write-behind buffers document their loss window and flush on shutdown
+
 ## Queuing ([mailbox-queuing.md](mailbox-queuing.md))
 
 - [ ] Hot-path throughput fits within `1 / handling_time` of one process, or the work is partitioned

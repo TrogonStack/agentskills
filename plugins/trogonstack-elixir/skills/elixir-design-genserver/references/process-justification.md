@@ -18,6 +18,7 @@ Invalid answers:
 - "It is the service layer for users / orders / billing." That is a module.
 - "It encapsulates the logic." Modules encapsulate logic.
 - "It wraps the database / HTTP client." Those calls are already concurrent and pooled; a GenServer in front serializes them.
+- "It makes writes fault tolerant" or "it prevents race conditions." Neither holds for database writes; see [anti-pattern-database-gatekeeper.md](anti-pattern-database-gatekeeper.md).
 - "It runs in the background." That is a `Task` under a `Task.Supervisor`.
 - "It caches data." Reads belong in ETS or `:persistent_term`; a process may own the table, but readers should not message it.
 
@@ -42,6 +43,7 @@ A GenServer whose state is never used, forwarding every request to the database 
 
 - `state` is ignored or is `nil` / `%{}` forever
 - Every `handle_call` clause is a thin pass-through to another module
+- Callbacks wrap `Repo` calls ([anti-pattern-database-gatekeeper.md](anti-pattern-database-gatekeeper.md))
 - The module is a named singleton and every web request calls it
 - The GenServer exists "for consistency" with other modules
 - Removing `use GenServer` and the callbacks would change nothing but concurrency
