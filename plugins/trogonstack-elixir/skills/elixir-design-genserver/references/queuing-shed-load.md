@@ -39,9 +39,9 @@ end
 - `{:error, %OverloadedError{}}` follows the reply shapes in [callback-patterns.md](callback-patterns.md#reply-shapes); callers map it to a retry with backoff or an HTTP 429.
 - When the server is not running, `overloaded?/1` returns `false` and the `call` exits as it would have anyway.
 
-The mailbox check is best-effort: concurrent callers can all see a length below the limit and enqueue together, so it cannot enforce a hard bound.
+The mailbox check is best-effort: concurrent callers can all see a length below the limit and enqueue together, so it cannot enforce a strict bound.
 
-## Hard Bound
+## Bound Waiting Callers
 
 Reserve a slot atomically before sending, release it when the call returns, and give the request a deadline so the server skips work nobody is waiting for:
 
@@ -84,7 +84,7 @@ end
 
 ## Trade-offs
 
-- Use the mailbox check when stopping runaway growth is enough; use admission control when the bound must hold.
+- Use the mailbox check when stopping runaway growth is enough; use admission control when the number of waiting callers must stay bounded.
 - `Process.info/2` works only for local pids. For remote servers, use admission control.
 - Admission control counts only callers that go through it; casts and messages from elsewhere still reach the mailbox.
 - Shedding is a last resort. It keeps the node alive, but callers still fail; prefer the patterns that remove the queue.

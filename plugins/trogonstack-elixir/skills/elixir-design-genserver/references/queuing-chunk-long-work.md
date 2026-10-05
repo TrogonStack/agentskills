@@ -31,21 +31,17 @@ end
 
 @impl GenServer
 def handle_info(%ImportNextBatch{}, %CatalogServerState{} = state) do
-  if :queue.is_empty(state.import_queue) do
-    {:noreply, state}
-  else
-    {batch, rest} = :queue.split(min(@batch_size, :queue.len(state.import_queue)), state.import_queue)
-    catalog = Enum.reduce(:queue.to_list(batch), state.catalog, &Catalog.import_row(&2, &1))
-    send(self(), %ImportNextBatch{})
-    {:noreply, %CatalogServerState{state | catalog: catalog, import_queue: rest}}
-  end
+  {batch, rest} = :queue.split(min(@batch_size, :queue.len(state.import_queue)), state.import_queue)
+  catalog = Enum.reduce(:queue.to_list(batch), state.catalog, &Catalog.import_row(&2, &1))
+  if :queue.len(rest) > 0, do: send(self(), %ImportNextBatch{})
+  {:noreply, %CatalogServerState{state | catalog: catalog, import_queue: rest}}
 end
 ```
 
 - `send(self(), msg)` puts the message at the back of the mailbox, behind client messages already waiting. That is what lets them interleave.
 - `{:continue, term}` would run before any other message, which defeats the purpose here; see [handle-info.md](handle-info.md#deferring-work-to-yourself).
 - `import_queue` starts as `:queue.new()`. Appending with `++` copies the whole backlog on every import; `:queue` appends and splits without that cost.
-- Only a request that finds the queue empty schedules a batch. A second import joins the queue; scheduling again would start a second chain and double the batch rate.
+- A marker is pending exactly when the queue is not empty: a request that finds the queue empty schedules the first batch, and a batch schedules the next one only if rows remain. A second import joins the queue; a second marker would start a second chain and double the batch rate.
 - The reply means "accepted", not "imported", and reports the backlog. Progress is new fields on `ImportResponse` or a separate request.
 
 ## Trade-offs
