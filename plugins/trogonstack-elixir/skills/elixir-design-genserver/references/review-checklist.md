@@ -1,5 +1,7 @@
 # Review Checklist
 
+Each item is a symptom of a principle, not a rule on its own. When an item fails, read the linked reference and judge the code by the principle behind it; a justified exception passes, a compliant design that misses the point does not.
+
 ## Justification ([process-justification.md](process-justification.md))
 
 - [ ] The process owns something concrete: shared state, a resource, a lifecycle, or a failure boundary

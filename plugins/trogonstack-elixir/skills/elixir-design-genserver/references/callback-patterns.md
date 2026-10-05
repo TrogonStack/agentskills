@@ -1,5 +1,7 @@
 # Callback Patterns
 
+The GenServer module is plumbing between callers and the pure core. The patterns below keep that plumbing thin, give callers one predictable way to handle results, and keep the process safe to start and restart.
+
 ## Module Layout
 
 ```elixir

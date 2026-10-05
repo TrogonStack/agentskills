@@ -1,5 +1,7 @@
 # Where an Actor Belongs, and Why
 
+A process is justified by what it owns at runtime, never by the code it contains. Code is organized by modules; a process exists because something must be owned by exactly one place while many callers use it.
+
 ## The Question to Ask
 
 "What does this process own that cannot live in the caller?"

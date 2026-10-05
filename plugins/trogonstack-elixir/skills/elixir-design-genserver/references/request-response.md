@@ -56,16 +56,18 @@ end
 
 New request options and new response fields are new struct fields with defaults. Existing callers keep compiling and keep matching.
 
-## Rules
+## Growing Without Breaking
 
-- Every operation takes an `<Operation>Request`, even with no fields today: `%ListSessionsRequest{}` leaves room for filters and pagination.
-- Every success with data replies `{:ok, %<Operation>Response{}}`. Never reply with a bare list, map, integer, or boolean.
-- Collections live in a named field (`sessions`, `items`), never as the whole reply. The struct is where metadata (cursor, total, truncation) lands later.
-- Reply `:ok` only for commands that will never return data. When an operation might, start with an empty Response struct; changing `:ok` to `{:ok, response}` later breaks every caller.
-- Callers match on the struct name and the fields they read, `%ListSessionsResponse{sessions: sessions}`, never on the whole struct. Matching the fields they need keeps them indifferent to new ones.
-- Add fields with defaults. Never rename or remove a field callers may read; add the new one and keep the old one until callers move.
-- Decide `@enforce_keys` when the struct is created. Enforcing a key later breaks every caller that builds the struct without it.
-- Errors follow the same rule: `defexception` structs, so a new detail is a new field. See [naming.md](naming.md#errors).
+A change to the contract should be additive: a new field with a default. A shape that can only change by being replaced forces every caller to change at once. That one idea explains every choice below.
+
+- **A Request, even with no fields.** An operation that takes nothing today takes a filter or a page size tomorrow. A field is additive; a new argument changes the arity.
+- **A Response, not a bare value.** A bare list, map, integer, or boolean has no room for a second piece of data, so the first piece of metadata (cursor, total, truncation) replaces the shape.
+- **Collections in a named field.** Data about a collection belongs next to it, and a field named `sessions` leaves room for `next_cursor`.
+- **`:ok` only when there is never anything to say.** Moving from `:ok` to `{:ok, response}` is a replacement. When an operation might return data later, start with an empty Response struct.
+- **Callers match what they read.** A struct pattern such as `%ListSessionsResponse{sessions: sessions}` ignores fields added later. Comparing whole structs with `==`, in code or in test assertions, breaks as soon as a new field carries a value.
+- **Evolve by addition.** Renaming or removing a field is a replacement. Add the new field and keep the old one until callers move.
+- **Enforced keys are decided once.** Adding `@enforce_keys` later breaks every caller that builds the struct without the key.
+- **Errors grow the same way.** `defexception` structs carry new detail as new fields; see [naming.md](naming.md#errors).
 
 ## Boundaries
 

@@ -1,5 +1,7 @@
 # Supervision and Testing
 
+A restart repairs state and nothing else: it fixes corruption and transient faults, and repeats any fault that lives outside the process. Supervise for the faults a clean start fixes, and test logic where it lives, in the pure core.
+
 ## Restart Strategy
 
 `use GenServer` generates `child_spec/1` with `restart: :permanent`. Override it when that is wrong:

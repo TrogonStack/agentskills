@@ -1,5 +1,7 @@
 # Mailbox Queuing
 
+A GenServer serializes everything sent to it. That is the point when it protects state that must change consistently, and pure cost when it does not. Remove serialization the problem does not need; bound the serialization it does.
+
 ## The Model
 
 A GenServer is a queue with exactly one worker:

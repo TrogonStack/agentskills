@@ -1,5 +1,7 @@
 # handle_info and Self-Messaging
 
+Messages outside the client API are still a protocol. Give the ones you send a name, accept that you will receive ones you did not send, and never assume a message reflects the current state by the time it arrives.
+
 `handle_info/2` receives every message that did not come through `GenServer.call/cast`: messages the server sends itself, timers, monitors, task results, exit signals, and messages from libraries.
 
 ## What Arrives Here
