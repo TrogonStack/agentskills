@@ -29,33 +29,14 @@ Invalid answers:
 | DB query or HTTP request | Call it from the caller's process |
 | One-off concurrent work, result awaited | `Task` / `Task.async_stream` |
 | Fire-and-forget work that must survive the caller | `Task.Supervisor.start_child` |
-| Read-heavy shared data | ETS table owned by a process, or `:persistent_term` for rarely changing data |
+| Read-heavy shared data | ETS table owned by a process ([queuing-reads-from-ets.md](queuing-reads-from-ets.md)), or `:persistent_term` for rarely changing data |
 | Shared state with logic, lifecycle, or timers | `GenServer` |
-| One process per entity, looked up by key | `GenServer` + `Registry` + `DynamicSupervisor` |
-| Stateless server that is a bottleneck | `PartitionSupervisor` (Elixir 1.14+) |
+| One process per entity, looked up by key | `GenServer` + `Registry` + `DynamicSupervisor` ([queuing-process-per-entity.md](queuing-process-per-entity.md)) |
+| Keyed state bottlenecked in one server | `PartitionSupervisor` (Elixir 1.14+, [queuing-partition-by-key.md](queuing-partition-by-key.md)) |
 
 ## The Anti-Pattern
 
-```elixir
-defmodule MyApp.Users do
-  use GenServer
-
-  def get(id), do: GenServer.call(__MODULE__, {:get, id})
-
-  @impl GenServer
-  def handle_call({:get, id}, _from, state) do
-    {:reply, Repo.get(User, id), state}
-  end
-end
-```
-
-The state is never used. Every request in the system now waits in one mailbox for every other `get/1` ahead of it, while the Repo connection pool sits mostly idle. The fix is deleting the process:
-
-```elixir
-defmodule MyApp.Users do
-  def get(id), do: Repo.get(User, id)
-end
-```
+A GenServer whose state is never used, forwarding every request to the database or an HTTP client. See [queuing-remove-the-process.md](queuing-remove-the-process.md) for the example and its fix.
 
 ## Smells in Review
 

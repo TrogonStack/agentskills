@@ -30,13 +30,15 @@ Read [references/process-justification.md](references/process-justification.md) 
 
 Estimate arrival rate and handling time on the hot path. A single server tops out at `1 / handling_time` messages per second regardless of core count. If callers can outpace it, the mailbox grows and latency grows with it.
 
-Read [references/mailbox-queuing.md](references/mailbox-queuing.md) when the server sits on a request path, receives casts from many producers, does I/O inside callbacks, or already shows timeouts or a growing `message_queue_len`.
+Read [references/mailbox-queuing.md](references/mailbox-queuing.md) when the server sits on a request path, receives casts from many producers, does I/O inside callbacks, or already shows timeouts or a growing `message_queue_len`. It links to an avoid/prefer example for each way of removing the queue.
 
 ### 3. Shape the Module
 
 Client API wraps every `call`/`cast`, callbacks delegate to a pure core, `call` is the default, `init/1` stays fast, and `handle_info/2` has a catch-all.
 
 Read [references/callback-patterns.md](references/callback-patterns.md) when writing or reviewing the module body.
+
+Read [references/handle-info.md](references/handle-info.md) when the server sends itself messages, uses timers, monitors other processes, or receives task results.
 
 Read [references/naming.md](references/naming.md) when naming the public module, the pure core, the process state, or the Request/Response structs the GenServer exchanges.
 

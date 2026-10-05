@@ -44,6 +44,15 @@ defmodule MyApp.RateLimiter.Bucket do
 end
 ```
 
+```elixir
+defmodule MyApp.RateLimiter.Bucket.ExhaustedError do
+  defexception [:key]
+
+  @impl Exception
+  def message(%__MODULE__{key: key}), do: "rate limit exhausted for #{inspect(key)}"
+end
+```
+
 Replies follow the shapes in [callback-patterns.md](callback-patterns.md#reply-shapes): `:ok`, `{:ok, value}`, or `{:error, error}`.
 
 ## Public Module
@@ -63,6 +72,8 @@ Exchange structs with the GenServer instead of tuples like `{:allow?, key}`. Nam
 - The client function takes the request and returns `{:ok, %TakeResponse{}}` or `{:error, error}`.
 - An operation with nothing to return replies `:ok` and needs no Response struct.
 
+Messages the server sends itself (`send/2`, timers) are structs too, for example `%RefillTick{}`; see [handle-info.md](handle-info.md#internal-message-structs).
+
 Request and Response exist only at the GenServer boundary. The pure core never sees them; `handle_call/3` unpacks the request, calls the core with domain values, and builds the response.
 
 ## Pure Core
@@ -72,6 +83,20 @@ Name it after the domain concept: `Bucket`, `Room`, `Session`, `Ledger`. The str
 Avoid role names: `State`, `Core`, `Logic`, `Impl`, `Engine`, `Worker`, `Manager`, `Service`. They describe architecture rather than meaning, repeat in every GenServer, and tie the core to the process even when it is used without one.
 
 Name core functions with domain verbs (`take`, `refill`, `expire`), never GenServer vocabulary (`handle_*`).
+
+## Errors
+
+Return errors as `defexception` structs named `*Error`, nested under the module that produces them: `Bucket.ExhaustedError`. An exception struct in `{:error, error}` is not raised; it gains `Exception.message/1` for logs and lets a bang variant `raise` the same value. Build the message from structured fields so callers can still match on them.
+
+## Time Is an Input
+
+The core never reads the clock. The server reads it and passes it in, so the same inputs always produce the same output and tests need no sleeping or mocking:
+
+```elixir
+Bucket.refill(bucket, System.monotonic_time(:millisecond))
+```
+
+The same applies to randomness and ids: generate them in the server, pass them to the core.
 
 ## Process State
 

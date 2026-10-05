@@ -59,7 +59,7 @@ This rule covers the replies you design. OTP callback return values such as `{:r
 
 - `call`: the default. Back-pressure, errors reach the caller, the work is confirmed.
 - `cast`: only when the caller does not care about the outcome and producers cannot outrun the server. See [mailbox-queuing.md](mailbox-queuing.md).
-- `send/2` + `handle_info/2`: messages that are not part of the client API, such as timers, monitors, ports, and other libraries.
+- `send/2` + `handle_info/2`: messages that are not part of the client API, such as timers, monitors, task results, and other libraries. See [handle-info.md](handle-info.md).
 
 ## Initialization
 
@@ -73,22 +73,23 @@ This rule covers the replies you design. OTP callback return values such as `{:r
 ## Timeouts and Long Work
 
 - `GenServer.call/3` defaults to 5 seconds and exits the caller on expiry. A slow call inside a serialized process is a design question before it is a timeout question.
-- Offload slow work to a `Task` and reply later with `GenServer.reply/2`.
-- For periodic work use `Process.send_after/3` and reschedule inside `handle_info/2`. `:timer.send_interval/2` keeps firing even when the server falls behind, which piles messages into the mailbox.
+- Offload slow work to a task and reply later with `GenServer.reply/2`; see [queuing-offload-slow-work.md](queuing-offload-slow-work.md).
+- For periodic work, timers, monitors, and the `handle_info/2` catch-all, see [handle-info.md](handle-info.md).
 
-## Unexpected Messages
+## Redacting State in Crash Logs
 
-`use GenServer` injects a `handle_info/2` that logs unexpected messages. Defining your own replaces it, so add a catch-all clause or an unknown message crashes the server with a `FunctionClauseError`.
+Crash reports and `:sys.get_status/1` print the full state. When it holds secrets (tokens, credentials, personal data), implement `format_status/1` (OTP 25+) to redact them:
 
 ```elixir
 @impl GenServer
-def handle_info(msg, state) do
-  Logger.warning("unexpected message: #{inspect(msg)}")
-  {:noreply, state}
+def format_status(%{state: %ClientServerState{} = state} = status) do
+  %{status | state: %ClientServerState{state | api_key: :redacted}}
 end
+
+def format_status(status), do: status
 ```
 
-## Naming
+## Process Names
 
 - Singleton: `name: __MODULE__`, only for genuinely one-per-node services. A singleton on a request path is a global queue.
 - Many instances: `name: {:via, Registry, {MyApp.Registry, key}}` under a `DynamicSupervisor`.
