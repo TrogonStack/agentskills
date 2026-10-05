@@ -6,16 +6,15 @@
 defmodule MyApp.RateLimiter do
   use GenServer
 
-  alias MyApp.RateLimiter.{Bucket, ServerState}
-  alias MyApp.RateLimiter.Bucket.{TakeRequest, TakeResponse}
+  alias MyApp.RateLimiter.{Bucket, ServerState, TakeRequest, TakeResponse}
 
   def start_link(opts) do
     {name, opts} = Keyword.pop!(opts, :name)
     GenServer.start_link(__MODULE__, opts, name: name)
   end
 
-  def allow?(server, key) do
-    GenServer.call(server, {:allow?, key})
+  def take(server, %TakeRequest{} = request) do
+    GenServer.call(server, request)
   end
 
   @impl GenServer
@@ -24,17 +23,20 @@ defmodule MyApp.RateLimiter do
   end
 
   @impl GenServer
-  def handle_call({:allow?, key}, _from, %ServerState{} = state) do
-    %TakeResponse{allowed?: allowed?, bucket: bucket} =
-      Bucket.take(state.bucket, %TakeRequest{key: key})
+  def handle_call(%TakeRequest{key: key}, _from, %ServerState{} = state) do
+    case Bucket.take(state.bucket, key) do
+      {:ok, bucket} ->
+        {:reply, %TakeResponse{allowed?: true}, %ServerState{state | bucket: bucket}}
 
-    {:reply, allowed?, %ServerState{state | bucket: bucket}}
+      {:error, :exhausted} ->
+        {:reply, %TakeResponse{allowed?: false}, state}
+    end
   end
 end
 ```
 
-- Callers never call `GenServer.call/cast` directly. The client API is the contract; message shapes are private.
-- Callbacks delegate to a pure core (`Bucket.take/2`) that takes structs in and returns structs out. See [naming.md](naming.md).
+- Callers never call `GenServer.call/cast` directly. The client API owns the call; the messages are `<Operation>Request` and `<Operation>Response` structs. See [naming.md](naming.md).
+- Callbacks delegate to a pure core (`Bucket.take/2`) that knows nothing about the GenServer or its messages.
 - Mark every callback with `@impl GenServer`.
 - Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice.
 - Hold process state in a `ServerState` struct so its shape is documented and enforced.

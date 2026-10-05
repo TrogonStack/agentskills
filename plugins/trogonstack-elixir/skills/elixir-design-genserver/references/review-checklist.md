@@ -13,7 +13,7 @@
 
 ## Module Shape ([callback-patterns.md](callback-patterns.md))
 
-- [ ] Client API wraps every message; message tuples never leak
+- [ ] Client API wraps every `call`/`cast`; callers never send messages directly
 - [ ] Callbacks delegate to pure, separately tested functions
 - [ ] `init/1` is fast; slow work runs in `handle_continue/2`, unless siblings need the state at boot
 - [ ] Persistent dependency failures retry with backoff instead of crash-looping the supervisor
@@ -24,7 +24,8 @@
 
 - [ ] Pure core named after a domain concept, not a role (`State`, `Core`, `Logic`, `Impl`)
 - [ ] Process bookkeeping lives in `ServerState` and holds the core as a field
-- [ ] Core takes and returns `<Operation>Request` / `<Operation>Response` structs, not tuples
+- [ ] GenServer messages are `<Operation>Request` / `<Operation>Response` structs, not tuples
+- [ ] The pure core never references the Request/Response structs
 
 ## Supervision ([supervision-and-testing.md](supervision-and-testing.md))
 
