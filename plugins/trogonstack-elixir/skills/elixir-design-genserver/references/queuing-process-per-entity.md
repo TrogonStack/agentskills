@@ -66,6 +66,7 @@ end
 - `Registry` maps the entity id to its pid, so callers address rooms by id.
 - `:transient` restarts a room that crashes, but not one that stops normally.
 - `ensure_started/1` treats `:already_started` as success, which covers two callers racing to start the same room.
+- For the full room with its core, contract, monitors, and idle stop, see [example-chat-room.md](example-chat-room.md).
 
 ## Trade-offs
 

@@ -58,6 +58,10 @@ A restart starts from a clean state, which fixes corrupt state and transient fau
 
 Read [references/supervision-and-testing.md](references/supervision-and-testing.md) when wiring the child spec, handling cleanup, or writing tests.
 
+## Worked Example
+
+Read [references/example-chat-room.md](references/example-chat-room.md) to see every principle applied in one complete, tested GenServer.
+
 ## Reviewing an Existing GenServer
 
 Read [references/review-checklist.md](references/review-checklist.md) when reviewing or auditing GenServer code. Each item is a symptom; a failing item is a question about the principle behind it, answered in the linked reference.
