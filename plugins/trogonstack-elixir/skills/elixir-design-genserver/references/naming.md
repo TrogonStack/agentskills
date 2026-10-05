@@ -50,7 +50,9 @@ Replies follow the shapes in [callback-patterns.md](callback-patterns.md#reply-s
 
 Name it after the capability callers use: `MyApp.RateLimiter`. That it runs as a process is an implementation detail.
 
-When the callbacks outgrow a single module, move them to `MyApp.RateLimiter.Server` and keep the client API in `MyApp.RateLimiter`. Callers never reference `.Server`.
+When the callbacks outgrow a single module, move them to `MyApp.RateLimiter.RateLimiterServer` and keep the client API in `MyApp.RateLimiter`. Callers never reference the server module.
+
+Prefix the server module with the domain name instead of a bare `.Server`. A context may grow more than one server, and a bare `Server` collides across the codebase: every alias, stack trace, and search result reads `Server`, and aliasing two of them in one module forces `as:` renames.
 
 ## Messages
 
@@ -78,10 +80,10 @@ Start with the domain struct as the process state: `init/1` returns `{:ok, %Buck
 | Situation | State |
 |-----------|-------|
 | Only domain data | The domain struct: `%Bucket{}` |
-| Process-only data too: timer refs, monitor refs, pending `from`s, task refs | `%ServerState{bucket: %Bucket{}, refill_timer: ref}` |
-| Several domain structs | `%ServerState{bucket: %Bucket{}, quota: %Quota{}}` |
-| No domain logic, only bookkeeping | `%ServerState{}` and no core module |
+| Process-only data too: timer refs, monitor refs, pending `from`s, task refs | `%RateLimiterServerState{bucket: %Bucket{}, refill_timer: ref}` |
+| Several domain structs | `%RateLimiterServerState{bucket: %Bucket{}, quota: %Quota{}}` |
+| No domain logic, only bookkeeping | `%RateLimiterServerState{}` and no core module |
 
 Process-only data stays out of the domain struct because refs and `from`s are runtime plumbing, not deterministic data; putting them in the core makes it harder to test and reuse without a process.
 
-Name the wrapper `ServerState`, or `Server.State` when callbacks live in `.Server`.
+Name the wrapper `<Name>ServerState`, for example `MyApp.RateLimiter.RateLimiterServerState`, for the same reason the server module carries the domain name.

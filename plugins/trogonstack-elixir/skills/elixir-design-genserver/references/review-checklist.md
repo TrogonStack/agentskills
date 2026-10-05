@@ -24,7 +24,8 @@
 ## Naming ([naming.md](naming.md))
 
 - [ ] Pure core named after a domain concept, not a role (`State`, `Core`, `Logic`, `Impl`)
-- [ ] The domain struct is the state; `ServerState` exists only for process-only data or several domain structs
+- [ ] The domain struct is the state; a `<Name>ServerState` wrapper exists only for process-only data or several domain structs
+- [ ] Server modules carry the domain name (`RateLimiterServer`), never a bare `.Server`
 - [ ] GenServer messages are `<Operation>Request` / `<Operation>Response` structs, not tuples
 - [ ] The pure core never references the Request/Response structs
 
