@@ -45,7 +45,7 @@ end
 
 ## Reply Shapes
 
-Every reply, and every result the pure core returns, is one of:
+Every reply, and every core function that can fail, returns one of:
 
 | Shape | When |
 |-------|------|
@@ -54,6 +54,8 @@ Every reply, and every result the pure core returns, is one of:
 | `{:error, error}` | Failure, with an error struct (`defexception`) |
 
 Never reply with a tuple of more than two elements such as `{:ok, value, extra}` or `{:error, reason, details}`. Put the extra data in the struct. Callers can then handle every operation with the same `case` or `with`, and adding a field never breaks a pattern match.
+
+Core functions that cannot fail return their value directly, as `Bucket.remaining/2` returns an integer. When they return more than one value, they return a struct, never a loose tuple such as `{messages, more?}`.
 
 Reply with a Response struct rather than a bare list or value, so the reply can grow; see [request-response.md](request-response.md).
 

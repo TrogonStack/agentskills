@@ -23,43 +23,73 @@ A 2 second HTTP call caps the server at one request every 2 seconds, and every o
 ```elixir
 @impl GenServer
 def handle_call(%FetchRateRequest{currency: currency}, from, %RatesServerState{} = state) do
-  task = Task.Supervisor.async_nolink(state.task_supervisor, fn -> RatesClient.fetch(currency) end)
-  pending = Map.put(state.pending, task.ref, %PendingFetch{from: from, currency: currency})
-  {:noreply, %RatesServerState{state | pending: pending}}
+  case RateCache.fetch(state.cache, currency) do
+    {:ok, rate} -> {:reply, {:ok, %FetchRateResponse{rate: rate}}, state}
+    {:error, %RateNotCachedError{}} -> {:noreply, await_fetch(state, currency, from)}
+  end
 end
 
 @impl GenServer
-def handle_info({ref, result}, %RatesServerState{} = state) when is_map_key(state.pending, ref) do
+def handle_info({ref, result}, %RatesServerState{} = state) when is_map_key(state.fetching, ref) do
   Process.demonitor(ref, [:flush])
-  {%PendingFetch{} = fetch, pending} = Map.pop(state.pending, ref)
-  state = %RatesServerState{state | pending: pending}
+  {%PendingFetch{} = fetch, state} = pop_fetch(state, ref)
 
   case result do
     {:ok, rate} ->
-      GenServer.reply(fetch.from, {:ok, %FetchRateResponse{rate: rate}})
+      reply_all(fetch, {:ok, %FetchRateResponse{rate: rate}})
       {:noreply, %RatesServerState{state | cache: RateCache.put(state.cache, fetch.currency, rate)}}
 
     {:error, error} ->
-      GenServer.reply(fetch.from, {:error, error})
+      reply_all(fetch, {:error, error})
       {:noreply, state}
   end
 end
 
 def handle_info({:DOWN, ref, :process, _pid, reason}, %RatesServerState{} = state)
-    when is_map_key(state.pending, ref) do
-  {%PendingFetch{} = fetch, pending} = Map.pop(state.pending, ref)
-  GenServer.reply(fetch.from, {:error, %FetchFailedError{reason: reason}})
-  {:noreply, %RatesServerState{state | pending: pending}}
+    when is_map_key(state.fetching, ref) do
+  {%PendingFetch{} = fetch, state} = pop_fetch(state, ref)
+  reply_all(fetch, {:error, %FetchFailedError{reason: reason}})
+  {:noreply, state}
+end
+
+defp await_fetch(%RatesServerState{} = state, currency, from) do
+  case Map.fetch(state.pending, currency) do
+    {:ok, %PendingFetch{} = fetch} ->
+      pending = Map.put(state.pending, currency, %PendingFetch{fetch | callers: [from | fetch.callers]})
+      %RatesServerState{state | pending: pending}
+
+    :error ->
+      task = Task.Supervisor.async_nolink(state.task_supervisor, RatesClient, :fetch, [currency])
+      fetch = %PendingFetch{currency: currency, callers: [from]}
+
+      %RatesServerState{
+        state
+        | pending: Map.put(state.pending, currency, fetch),
+          fetching: Map.put(state.fetching, task.ref, currency)
+      }
+  end
+end
+
+defp pop_fetch(%RatesServerState{} = state, ref) do
+  {currency, fetching} = Map.pop!(state.fetching, ref)
+  {fetch, pending} = Map.pop!(state.pending, currency)
+  {fetch, %RatesServerState{state | pending: pending, fetching: fetching}}
+end
+
+defp reply_all(%PendingFetch{callers: callers}, reply) do
+  Enum.each(callers, &GenServer.reply(&1, reply))
 end
 ```
 
-- `async_nolink` keeps a crashing task from taking the server down; the crash arrives as `:DOWN`.
-- Returning `{:noreply, state}` from `handle_call/3` frees the server; `GenServer.reply/2` answers the caller later.
+- What the process owns is coordination: a cache hit replies at once, and concurrent misses for the same currency share one fetch instead of each calling the API.
+- `async_nolink` keeps a crashing task from taking the server down; the crash arrives as `:DOWN` and every waiting caller gets an error.
+- Returning `{:noreply, state}` from `handle_call/3` frees the server; `GenServer.reply/2` answers the callers later.
 - `Process.demonitor(ref, [:flush])` drops the `:DOWN` message that would otherwise follow a successful result.
-- The state is a `RatesServerState` wrapper because pending `from`s and task refs are process-only data; see [naming.md](naming.md#process-state).
+- Pending callers and task refs are process-only data, so they live in the `RatesServerState` wrapper and not in `RateCache`; see [naming.md](naming.md#process-state).
 
 ## Trade-offs
 
 - The caller still waits for the I/O, but other callers no longer wait for it.
+- Cache hits still go through the mailbox. When they dominate, serve them from ETS as well; see [queuing-reads-from-ets.md](queuing-reads-from-ets.md).
 - The caller's `call` timeout still applies. A reply after the timeout is discarded.
 - Keep the clauses above the `handle_info/2` catch-all; see [handle-info.md](handle-info.md).

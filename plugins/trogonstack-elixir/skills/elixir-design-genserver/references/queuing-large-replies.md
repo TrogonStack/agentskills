@@ -8,33 +8,33 @@ Binaries larger than 64 bytes are the exception: they live in a shared heap and 
 
 ```elixir
 @impl GenServer
-def handle_call(%ListSessionsRequest{}, _from, %Sessions{} = sessions) do
-  {:reply, {:ok, %ListSessionsResponse{sessions: Sessions.all(sessions)}}, sessions}
+def handle_call(%GetRoomRequest{}, _from, %Room{} = room) do
+  {:reply, {:ok, %GetRoomResponse{room: room}}, room}
 end
 ```
 
 ```elixir
-{:ok, %ListSessionsResponse{sessions: sessions}} = SessionStore.list_sessions(server, %ListSessionsRequest{})
-Enum.find(sessions, &(&1.user_id == user_id))
+{:ok, %GetRoomResponse{room: room}} = RoomServer.get_room(room_id, %GetRoomRequest{})
+Enum.find(room.members, &(&1.user_id == user_id))
 ```
 
-The caller wants one session and receives 100,000 of them.
+The caller wants one member and receives the whole room: every member and the full message history. Handing out the state is how this usually starts.
 
 ## Prefer
 
-Ask the server for what you need, and let it do the filtering:
+Ask the process the question instead of asking for its state:
 
 ```elixir
 @impl GenServer
-def handle_call(%FindSessionRequest{user_id: user_id}, _from, %Sessions{} = sessions) do
-  case Sessions.find_by_user(sessions, user_id) do
-    {:ok, session} -> {:reply, {:ok, %FindSessionResponse{session: session}}, sessions}
-    {:error, error} -> {:reply, {:error, error}, sessions}
+def handle_call(%FetchMemberRequest{user_id: user_id}, _from, %Room{} = room) do
+  case Room.fetch_member(room, user_id) do
+    {:ok, member} -> {:reply, {:ok, %FetchMemberResponse{member: member}}, room}
+    {:error, error} -> {:reply, {:error, error}, room}
   end
 end
 ```
 
-When callers genuinely need to scan large data, serve it from ETS instead; see [queuing-reads-from-ets.md](queuing-reads-from-ets.md).
+When many callers read the same data, serve it from ETS instead of the mailbox; see [queuing-reads-from-ets.md](queuing-reads-from-ets.md).
 
 ## Trade-offs
 

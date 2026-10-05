@@ -5,13 +5,16 @@ When reads vastly outnumber writes, the server should own the data but not serve
 ## Avoid
 
 ```elixir
-def enabled?(server, %EnabledRequest{} = request) do
+def fetch_flag(server, %FetchFlagRequest{} = request) do
   GenServer.call(server, request)
 end
 
 @impl GenServer
-def handle_call(%EnabledRequest{flag: flag}, _from, %Flags{} = flags) do
-  {:reply, Flags.fetch(flags, flag), flags}
+def handle_call(%FetchFlagRequest{name: name}, _from, %Flags{} = flags) do
+  case Flags.fetch(flags, name) do
+    {:ok, flag} -> {:reply, {:ok, %FetchFlagResponse{flag: flag}}, flags}
+    {:error, error} -> {:reply, {:error, error}, flags}
+  end
 end
 ```
 
@@ -23,17 +26,17 @@ Every feature-flag check on every request queues behind every other check.
 defmodule MyApp.FeatureFlags do
   use GenServer
 
-  alias MyApp.FeatureFlags.{EnableRequest, FlagNotFoundError}
+  alias MyApp.FeatureFlags.{EnableRequest, FeatureFlagsServerState, Flag, FlagNotFoundError}
 
   def start_link(opts) do
     {name, opts} = Keyword.pop!(opts, :name)
     GenServer.start_link(__MODULE__, opts, name: name)
   end
 
-  def enabled?(table, flag) do
-    case :ets.lookup(table, flag) do
-      [{^flag, enabled?}] -> {:ok, enabled?}
-      [] -> {:error, %FlagNotFoundError{flag: flag}}
+  def fetch_flag(table, name) do
+    case :ets.lookup(table, name) do
+      [{^name, %Flag{} = flag}] -> {:ok, flag}
+      [] -> {:error, %FlagNotFoundError{name: name}}
     end
   end
 
@@ -44,19 +47,21 @@ defmodule MyApp.FeatureFlags do
   @impl GenServer
   def init(opts) do
     table = :ets.new(Keyword.fetch!(opts, :table), [:named_table, :protected, read_concurrency: true])
-    {:ok, table}
+    {:ok, %FeatureFlagsServerState{table: table}}
   end
 
   @impl GenServer
-  def handle_call(%EnableRequest{flag: flag}, _from, table) do
-    :ets.insert(table, {flag, true})
-    {:reply, :ok, table}
+  def handle_call(%EnableRequest{name: name}, _from, %FeatureFlagsServerState{} = state) do
+    :ets.insert(state.table, {name, %Flag{name: name, enabled?: true}})
+    {:reply, :ok, state}
   end
 end
 ```
 
 - `:protected` lets any process read and only the owner write, so writes stay serialized and consistent.
 - `read_concurrency: true` optimizes for concurrent readers.
+- Reads never reach the GenServer, so `fetch_flag/2` takes domain values and returns the `Flag` struct; Request and Response structs exist only for messages to the server.
+- The table is process-only data, so the state is a `FeatureFlagsServerState` wrapper; see [naming.md](naming.md#process-state).
 - The caller passes the table name, so several instances can coexist.
 
 ## Trade-offs

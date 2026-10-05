@@ -12,8 +12,8 @@ def init(opts) do
 end
 
 @impl GenServer
-def handle_call(%ChargeRequest{} = request, _from, conn) do
-  {:reply, PaymentsClient.charge(conn, request), conn}
+def handle_call(%ChargeRequest{charge: charge}, _from, conn) do
+  {:reply, PaymentsClient.charge(conn, charge), conn}
 end
 ```
 
@@ -36,7 +36,7 @@ When no library pool exists, build one with `NimblePool`, which checks a resourc
 
 ```elixir
 NimblePool.checkout!(MyApp.PaymentsPool, :checkout, fn _from, conn ->
-  {PaymentsClient.charge(conn, request), conn}
+  {PaymentsClient.charge(conn, charge), conn}
 end)
 ```
 

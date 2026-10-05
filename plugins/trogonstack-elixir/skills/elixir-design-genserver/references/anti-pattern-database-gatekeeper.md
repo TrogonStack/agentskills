@@ -45,12 +45,12 @@ defmodule MyApp.Accounts do
 
   def debit(account_id, amount) do
     Repo.transact(fn ->
-      Account
-      |> where([a], a.id == ^account_id)
-      |> lock("FOR UPDATE")
-      |> Repo.one!()
-      |> Account.debit_changeset(amount)
-      |> Repo.update()
+      query = Account |> where([a], a.id == ^account_id) |> lock("FOR UPDATE")
+
+      case Repo.one(query) do
+        nil -> {:error, %AccountNotFoundError{account_id: account_id}}
+        %Account{} = account -> account |> Account.debit_changeset(amount) |> Repo.update()
+      end
     end)
   end
 end

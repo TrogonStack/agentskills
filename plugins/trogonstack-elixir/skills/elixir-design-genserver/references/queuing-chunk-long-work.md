@@ -23,8 +23,10 @@ Importing 100,000 rows blocks every lookup until the import ends.
 
 @impl GenServer
 def handle_call(%ImportRequest{rows: rows}, _from, %CatalogServerState{} = state) do
-  send(self(), %ImportNextBatch{})
-  {:reply, :ok, %CatalogServerState{state | import_queue: state.import_queue ++ rows}}
+  if state.import_queue == [], do: send(self(), %ImportNextBatch{})
+  import_queue = state.import_queue ++ rows
+  response = %ImportResponse{pending_rows: length(import_queue)}
+  {:reply, {:ok, response}, %CatalogServerState{state | import_queue: import_queue}}
 end
 
 @impl GenServer
@@ -42,9 +44,11 @@ end
 
 - `send(self(), msg)` puts the message at the back of the mailbox, behind client messages already waiting. That is what lets them interleave.
 - `{:continue, term}` would run before any other message, which defeats the purpose here; see [handle-info.md](handle-info.md#deferring-work-to-yourself).
-- The reply `:ok` means "accepted", not "imported". Expose progress through a separate request if callers need it.
+- Only a request that finds the queue empty schedules a batch. A second import joins the queue; scheduling again would start a second chain and double the batch rate.
+- The reply means "accepted", not "imported", and reports the backlog. Progress is new fields on `ImportResponse` or a separate request.
 
 ## Trade-offs
 
 - Lookups during the import see a partially imported catalog. If that is not acceptable, build the new catalog in a task and swap it in with one message.
 - Batch size trades import throughput against lookup latency: a lookup waits at most one batch.
+- The rows are copied into the server with the request; see [queuing-large-replies.md](queuing-large-replies.md). For large imports, send a source such as a file path and read it batch by batch.

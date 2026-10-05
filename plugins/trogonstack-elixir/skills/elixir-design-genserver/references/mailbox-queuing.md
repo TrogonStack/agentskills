@@ -46,10 +46,16 @@ Measure handling time per callback, so the `1 / handling_time` ceiling is a numb
 
 ```elixir
 @impl GenServer
-def handle_call(%TakeRequest{} = request, _from, %Bucket{} = bucket) do
-  :telemetry.span([:my_app, :rate_limiter, :take], %{}, fn ->
-    {take(request, bucket), %{}}
-  end)
+def handle_call(%TakeRequest{key: key}, _from, %Bucket{} = bucket) do
+  result =
+    :telemetry.span([:my_app, :rate_limiter, :take], %{}, fn ->
+      {Bucket.take(bucket, key), %{}}
+    end)
+
+  case result do
+    {:ok, bucket} -> {:reply, {:ok, %TakeResponse{remaining: Bucket.remaining(bucket, key)}}, bucket}
+    {:error, error} -> {:reply, {:error, error}, bucket}
+  end
 end
 ```
 
