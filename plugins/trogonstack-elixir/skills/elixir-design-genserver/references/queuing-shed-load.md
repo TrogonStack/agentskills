@@ -39,8 +39,36 @@ end
 - `{:error, %OverloadedError{}}` follows the reply shapes in [callback-patterns.md](callback-patterns.md#reply-shapes); callers map it to a retry with backoff or an HTTP 429.
 - When the server is not running, `overloaded?/1` returns `false` and the `call` exits as it would have anyway.
 
+The mailbox check is best-effort: concurrent callers can all see a length below the limit and enqueue together, so it cannot enforce a hard bound.
+
+## Hard Bound
+
+Reserve a slot atomically before sending, and release it when the call returns:
+
+```elixir
+@max_in_flight 1_000
+
+def take(server, admission, %TakeRequest{} = request) do
+  if :atomics.add_get(admission, 1, 1) > @max_in_flight do
+    :atomics.sub(admission, 1, 1)
+    {:error, %OverloadedError{}}
+  else
+    try do
+      GenServer.call(server, request)
+    after
+      :atomics.sub(admission, 1, 1)
+    end
+  end
+end
+```
+
+- `admission` is `:atomics.new(1, signed: true)`, created once by whoever starts the server and passed to callers, for example through the same place the server name lives.
+- The counter bounds calls in flight (queued plus being handled), which is a hard upper bound on the mailbox for this operation.
+- `after` releases the slot even when the call exits on timeout.
+
 ## Trade-offs
 
-- The check is approximate: the queue can grow between the check and the send. That is fine for shedding, which only needs to stop runaway growth.
-- `Process.info/2` works only for local pids. For remote servers, track in-flight requests with a counter (`:atomics` or `:ets.update_counter/3`) instead.
+- Use the mailbox check when stopping runaway growth is enough; use admission control when the bound must hold.
+- `Process.info/2` works only for local pids. For remote servers, use admission control.
+- Admission control counts only callers that go through it; casts and messages from elsewhere still reach the mailbox.
 - Shedding is a last resort. It keeps the node alive, but callers still fail; prefer the patterns that remove the queue.

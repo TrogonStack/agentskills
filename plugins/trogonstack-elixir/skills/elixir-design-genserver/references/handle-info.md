@@ -105,10 +105,12 @@ Results of `Task.Supervisor.async_nolink/2` arrive as `{ref, result}`, and a cra
 `use GenServer` injects a `handle_info/2` that logs unexpected messages. Defining your own replaces it, so end with a catch-all clause or an unknown message crashes the server with a `FunctionClauseError`:
 
 ```elixir
+require Logger
+
 def handle_info(msg, state) do
   Logger.warning("unexpected message: #{inspect(msg)}")
   {:noreply, state}
 end
 ```
 
-Keep it as the last clause; clauses after it never match.
+Keep it as the last clause; clauses after it never match. `Logger.warning/1` is a macro, so the module needs `require Logger`.
