@@ -9,11 +9,11 @@ defmodule MyApp.RateLimiter do
   alias MyApp.RateLimiter.Bucket
 
   def start_link(opts) do
-    {name, opts} = Keyword.pop(opts, :name, __MODULE__)
+    {name, opts} = Keyword.pop!(opts, :name)
     GenServer.start_link(__MODULE__, opts, name: name)
   end
 
-  def allow?(server \\ __MODULE__, key) do
+  def allow?(server, key) do
     GenServer.call(server, {:allow?, key})
   end
 
@@ -33,7 +33,7 @@ end
 - Callers never call `GenServer.call/cast` directly. The client API is the contract; message shapes are private.
 - Callbacks delegate to pure functions (`Bucket.take/2`) that take state and return new state.
 - Mark every callback with `@impl GenServer`.
-- Accept `:name`, and a server reference in client functions, so tests can start isolated instances.
+- Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice.
 - Hold state in a struct so its shape is documented and enforced.
 
 ## call vs cast vs send
