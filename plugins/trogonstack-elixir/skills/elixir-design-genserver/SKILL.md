@@ -38,6 +38,8 @@ Client API wraps every `call`/`cast`, callbacks delegate to a pure core, `call` 
 
 Read [references/callback-patterns.md](references/callback-patterns.md) when writing or reviewing the module body.
 
+Read [references/naming.md](references/naming.md) when naming the public module, the pure core, the process state, or the structs passed in and out of the core.
+
 ### 4. Supervise and Test
 
 Pick a restart strategy that matches the lifecycle, and test the pure core without processes.

@@ -20,6 +20,12 @@
 - [ ] `handle_info/2` has a catch-all clause
 - [ ] Process names never built from untrusted input
 
+## Naming ([naming.md](naming.md))
+
+- [ ] Pure core named after a domain concept, not a role (`State`, `Core`, `Logic`, `Impl`)
+- [ ] Process bookkeeping lives in `ServerState` and holds the core as a field
+- [ ] Core takes and returns `<Operation>Request` / `<Operation>Response` structs, not tuples
+
 ## Supervision ([supervision-and-testing.md](supervision-and-testing.md))
 
 - [ ] Restart strategy matches the process lifecycle

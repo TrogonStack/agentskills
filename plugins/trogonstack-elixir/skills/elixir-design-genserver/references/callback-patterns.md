@@ -6,7 +6,8 @@
 defmodule MyApp.RateLimiter do
   use GenServer
 
-  alias MyApp.RateLimiter.Bucket
+  alias MyApp.RateLimiter.{Bucket, ServerState}
+  alias MyApp.RateLimiter.Bucket.{TakeRequest, TakeResponse}
 
   def start_link(opts) do
     {name, opts} = Keyword.pop!(opts, :name)
@@ -19,22 +20,24 @@ defmodule MyApp.RateLimiter do
 
   @impl GenServer
   def init(opts) do
-    {:ok, Bucket.new(opts)}
+    {:ok, %ServerState{bucket: Bucket.new(opts)}}
   end
 
   @impl GenServer
-  def handle_call({:allow?, key}, _from, bucket) do
-    {result, bucket} = Bucket.take(bucket, key)
-    {:reply, result, bucket}
+  def handle_call({:allow?, key}, _from, %ServerState{} = state) do
+    %TakeResponse{allowed?: allowed?, bucket: bucket} =
+      Bucket.take(state.bucket, %TakeRequest{key: key})
+
+    {:reply, allowed?, %ServerState{state | bucket: bucket}}
   end
 end
 ```
 
 - Callers never call `GenServer.call/cast` directly. The client API is the contract; message shapes are private.
-- Callbacks delegate to pure functions (`Bucket.take/2`) that take state and return new state.
+- Callbacks delegate to a pure core (`Bucket.take/2`) that takes structs in and returns structs out. See [naming.md](naming.md).
 - Mark every callback with `@impl GenServer`.
 - Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice.
-- Hold state in a struct so its shape is documented and enforced.
+- Hold process state in a `ServerState` struct so its shape is documented and enforced.
 
 ## call vs cast vs send
 
