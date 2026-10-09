@@ -45,11 +45,12 @@ defmodule MyApp.Accounts do
   alias Ecto.Multi
 
   def debit(account_id, amount) do
-    Multi.new()
-    |> Multi.run(:account, fn repo, _changes -> fetch_for_update(repo, account_id) end)
-    |> Multi.update(:debited, fn %{account: account} -> Account.debit_changeset(account, amount) end)
-    |> Repo.transact()
-    |> case do
+    multi =
+      Multi.new()
+      |> Multi.run(:account, fn repo, _changes -> fetch_for_update(repo, account_id) end)
+      |> Multi.update(:debited, fn %{account: account} -> Account.debit_changeset(account, amount) end)
+
+    case Repo.transact(multi) do
       {:ok, %{debited: account}} -> {:ok, account}
       {:error, _step, error, _changes} -> {:error, error}
     end
