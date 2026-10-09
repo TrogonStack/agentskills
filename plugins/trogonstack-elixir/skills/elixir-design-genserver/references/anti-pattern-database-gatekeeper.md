@@ -42,21 +42,31 @@ Run the write in the caller's process and let the database linearize it:
 ```elixir
 defmodule MyApp.Accounts do
   import Ecto.Query
+  alias Ecto.Multi
 
   def debit(account_id, amount) do
-    Repo.transact(fn ->
-      query = Account |> where([a], a.id == ^account_id) |> lock("FOR UPDATE")
+    Multi.new()
+    |> Multi.run(:account, fn repo, _changes -> fetch_for_update(repo, account_id) end)
+    |> Multi.update(:debited, fn %{account: account} -> Account.debit_changeset(account, amount) end)
+    |> Repo.transact()
+    |> case do
+      {:ok, %{debited: account}} -> {:ok, account}
+      {:error, _step, error, _changes} -> {:error, error}
+    end
+  end
 
-      case Repo.one(query) do
-        nil -> {:error, %AccountNotFoundError{account_id: account_id}}
-        %Account{} = account -> account |> Account.debit_changeset(amount) |> Repo.update()
-      end
-    end)
+  defp fetch_for_update(repo, account_id) do
+    query = Account |> where([a], a.id == ^account_id) |> lock("FOR UPDATE")
+
+    case repo.one(query) do
+      nil -> {:error, %AccountNotFoundError{account_id: account_id}}
+      %Account{} = account -> {:ok, account}
+    end
   end
 end
 ```
 
-The row lock serializes concurrent debits of the same account, from any process on any node, while debits of other accounts run in parallel. `Repo.transact/2` (Ecto 3.13+) commits on `{:ok, value}` and rolls back on `{:error, error}`.
+The row lock serializes concurrent debits of the same account, from any process on any node, while debits of other accounts run in parallel. Each `Ecto.Multi` step runs in order inside one transaction; the first step that fails, a missing account or an invalid changeset, rolls the whole transaction back. `Repo.transact/2` (Ecto 3.13+) runs the multi and returns `{:error, step, error, changes}` on failure, which `debit/2` narrows to the [reply shapes](callback-patterns.md#reply-shapes).
 
 Pick the database mechanism that matches the guarantee:
 
