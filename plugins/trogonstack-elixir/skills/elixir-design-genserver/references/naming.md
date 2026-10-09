@@ -86,7 +86,7 @@ Name core functions with domain verbs (`take`, `refill`, `expire`), never GenSer
 
 ## Errors
 
-Return errors as `defexception` structs named `*Error`, nested under the module that produces them: `Bucket.ExhaustedError`. An exception struct in `{:error, error}` is not raised; it gains `Exception.message/1` for logs and lets a bang variant `raise` the same value. Build the message from structured fields so callers can still match on them.
+Any term can be the error in `{:error, error}`, and an atom such as `:not_found` is common. Prefer `defexception` structs named `*Error`, nested under the module that produces them: `Bucket.ExhaustedError`. An exception struct in `{:error, error}` is not raised; it gains `Exception.message/1` for logs and lets a bang variant `raise` the same value. Build the message from structured fields so callers can still match on them. An atom has no room for detail, so the first field it needs replaces the shape, the same problem [request-response.md](request-response.md#growing-without-breaking) describes for replies.
 
 ## Time Is an Input
 

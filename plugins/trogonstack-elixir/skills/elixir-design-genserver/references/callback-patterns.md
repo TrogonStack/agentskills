@@ -51,7 +51,7 @@ Every reply, and every core function that can fail, returns one of:
 |-------|------|
 | `:ok` | Success with nothing to return |
 | `{:ok, value}` | Success with a value, usually an `<Operation>Response` struct |
-| `{:error, error}` | Failure, with an error struct (`defexception`) |
+| `{:error, error}` | Failure. Any term works; an error struct (`defexception`) is recommended, see [naming.md](naming.md#errors) |
 
 Never reply with a tuple of more than two elements such as `{:ok, value, extra}` or `{:error, reason, details}`. Put the extra data in the struct. Callers can then handle every operation with the same `case` or `with`, and adding a field never breaks a pattern match.
 
