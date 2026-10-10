@@ -319,6 +319,150 @@ end
 - `whereis/1` checks the `Registry` first, so the `DynamicSupervisor` is called only when a room actually starts, not on every request.
 - `join/2` monitors the room in the caller's process and returns the ref in `JoinResponse`. A subscriber that receives `:DOWN` for it knows the room is gone and can join again.
 
+## Tests
+
+```elixir
+defmodule MyApp.Chat.RoomTest do
+  use ExUnit.Case, async: true
+
+  alias MyApp.Chat.{Member, Message, Room}
+  alias MyApp.Chat.Room.{History, NotAMemberError}
+
+  defp message(id, member_id),
+    do: %Message{id: id, member_id: member_id, body: "msg-#{id}", posted_at: DateTime.utc_now()}
+
+  test "post by a non-member returns NotAMemberError" do
+    room = Room.new("room-1", 500)
+
+    assert {:error, %NotAMemberError{member_id: 1}} = Room.post(room, message(1, 1))
+  end
+
+  test "history is bounded by max_messages" do
+    room = Room.new("room-1", 2) |> Room.join(%Member{id: 1, name: "alice"})
+
+    room =
+      Enum.reduce(1..3, room, fn id, room ->
+        {:ok, room} = Room.post(room, message(id, 1))
+        room
+      end)
+
+    assert %History{messages: messages} = Room.history(room, nil, 10)
+    assert Enum.map(messages, & &1.id) == [3, 2]
+  end
+
+  test "history pages with before and reports more?" do
+    room = Room.new("room-1", 500) |> Room.join(%Member{id: 1, name: "alice"})
+
+    room =
+      Enum.reduce(1..5, room, fn id, room ->
+        {:ok, room} = Room.post(room, message(id, 1))
+        room
+      end)
+
+    assert %History{messages: page_1, more?: true} = Room.history(room, nil, 2)
+    assert Enum.map(page_1, & &1.id) == [5, 4]
+
+    assert %History{messages: page_2, more?: true} = Room.history(room, 4, 2)
+    assert Enum.map(page_2, & &1.id) == [3, 2]
+
+    assert %History{messages: page_3, more?: false} = Room.history(room, 2, 2)
+    assert Enum.map(page_3, & &1.id) == [1]
+  end
+end
+```
+
+- The core needs no process, so every case builds a `Room` and calls it directly. See [supervision-and-testing.md](supervision-and-testing.md#testing).
+- `before` takes the oldest id already seen and returns the next older page; walking the full history proves `more?` turns false only on the last page.
+
+```elixir
+defmodule MyApp.Chat.RoomServerTest do
+  use ExUnit.Case, async: false
+
+  alias MyApp.Chat
+  alias MyApp.Chat.{
+    JoinRequest,
+    ListMessagesRequest,
+    Member,
+    MessagePosted,
+    PostMessageRequest,
+    PostMessageResponse,
+    RoomServer
+  }
+
+  alias MyApp.Chat.Room.NotAMemberError
+  alias MyApp.Chat.RoomNotFoundError
+
+  setup do
+    start_supervised!({Registry, keys: :unique, name: MyApp.Chat.RoomRegistry})
+    start_supervised!({DynamicSupervisor, name: MyApp.Chat.RoomSupervisor, strategy: :one_for_one})
+    :ok
+  end
+
+  defp room_id, do: "room-#{System.unique_integer([:positive])}"
+
+  test "join then post broadcasts MessagePosted to the subscriber" do
+    room_id = room_id()
+    member = %Member{id: 1, name: "alice"}
+
+    assert {:ok, _} = Chat.join(room_id, %JoinRequest{member: member})
+
+    assert {:ok, %PostMessageResponse{message: message}} =
+             Chat.post_message(room_id, %PostMessageRequest{member_id: 1, body: "hi"})
+
+    assert_receive %MessagePosted{room_id: ^room_id, message: ^message}
+  end
+
+  test "post and list on a room that is not running return RoomNotFoundError" do
+    room_id = room_id()
+
+    assert {:error, %RoomNotFoundError{room_id: ^room_id}} =
+             Chat.post_message(room_id, %PostMessageRequest{member_id: 1, body: "hi"})
+
+    assert {:error, %RoomNotFoundError{room_id: ^room_id}} =
+             Chat.list_messages(room_id, %ListMessagesRequest{})
+  end
+
+  test "member is removed once its only subscriber process exits" do
+    room_id = room_id()
+    member = %Member{id: 1, name: "alice"}
+    test_pid = self()
+
+    joiner =
+      spawn(fn ->
+        {:ok, _} = Chat.join(room_id, %JoinRequest{member: member})
+        send(test_pid, :joined)
+
+        receive do
+          :stop -> :ok
+        end
+      end)
+
+    assert_receive :joined
+    ref = Process.monitor(joiner)
+    send(joiner, :stop)
+    assert_receive {:DOWN, ^ref, :process, ^joiner, :normal}
+
+    assert {:error, %NotAMemberError{member_id: 1}} =
+             Chat.post_message(room_id, %PostMessageRequest{member_id: 1, body: "hi"})
+  end
+
+  test "an empty room stops normally on idle timeout" do
+    room_id = room_id()
+    {:ok, pid} = RoomServer.ensure_started(room_id)
+
+    ref = Process.monitor(pid)
+    send(pid, :timeout)
+
+    assert_receive {:DOWN, ^ref, :process, ^pid, :normal}
+  end
+end
+```
+
+- The server is tested through `MyApp.Chat`, the same public API callers use, under the same children as [Layout](#layout). See [supervision-and-testing.md](supervision-and-testing.md#testing).
+- `Registry` and `DynamicSupervisor` are started with the fixed names the example hardcodes, not a unique name per test, so tests running concurrently would share them; that forces `async: false`. Passing the names in, as [callback-patterns.md](callback-patterns.md) recommends for shared servers, is what keeps `async: true` possible.
+- The exiting member is a separate spawned process, since the room monitors whoever called `join/2` and the test process itself must stay alive to assert. `assert_receive` on that process's own `:DOWN` confirms the exit before the next call runs.
+- The idle-timeout test sends `:timeout` straight to the room instead of waiting `@idle_timeout` out; the room cannot tell a real timer from this message, so the assertion exercises the same `handle_info/2` clause either way.
+
 ## Trade-offs
 
 - A caller can look up a room just before it stops idle and get an exit from `GenServer.call/2`. The room stops only when it has no subscribers, so active members never hit this.
