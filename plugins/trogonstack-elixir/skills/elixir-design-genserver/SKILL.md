@@ -1,6 +1,6 @@
 ---
 name: elixir-design-genserver
-description: "Design or review Elixir GenServer modules. Decides whether a process is justified at all, detects mailbox queuing and serialization bottlenecks, shapes the client API, picks call vs cast, and places the server under supervision. Use when writing a new GenServer, reviewing an existing one, deciding where an actor belongs, or diagnosing a process that became a bottleneck. Do not use for: (1) designing full supervision trees across an application, (2) distributed Erlang or clustering, (3) Phoenix LiveView or Channel processes, (4) GenStage, Broadway, or Flow pipelines."
+description: "Design or review Elixir GenServer modules. Decides whether a process is justified at all, detects mailbox queuing and serialization bottlenecks, picks call vs cast, shapes the client API, and places the server under supervision. Use when writing a new GenServer, reviewing an existing one, deciding where an actor belongs, or diagnosing a process that became a bottleneck. Do not use for: (1) designing full supervision trees across an application, (2) distributed Erlang or clustering, (3) Phoenix LiveView or Channel processes, (4) GenStage, Broadway, or Flow pipelines."
 allowed-tools:
   - AskUserQuestion
   - Read

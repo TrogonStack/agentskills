@@ -73,7 +73,7 @@ Pick the database mechanism that matches the guarantee:
 
 | Need | Use |
 |------|-----|
-| No duplicates | Unique index, and `Repo.insert(changeset, on_conflict: :nothing, conflict_target: :email)` for upserts |
+| No duplicates | Unique index, and `Repo.insert(changeset, on_conflict: :nothing, conflict_target: :email)` for idempotent inserts, `on_conflict: {:replace, fields}` to update the existing row |
 | No lost updates on a contended row | `lock("FOR UPDATE")` inside a transaction |
 | No lost updates on a rarely contended row | `Ecto.Changeset.optimistic_lock/3`, retrying on `Ecto.StaleEntryError` |
 | Ordering or sequence numbers | A database sequence or a version column |

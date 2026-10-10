@@ -19,7 +19,7 @@ Latency under load (Little's law): a message waits roughly `queue_length * avera
 ### With `call`
 
 - Each caller blocks until every message ahead of it is handled.
-- The default 5 second timeout exits the caller, but the request stays in the mailbox and the server still does the work, then the reply is discarded. Load does not drop when callers give up.
+- The default 5 second timeout exits the caller, but the request stays in the mailbox and the server still does the work, then the reply is dropped. The call was tagged with an alias the caller removed on timeout, so the late reply never reaches its mailbox. Load does not drop when callers give up.
 - Callers that retry on timeout add more messages to a queue that is already behind, so the backlog feeds itself.
 - A server that calls another busy server inherits that server's queue as well.
 
