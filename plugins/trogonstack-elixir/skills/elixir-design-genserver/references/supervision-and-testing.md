@@ -13,8 +13,8 @@ use GenServer, restart: :transient
 | Strategy | Restarts when | Fits |
 |----------|---------------|------|
 | `:permanent` | Always | Long-lived services |
-| `:transient` | Abnormal exit only | Work that can finish normally, per-entity processes |
-| `:temporary` | Never | One-shot processes whose failure the caller handles |
+| `:transient` | Abnormal exit only | Work that can finish normally, per-entity processes that reload durable state |
+| `:temporary` | Never | One-shot processes whose failure the caller handles, in-memory per-entity processes |
 
 ## Cleanup
 

@@ -27,7 +27,7 @@ children = [
 
 ```elixir
 defmodule MyApp.Chat.RoomServer do
-  use GenServer, restart: :transient
+  use GenServer, restart: :temporary
 
   alias MyApp.Chat.{PostMessageRequest, Room}
 
@@ -64,12 +64,12 @@ end
 ```
 
 - `Registry` maps the entity id to its pid, so callers address rooms by id.
-- `:transient` restarts a room that crashes, but not one that stops normally.
-- `ensure_started/1` treats `:already_started` as success, which covers two callers racing to start the same room.
+- `:temporary`: the room lives only in memory, so a restart would bring back an empty room. A crashed room stays down and the next `ensure_started/1` starts a fresh one.
+- `ensure_started/1` treats `:already_started` as success, which covers two callers racing to start the same room: the `:unique` `Registry` key makes the second registration fail atomically.
 - For the full room with its core, contract, monitors, and idle stop, see [example-chat-room.md](example-chat-room.md).
 
 ## Trade-offs
 
 - Idle entities hold memory. Stop them after inactivity, for example by returning a timeout from callbacks and stopping with `{:stop, :normal, state}` on `:timeout`.
-- State is lost when the process stops. Load it from durable storage in `handle_continue/2` if it must survive.
+- State is lost when the process stops. Load it from durable storage in `handle_continue/2` if it must survive; a restart then recovers real state, so `:transient` fits.
 - Cross-entity operations become messages between processes; keep them rare or move them to a separate read model.
