@@ -13,6 +13,8 @@ claude plugin marketplace add TrogonStack/agentskills
 claude plugin install {plugin-name}@trogonstack
 ```
 
+In Cursor, import `https://github.com/TrogonStack/agentskills` as a team marketplace from **Dashboard > Plugins & MCPs > Team Marketplaces > Add Marketplace > Import from Repo**, then install plugins from **Customize** in the sidebar.
+
 See all available plugins under [plugins](./plugins) directory.
 
 ## Contributing

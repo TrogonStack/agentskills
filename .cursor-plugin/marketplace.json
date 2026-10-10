@@ -1,0 +1,61 @@
+{
+  "name": "trogonstack",
+  "owner": {
+    "name": "TrogonStack"
+  },
+  "metadata": {
+    "description": "Plugins by TrogonStack for Cursor"
+  },
+  "plugins": [
+    {
+      "name": "trogonstack-diataxis",
+      "source": "plugins/trogonstack-diataxis",
+      "description": "Documentation skills following the Diataxis framework for organizing and generating docs into tutorials, how-to guides, reference, and explanation sections"
+    },
+    {
+      "name": "trogonstack-gh",
+      "source": "plugins/trogonstack-gh",
+      "description": "GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI"
+    },
+    {
+      "name": "trogonstack-nats",
+      "source": "plugins/trogonstack-nats",
+      "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns"
+    },
+    {
+      "name": "trogonstack-datadog",
+      "source": "plugins/trogonstack-datadog",
+      "description": "Datadog observability skills for designing dashboards with proper widget selection, layout patterns, and template variables using the pup CLI, and for checking metrics against Datadog's no-cost metrics"
+    },
+    {
+      "name": "trogonstack-ask",
+      "source": "plugins/trogonstack-ask",
+      "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions"
+    },
+    {
+      "name": "trogonstack-otel",
+      "source": "plugins/trogonstack-otel",
+      "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions"
+    },
+    {
+      "name": "trogonstack-eventmodeling",
+      "source": "plugins/trogonstack-eventmodeling",
+      "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology"
+    },
+    {
+      "name": "trogonstack-eda",
+      "source": "plugins/trogonstack-eda",
+      "description": "Event-driven architecture skills for designing event names, schemas, contracts, and catalogs following good practices for domain and integration events"
+    },
+    {
+      "name": "trogonstack-product-requirements",
+      "source": "plugins/trogonstack-product-requirements",
+      "description": "Skills for writing and reviewing Product Requirements Documents (PRDs) and Feature Requirements Documents (FRDs)"
+    },
+    {
+      "name": "trogonstack-elixir",
+      "source": "plugins/trogonstack-elixir",
+      "description": "Elixir skills for designing and reviewing OTP processes such as GenServers"
+    }
+  ]
+}

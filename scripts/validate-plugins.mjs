@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pluginsDir = join(repoRoot, "plugins");
 const marketplacePath = join(repoRoot, ".claude-plugin", "marketplace.json");
+const cursorMarketplacePath = join(repoRoot, ".cursor-plugin", "marketplace.json");
+const cursorSchemasDir = join(repoRoot, "schemas", "cursor-plugin");
 const configPath = join(repoRoot, ".github", "release-please-config.json");
 const manifestPath = join(repoRoot, ".github", "release-please-manifest.json");
 
@@ -24,11 +26,15 @@ const readJson = (path) => {
 const semverRe = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 const marketplace = readJson(marketplacePath);
+const cursorMarketplace = readJson(cursorMarketplacePath);
 const config = readJson(configPath);
 const manifest = readJson(manifestPath);
 
 const marketplaceByName = new Map(
   (marketplace?.plugins ?? []).map((p) => [p.name, p])
+);
+const cursorMarketplaceByName = new Map(
+  (cursorMarketplace?.plugins ?? []).map((p) => [p.name, p])
 );
 const configPackages = config?.packages ?? {};
 const manifestPackages = manifest ?? {};
@@ -39,6 +45,41 @@ const pluginDirs = readdirSync(pluginsDir).filter((entry) => {
 });
 
 const expectedPath = (name) => `plugins/${name}`;
+
+let Ajv, addFormats;
+try {
+  ({ default: Ajv } = await import("ajv"));
+  ({ default: addFormats } = await import("ajv-formats"));
+} catch {
+  console.error("Missing dependencies: run `npm install --no-save ajv@8 ajv-formats@3` first.");
+  process.exit(1);
+}
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+const validateCursorPlugin = ajv.compile(
+  readJson(join(cursorSchemasDir, "plugin.schema.json"))
+);
+const validateCursorMarketplace = ajv.compile(
+  readJson(join(cursorSchemasDir, "marketplace.schema.json"))
+);
+const schemaErrors = (validate) =>
+  (validate.errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message}`).join("; ");
+
+if (cursorMarketplace && !validateCursorMarketplace(cursorMarketplace)) {
+  fail(`.cursor-plugin/marketplace.json: ${schemaErrors(validateCursorMarketplace)}`);
+}
+if (marketplace && cursorMarketplace && marketplace.name !== cursorMarketplace.name) {
+  fail(
+    `.cursor-plugin/marketplace.json name "${cursorMarketplace.name}" does not match .claude-plugin/marketplace.json name "${marketplace.name}"`
+  );
+}
+
+const extraFilePaths = new Set((config?.["extra-files"] ?? []).map((f) => f.path));
+for (const path of [".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"]) {
+  if (!extraFilePaths.has(path)) {
+    fail(`release-please-config.json extra-files is missing "${path}", its version would drift on release`);
+  }
+}
 
 for (const name of pluginDirs) {
   const pluginJsonPath = join(pluginsDir, name, ".claude-plugin", "plugin.json");
@@ -69,6 +110,50 @@ for (const name of pluginDirs) {
     );
   }
 
+  const cursorPluginJsonPath = join(pluginsDir, name, ".cursor-plugin", "plugin.json");
+  if (!existsSync(cursorPluginJsonPath)) {
+    fail(`plugins/${name}: missing .cursor-plugin/plugin.json`);
+  } else {
+    const cursorPluginJson = readJson(cursorPluginJsonPath);
+    if (cursorPluginJson) {
+      if (!validateCursorPlugin(cursorPluginJson)) {
+        fail(`plugins/${name}/.cursor-plugin/plugin.json: ${schemaErrors(validateCursorPlugin)}`);
+      }
+      for (const field of ["name", "version", "description"]) {
+        if (cursorPluginJson[field] !== pluginJson[field]) {
+          fail(
+            `plugins/${name}: .cursor-plugin/plugin.json ${field} "${cursorPluginJson[field]}" does not match .claude-plugin/plugin.json ${field} "${pluginJson[field]}"`
+          );
+        }
+      }
+      const skillPaths = [cursorPluginJson.skills ?? []].flat();
+      if (skillPaths.length === 0) {
+        fail(`plugins/${name}: .cursor-plugin/plugin.json does not declare "skills"`);
+      }
+      for (const skillPath of skillPaths) {
+        if (!existsSync(join(pluginsDir, name, skillPath))) {
+          fail(`plugins/${name}: .cursor-plugin/plugin.json skills path "${skillPath}" does not exist`);
+        }
+      }
+    }
+  }
+
+  const cmp = cursorMarketplaceByName.get(name);
+  if (!cmp) {
+    fail(`plugins/${name}: not listed in .cursor-plugin/marketplace.json`);
+  } else {
+    if (cmp.source !== `plugins/${name}`) {
+      fail(
+        `plugins/${name}: .cursor-plugin/marketplace.json source "${cmp.source}" should be "plugins/${name}"`
+      );
+    }
+    if (mp && cmp.description !== mp.description) {
+      fail(
+        `plugins/${name}: .cursor-plugin/marketplace.json description does not match .claude-plugin/marketplace.json`
+      );
+    }
+  }
+
   const key = expectedPath(name);
   if (!configPackages[key]) {
     fail(`plugins/${name}: missing entry "${key}" in release-please-config.json packages`);
@@ -92,6 +177,12 @@ const pluginSet = new Set(pluginDirs);
 for (const mp of marketplace?.plugins ?? []) {
   if (!pluginSet.has(mp.name)) {
     fail(`marketplace.json references "${mp.name}" but plugins/${mp.name} does not exist`);
+  }
+}
+
+for (const cmp of cursorMarketplace?.plugins ?? []) {
+  if (!pluginSet.has(cmp.name)) {
+    fail(`.cursor-plugin/marketplace.json references "${cmp.name}" but plugins/${cmp.name} does not exist`);
   }
 }
 

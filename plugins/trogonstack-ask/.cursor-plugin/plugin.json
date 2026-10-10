@@ -1,0 +1,23 @@
+{
+  "name": "trogonstack-ask",
+  "displayName": "TrogonStack Ask",
+  "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
+  "version": "0.2.1",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-ask",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "requirements",
+    "questions"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "requirements",
+    "questions"
+  ],
+  "skills": "./skills/"
+}

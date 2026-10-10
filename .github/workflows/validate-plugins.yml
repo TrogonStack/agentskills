@@ -5,6 +5,8 @@ on:
     paths:
       - "plugins/**"
       - ".claude-plugin/marketplace.json"
+      - ".cursor-plugin/marketplace.json"
+      - "schemas/cursor-plugin/**"
       - ".github/release-please-config.json"
       - ".github/release-please-manifest.json"
       - "scripts/validate-plugins.mjs"
@@ -18,5 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+      - name: Install schema validator
+        run: npm install --no-save ajv@8 ajv-formats@3
       - name: Validate plugin registrations
         run: node scripts/validate-plugins.mjs

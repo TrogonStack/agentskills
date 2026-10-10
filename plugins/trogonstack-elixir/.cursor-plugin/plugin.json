@@ -1,0 +1,25 @@
+{
+  "name": "trogonstack-elixir",
+  "displayName": "TrogonStack Elixir",
+  "description": "Elixir skills for designing and reviewing OTP processes such as GenServers",
+  "version": "0.1.0",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-elixir",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "elixir",
+    "otp",
+    "genserver"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "elixir",
+    "otp",
+    "genserver"
+  ],
+  "skills": "./skills/"
+}
