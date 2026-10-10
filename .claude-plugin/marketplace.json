@@ -60,6 +60,12 @@
       "description": "Skills for writing and reviewing Product Requirements Documents (PRDs) and Feature Requirements Documents (FRDs)",
       "source": "./plugins/trogonstack-product-requirements",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-elixir",
+      "description": "Elixir skills for designing and reviewing OTP processes such as GenServers",
+      "source": "./plugins/trogonstack-elixir",
+      "category": "development"
     }
   ]
 }

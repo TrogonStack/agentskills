@@ -50,6 +50,9 @@
     },
     "plugins/trogonstack-product-requirements": {
       "component": "trogonstack-product-requirements"
+    },
+    "plugins/trogonstack-elixir": {
+      "component": "trogonstack-elixir"
     }
   },
   "plugins": [
