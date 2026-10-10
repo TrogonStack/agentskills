@@ -40,7 +40,7 @@ end
 - Callers never call `GenServer.call/cast` directly. The client API owns the call; the messages are `<Operation>Request` and `<Operation>Response` structs. See [naming.md](naming.md).
 - Callbacks delegate to a pure core (`Bucket.take/2`) that knows nothing about the GenServer or its messages.
 - Mark every callback with `@impl GenServer`.
-- Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice.
+- Require `:name` in `start_link/1` and take the server as the first argument of every client function. Callers and tests always say which instance they talk to; a default argument hides that choice. A per-entity process derives its name from its key instead, and every client function takes that key first; see [example-chat-room.md](example-chat-room.md).
 - Hold state in a struct so its shape is documented and enforced. The domain struct is the state until process-only data appears; see [naming.md](naming.md).
 
 ## Reply Shapes
