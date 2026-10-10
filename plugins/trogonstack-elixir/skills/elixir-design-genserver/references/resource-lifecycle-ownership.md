@@ -1,6 +1,6 @@
 # Resource Lifecycle Ownership
 
-When a resource should live exactly as long as a process, tie it to that process and let the exit release it. Exit is the one cleanup path that always runs: a crash, a `:kill`, or a node shutdown skips `terminate/2` and any explicit `release/1`, but never the exit.
+When a resource should live exactly as long as a process, tie it to that process and let the exit release it. Exit is the one cleanup path that always runs: a `:kill`, a VM crash, or an exit signal received without trapping exits (including a supervisor shutdown) skips `terminate/2`, and a crashed caller never reaches its `release/1`, but none of them skips the exit.
 
 ## What the Runtime Cleans Up
 
