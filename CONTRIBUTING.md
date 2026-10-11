@@ -26,4 +26,4 @@ Releases are automated via release-please:
 2. Release-please creates/updates a "Release PR" with changelog and version bump
 3. Merge the Release PR to publish a new version
 
-The version in `.claude-plugin/plugin.json` is automatically updated when a release is published.
+The version in `.claude-plugin/plugin.json` and `.cursor-plugin/plugin.json` is automatically updated when a release is published.

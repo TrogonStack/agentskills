@@ -1,0 +1,23 @@
+{
+  "name": "trogonstack-nats",
+  "displayName": "TrogonStack NATS",
+  "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
+  "version": "0.1.3",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-nats",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "nats",
+    "messaging"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "nats",
+    "messaging"
+  ],
+  "skills": "./skills/"
+}
