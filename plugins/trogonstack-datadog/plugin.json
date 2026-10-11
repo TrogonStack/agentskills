@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-datadog",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Datadog observability skills for designing, redesigning, and auditing dashboards with proper widget selection, layout patterns, template variables, and operational readiness validation using the pup CLI, and for checking metrics against Datadog's no-cost metrics before creating custom ones",
   "author": {
     "name": "TrogonStack",

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.4.0...trogonstack-datadog@v0.5.0) (2026-10-11)
+
+
+### Features
+
+* Publish plugins to Cursor alongside Claude Code ([#86](https://github.com/TrogonStack/agentskills/issues/86)) ([c01b3e1](https://github.com/TrogonStack/agentskills/commit/c01b3e13ff5e64f932eede358b521d3ba300cf6e))
+* Ship Agent Plugins manifests for vendor-neutral installs ([#98](https://github.com/TrogonStack/agentskills/issues/98)) ([e0bbb39](https://github.com/TrogonStack/agentskills/commit/e0bbb39d899181548091127a92ed74eb803472ae))
+
 ## [0.4.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-datadog@v0.3.2...trogonstack-datadog@v0.4.0) (2026-10-03)
 
 
