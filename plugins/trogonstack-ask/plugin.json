@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-ask",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
   "author": {
     "name": "TrogonStack",
