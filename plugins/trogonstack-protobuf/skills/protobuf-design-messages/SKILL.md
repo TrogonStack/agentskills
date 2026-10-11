@@ -1,6 +1,6 @@
 ---
 name: protobuf-design-messages
-description: "Design or review protobuf message and field definitions: field naming for JSON consumers, identifier and reference value objects, enums, presence, and validation. Use when writing a new .proto message, enum, or field, or reviewing one for naming and shape. Do not use for schema evolution, breaking-change detection, or buf lint/breaking CI setup (use protobuf-evolve-schemas)."
+description: "Design or review protobuf message and field definitions: field naming for JSON consumers, identifier and reference value objects, enums, presence, validation, and file and service layout. Use when writing a new .proto file, service, message, enum, or field, or reviewing one for naming and shape. Do not use for schema evolution, breaking-change detection, or buf lint/breaking CI setup (use protobuf-evolve-schemas)."
 allowed-tools:
   - AskUserQuestion
   - Read
@@ -20,6 +20,7 @@ A `.proto` file is read by more than the compiler: ProtoJSON consumers see only 
 4. **Know what the schema can and cannot guarantee.** Editions presence and `protovalidate` constraints are schema-level tools with real limits; some invariants need live state and belong in the service.
 5. **Event-sourced contracts separate commands, events, state, and faults.** Commands are imperative, events are past tense, and an aggregate never gets an event for a fact it does not own.
 6. **Rename early when words collide with product vocabulary.** The cheapest moment to fix a name is before anything generates code from it.
+7. **A file is named after what it defines.** One top-level definition per file in `lower_snake_case`, a service in `<name>_service.proto` named `<Name>Service`, and its own `<Method>Request` and `<Method>Response` for every RPC.
 
 ## Load a Reference
 
@@ -33,5 +34,6 @@ A `.proto` file is read by more than the compiler: ProtoJSON consumers see only 
 | Deciding whether a field should be required, or writing a `buf.validate` constraint | [references/presence-and-validation.md](references/presence-and-validation.md) |
 | Designing commands, events, state, or faults for an event-sourced resource | [references/event-sourced-contracts.md](references/event-sourced-contracts.md) |
 | A field, message, or package name echoes a term used elsewhere for a different concept | [references/naming-collisions.md](references/naming-collisions.md) |
+| Creating a `.proto` file, adding a `service`, or naming RPC request and response messages | [references/file-layout.md](references/file-layout.md) |
 | Wanting to see every principle applied in one complete `.proto` package | [references/example-project-schema.md](references/example-project-schema.md) |
 | Reviewing or auditing an existing schema | [references/review-checklist.md](references/review-checklist.md) |

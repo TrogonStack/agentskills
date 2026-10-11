@@ -7,6 +7,8 @@ Use this reference when you want to see every principle in [SKILL.md](../SKILL.m
 - The `.proto` package, in full
 - What Each Choice Demonstrates
 
+The package is shown as one listing so it reads top to bottom. On disk, principle 7 puts each top-level definition in its own file under `example/projects/v1alpha1/` (`project_id.proto`, `create_project.proto`, `project_created.proto`, and so on).
+
 ```protobuf
 edition = "2023";
 

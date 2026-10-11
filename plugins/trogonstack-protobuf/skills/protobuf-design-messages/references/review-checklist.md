@@ -53,3 +53,10 @@ Skip this section for plain CRUD/RPC schemas.
 
 - [ ] New names were checked against the product's existing vocabulary, not only the local file
 - [ ] Any discovered collision was renamed before the package generates code
+
+## File and Service Layout ([file-layout.md](file-layout.md))
+
+- [ ] Each file holds one top-level definition named after it in `lower_snake_case`, or a deliberately grouped family named for the family
+- [ ] Every `service` ends in `Service` and lives in `<name>_service.proto`
+- [ ] Every RPC has its own `<Method>Request` and `<Method>Response`, shared with no other RPC
+- [ ] The directory path matches the package and ends in the version segment
