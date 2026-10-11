@@ -46,6 +46,7 @@ Each remaining item is a symptom of a principle `buf lint` cannot check, not a r
 Skip this section for plain CRUD/RPC schemas.
 
 - [ ] Commands are imperative; events are past tense
+- [ ] No command or event carries provenance (who issued it, when it happened); the envelope does, and no command lets the caller supply its own identity
 - [ ] The creation event carries every fact only knowable at creation time
 - [ ] No event duplicates a fact owned by another system
 - [ ] Faults are a `oneof` of specific types, not a generic error string

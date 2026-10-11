@@ -5,6 +5,7 @@ Use this reference when designing commands, events, state, or faults for an even
 ## Contents
 
 - Name by Tense
+- Who and When Belong to the Envelope, Not the Payload
 - Record Creation-Time Facts on the Creation Event, Even When Another System Owns What Happens Later
 - Do Not Add an Event for a Fact the Aggregate Does Not Own
 - State and Faults
@@ -27,18 +28,49 @@ message ProjectRenamed { ... }
 message ProjectArchived { ... }
 ```
 
+## Who and When Belong to the Envelope, Not the Payload
+
+Every event store already records provenance for each event: the principal whose command produced it, and when it was appended. Keep that in the event's envelope (metadata or headers, written by the runtime), never as payload fields. A `created_by`, `requested_by`, `creator`, `principal_id`, `created_at`, or `occurred_at` on a command or event duplicates the envelope at best, and at worst lets the caller decide whose name goes on the record.
+
+Commands are where this goes wrong first. The issuing principal comes from authentication, never from a field the caller fills in; a `creator` on `CreateProject` lets anyone claim to be anyone. Copying it onto the event then turns that claim into a recorded fact.
+
+```protobuf
+// Avoid: provenance copied into the payload, and on the command, supplied by the caller.
+message CreateProject {
+  string name = 1;
+  UserId created_by = 2;
+}
+
+message ProjectArchived {
+  ProjectId project_id = 1;
+  UserId archived_by = 2;
+  google.protobuf.Timestamp archived_at = 3;
+}
+
+// Prefer: the payload carries only domain facts; who and when come from the envelope.
+message CreateProject {
+  string name = 1;
+}
+
+message ProjectArchived {
+  ProjectId project_id = 1;
+}
+```
+
+Consumers that need the creator (an access-control system granting the creator membership, an audit view) read it from the envelope. A read model or query response may surface it as a field, because there it is a projection of the envelope, not a second source of truth.
+
+An actor or time field belongs in the payload only when it is a domain fact distinct from provenance: an approver named in a command that a system process issues on their behalf, a due date, the time an external occurrence happened as opposed to when it was recorded. If the value is always the issuing principal or the append time, it is provenance. No linter catches this; it has to be checked in review.
+
 ## Record Creation-Time Facts on the Creation Event, Even When Another System Owns What Happens Later
 
-A resource's creation event is the one place certain facts can ever be recorded as "true at the moment this came into existence": who created it, where it was placed at birth, what access level it started with. Even if another system owns moves, renames, or access changes afterward, the creation event still owns the initial values, because nothing else will ever again be in a position to say what they were at creation time.
+A resource's creation event is the one place certain facts can ever be recorded as "true at the moment this came into existence": where it was placed at birth, what access level it started with. (Who created it and when are provenance, recorded in the envelope as above.) Even if another system owns moves, renames, or access changes afterward, the creation event still owns the initial values, because nothing else will ever again be in a position to say what they were at creation time.
 
 ```protobuf
 message ProjectCreated {
   ProjectId project_id = 1;
   string name = 2;
-  UserId created_by = 3;
-  NodeId parent = 4;          // where it was placed at birth
-  AccessPreset initial_access_preset = 5;  // access choice at creation, even if access changes later move elsewhere
-  google.protobuf.Timestamp created_at = 6;
+  NodeId parent = 3;          // where it was placed at birth
+  AccessPreset initial_access_preset = 4;  // access choice at creation, even if access changes later move elsewhere
 }
 ```
 
@@ -115,6 +147,7 @@ ProjectId project_id = 1;
 ## Review Questions
 
 - Are commands named imperatively and events named in the past tense?
+- Does any command or event carry who issued it or when it happened (`*_by`, `creator`, `principal_id`, `created_at`, `occurred_at`) instead of leaving that to the envelope, and does any command let the caller supply its own identity?
 - Does the creation event carry every fact that is only knowable at creation time, even if later changes to those facts are owned elsewhere?
 - Does any event represent a fact the aggregate does not own, duplicating another system's source of truth?
 - Are faults modeled as a `oneof` of specific types rather than a generic error string or code?

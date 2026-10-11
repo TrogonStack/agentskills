@@ -47,6 +47,8 @@ int64 created = 1;
 google.protobuf.Timestamp created_at = 1;
 ```
 
+On an event-sourced command or event, the time it happened is provenance and belongs in the envelope, not a payload `_at` field; see [event-sourced-contracts.md](event-sourced-contracts.md).
+
 ## Review Questions
 
 - Does any numeric field omit its unit from the name?
