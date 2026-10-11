@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-protobuf",
+  "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

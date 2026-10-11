@@ -56,6 +56,11 @@
       "name": "trogonstack-elixir",
       "source": "plugins/trogonstack-elixir",
       "description": "Elixir skills for designing and reviewing OTP processes such as GenServers"
+    },
+    {
+      "name": "trogonstack-protobuf",
+      "source": "plugins/trogonstack-protobuf",
+      "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers"
     }
   ]
 }
