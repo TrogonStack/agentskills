@@ -13,7 +13,15 @@ claude plugin marketplace add TrogonStack/agentskills
 claude plugin install {plugin-name}@trogonstack
 ```
 
-In Cursor, import `https://github.com/TrogonStack/agentskills` as a team marketplace from **Dashboard > Plugins & MCPs > Team Marketplaces > Add Marketplace > Import from Repo**, then install plugins from **Customize** in the sidebar.
+In Cursor on a Teams or Enterprise plan, import `https://github.com/TrogonStack/agentskills` as a team marketplace from **Dashboard > Plugins & MCPs > Team Marketplaces > Add Marketplace > Import from Repo**, then install plugins from **Customize** in the sidebar.
+
+On other Cursor plans, copy a plugin into the local plugins directory and restart Cursor:
+
+```bash
+git clone https://github.com/TrogonStack/agentskills
+mkdir -p ~/.cursor/plugins/local
+cp -R agentskills/plugins/{plugin-name} ~/.cursor/plugins/local/
+```
 
 See all available plugins under [plugins](./plugins) directory.
 
