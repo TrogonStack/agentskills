@@ -30,7 +30,7 @@ message ProjectArchived { ... }
 
 ## Who and When Belong to the Envelope, Not the Payload
 
-Who issued a command and when its events were recorded are provenance. When the infrastructure records them, keep them in the event's envelope (metadata or headers) and out of the payload. A `created_by`, `requested_by`, `creator`, `principal_id`, or `recorded_at` on a command or event then duplicates the envelope at best, and at worst lets the caller decide whose name goes on the record.
+Who caused an event and when each step of its life happened are provenance. They are the same question for every event in the system, so they belong to platform metadata the infrastructure attaches to every event's envelope, not to individual contracts. When the infrastructure records them, keep them out of the payload. A `created_by`, `requested_by`, `creator`, `principal_id`, or `recorded_at` on a command or event then duplicates the envelope at best, and at worst lets the caller decide whose name goes on the record.
 
 Commands are where this goes wrong first. The issuing principal comes from authentication, never from a field the caller fills in; a `creator` on `CreateProject` lets anyone claim to be anyone. Copying it onto the event then turns that claim into a recorded fact.
 
@@ -61,25 +61,27 @@ message ProjectArchived {
 
 Moving provenance to the envelope is only correct when the platform guarantees it, so confirm each of these before removing a payload field, and if any is missing, fix the infrastructure first instead of dropping the only record:
 
-- The runtime, not the caller or the domain logic, writes the authenticated principal onto every event a command produces, under a documented, reserved envelope key.
-- The runtime or store records the append time on every event under a documented key.
+- The platform, not the caller or the domain logic, records the authenticated actor on every event, across every contract, with no opt-in. System processes (schedulers, processors) act under identities of their own, so no event lacks an actor.
+- The platform records a time for each step that matters, not only the write to storage: when the request was accepted, when the event was produced, and when it was first recorded. Each is stamped by the part of the platform that observed that step.
 - Both survive everything that moves events: replay, re-appending into another stream, restore from backup or archive, mirroring and replication. A store's own message timestamp is usually the time of that particular write, so re-appending an event elsewhere resets it unless the original is carried forward as metadata.
 - Consumers that need these values (an access-control system granting the creator membership, an audit view) have a supported way to read them.
+
+Where these values live and how they are encoded is specific to each platform and each store, so this skill names no keys. The platform has to document, in one place, which envelope values it guarantees, where each lives, and what is still missing. Read that before dropping a payload field, and if it does not exist, that is the first gap.
 
 Until those hold, a payload field is the honest place for the value; document it as a stopgap tied to the missing guarantee. If a pure decider needs the value to emit it, the trusted ingress that authenticated the caller stamps it onto the command, overwriting anything the client sent, the same way a host stamps the time; the client's own claim is never trusted.
 
 ### Recorded Time Is Not Domain Time
 
-The time an event was recorded and the time the fact happened in the domain are different values, and only the first is provenance:
+The times the platform observed an event and the time the fact happened in the domain are different values, and only the first kind is provenance:
 
-- **Recorded time**: when the store appended the event. Envelope, assigned by the infrastructure, never by the caller.
+- **Envelope times**: when the request was accepted, when the event was produced, and when it was first recorded. Envelope, assigned by the infrastructure, never by the caller.
 - **Domain time**: when the thing happened, took effect, or was observed: a reading taken by a device that synced hours later, a backfill or import of historical facts, a webhook carrying the external system's own timestamp, the time a scheduled occurrence was due, an effective date for a policy change. This is a domain fact, so it belongs in the payload.
 
-Name a domain time for what it means (`observed_at`, `effective_at`, `due_at`), not with a generic `occurred_at` or `created_at` that a reader will mistake for recorded time. If recorded time is always the right answer for a use case, there is no domain time to model.
+Name a domain time for what it means (`observed_at`, `effective_at`, `due_at`), not with a generic `occurred_at` or `created_at` that a reader will mistake for an envelope time. If an envelope time is always the right answer for a use case, there is no domain time to model.
 
 A decider's `decide` is pure and has no clock. When a decision needs domain time, it arrives in the command from a source the system trusts (a timer, a host-stamped value, a validated external timestamp), never from a client's unchecked `now`.
 
-An actor field belongs in the payload by the same test: only when it names someone other than the issuer, such as an approver named in a command a system process issues on their behalf. If the value is always the issuing principal or the append time, it is provenance. No linter catches this; it has to be checked in review.
+An actor field belongs in the payload by the same test: only when it names someone other than the issuer, such as an approver named in a command a system process issues on their behalf. If the value is always the actor that caused the event or one of the envelope times, it is provenance. No linter catches this; it has to be checked in review.
 
 ## Record Creation-Time Facts on the Creation Event, Even When Another System Owns What Happens Later
 
@@ -167,9 +169,9 @@ ProjectId project_id = 1;
 ## Review Questions
 
 - Are commands named imperatively and events named in the past tense?
-- Does any command or event copy who issued it or when it was recorded into the payload, while the infrastructure already guarantees both in the envelope? If the infrastructure does not guarantee them yet, is that the gap being fixed?
+- Does any command or event copy who caused it or when it was accepted, produced, or recorded into the payload, while the platform already guarantees those on every event's envelope? If the infrastructure does not guarantee them yet, is that the gap being fixed?
 - Does any command let the caller supply its own identity?
-- Is every payload time a domain time named for its meaning, distinct from recorded time?
+- Is every payload time a domain time named for its meaning, distinct from the envelope times?
 - Does the creation event carry every fact that is only knowable at creation time, even if later changes to those facts are owned elsewhere?
 - Does any event represent a fact the aggregate does not own, duplicating another system's source of truth?
 - Are faults modeled as a `oneof` of specific types rather than a generic error string or code?
