@@ -72,12 +72,13 @@ Until those hold, a payload field is the honest place for the value; document it
 
 ### Recorded Time Is Not Domain Time
 
-The times the platform observed an event and the time the fact happened in the domain are different values, and only the first kind is provenance:
+Times about the event itself and times inside the business fact are different values, and only the first kind is provenance:
 
-- **Envelope times**: when the request was accepted, when the event was produced, and when it was first recorded. Envelope, assigned by the infrastructure, never by the caller.
-- **Domain time**: when the thing happened, took effect, or was observed: a reading taken by a device that synced hours later, a backfill or import of historical facts, a webhook carrying the external system's own timestamp, the time a scheduled occurrence was due, an effective date for a policy change. This is a domain fact, so it belongs in the payload.
+- **Envelope times**: when the request was accepted, when the event was produced, and when it was first recorded. Assigned by the infrastructure, never by the caller.
+- **Occurrence time**: when the producer says the event happened (`occurred_at`), which differs from recorded time for a device that synced hours later, a backfill or import of historical facts, or a webhook carrying the external system's own timestamp. Every event has one, so it is event context in the envelope, kept distinct from recorded time, and recorded as the producer's claim rather than a platform observation.
+- **Domain time**: a time that is part of the business fact itself, such as when a scheduled occurrence was due, when a policy change takes effect, or when a measurement was taken. This belongs in the payload.
 
-Name a domain time for what it means (`observed_at`, `effective_at`, `due_at`), not with a generic `occurred_at` or `created_at` that a reader will mistake for an envelope time. If an envelope time is always the right answer for a use case, there is no domain time to model.
+Name a domain time for what it means (`due_at`, `effective_at`, `measured_at`), never with a generic `occurred_at` or `created_at` that a reader will mistake for an envelope or occurrence time. If an envelope or occurrence time is always the right answer for a use case, there is no domain time to model. See the EDA skill's event record layers for the same split between record metadata, event context, and payload.
 
 A decider's `decide` is pure and has no clock. When a decision needs domain time, it arrives in the command from a source the system trusts (a timer, a host-stamped value, a validated external timestamp), never from a client's unchecked `now`.
 

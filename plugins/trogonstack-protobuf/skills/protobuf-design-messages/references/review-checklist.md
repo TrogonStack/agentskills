@@ -48,7 +48,7 @@ Skip this section for plain CRUD/RPC schemas.
 - [ ] Commands are imperative; events are past tense
 - [ ] No command lets the caller supply its own identity
 - [ ] Provenance (the actor that caused the event, the envelope times) stays out of payloads where the platform guarantees it on every event's envelope, across replay, re-append, and restore
-- [ ] Payload times are domain times named for their meaning, never a copy of an envelope time
+- [ ] Payload times are domain times named for their meaning, never a copy of an envelope time or the producer-reported occurrence time
 - [ ] The creation event carries every fact only knowable at creation time
 - [ ] No event duplicates a fact owned by another system
 - [ ] Faults are a `oneof` of specific types, not a generic error string
