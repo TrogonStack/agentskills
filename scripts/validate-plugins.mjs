@@ -8,6 +8,7 @@ const pluginsDir = join(repoRoot, "plugins");
 const marketplacePath = join(repoRoot, ".claude-plugin", "marketplace.json");
 const cursorMarketplacePath = join(repoRoot, ".cursor-plugin", "marketplace.json");
 const cursorSchemasDir = join(repoRoot, "schemas", "cursor-plugin");
+const agentPluginsSchemaPath = join(repoRoot, "schemas", "agent-plugins", "1.0.0", "plugin.schema.json");
 const configPath = join(repoRoot, ".github", "release-please-config.json");
 const manifestPath = join(repoRoot, ".github", "release-please-manifest.json");
 
@@ -46,9 +47,10 @@ const pluginDirs = readdirSync(pluginsDir).filter((entry) => {
 
 const expectedPath = (name) => `plugins/${name}`;
 
-let Ajv, addFormats;
+let Ajv, Ajv2020, addFormats;
 try {
   ({ default: Ajv } = await import("ajv"));
+  ({ default: Ajv2020 } = await import("ajv/dist/2020.js"));
   ({ default: addFormats } = await import("ajv-formats"));
 } catch {
   console.error("Missing dependencies: run `npm install --no-save ajv@8 ajv-formats@3` first.");
@@ -62,6 +64,9 @@ const validateCursorPlugin = ajv.compile(
 const validateCursorMarketplace = ajv.compile(
   readJson(join(cursorSchemasDir, "marketplace.schema.json"))
 );
+const ajv2020 = new Ajv2020({ allErrors: true, strict: false });
+addFormats(ajv2020);
+const validateAgentPlugin = ajv2020.compile(readJson(agentPluginsSchemaPath));
 const schemaErrors = (validate) =>
   (validate.errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message}`).join("; ");
 
@@ -75,7 +80,7 @@ if (marketplace && cursorMarketplace && marketplace.name !== cursorMarketplace.n
 }
 
 const extraFilePaths = new Set((config?.["extra-files"] ?? []).map((f) => f.path));
-for (const path of [".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"]) {
+for (const path of [".claude-plugin/plugin.json", ".cursor-plugin/plugin.json", "plugin.json"]) {
   if (!extraFilePaths.has(path)) {
     fail(`release-please-config.json extra-files is missing "${path}", its version would drift on release`);
   }
@@ -136,6 +141,28 @@ for (const name of pluginDirs) {
         }
       }
     }
+  }
+
+  const agentPluginJsonPath = join(pluginsDir, name, "plugin.json");
+  if (!existsSync(agentPluginJsonPath)) {
+    fail(`plugins/${name}: missing plugin.json (Agent Plugins manifest)`);
+  } else {
+    const agentPluginJson = readJson(agentPluginJsonPath);
+    if (agentPluginJson) {
+      if (!validateAgentPlugin(agentPluginJson)) {
+        fail(`plugins/${name}/plugin.json: ${schemaErrors(validateAgentPlugin)}`);
+      }
+      for (const field of ["name", "version", "description"]) {
+        if (agentPluginJson[field] !== pluginJson[field]) {
+          fail(
+            `plugins/${name}: plugin.json ${field} "${agentPluginJson[field]}" does not match .claude-plugin/plugin.json ${field} "${pluginJson[field]}"`
+          );
+        }
+      }
+    }
+  }
+  if (!existsSync(join(pluginsDir, name, "skills"))) {
+    fail(`plugins/${name}: missing skills/ directory, the fixed Agent Plugins skills location`);
   }
 
   const cmp = cursorMarketplaceByName.get(name);

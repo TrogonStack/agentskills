@@ -48,6 +48,7 @@ plugins/{plugin-name}/
 │   └── plugin.json
 ├── .cursor-plugin/
 │   └── plugin.json
+├── plugin.json       (Agent Plugins manifest)
 ├── skills/           (empty, ready for skills)
 └── README.md
 ```
@@ -91,7 +92,28 @@ Create `plugins/{plugin-name}/.cursor-plugin/plugin.json`. The `name`, `descript
 }
 ```
 
-### 5. Create README.md
+### 5. Create Agent Plugins plugin.json
+
+Create `plugins/{plugin-name}/plugin.json` following the [Agent Plugins](https://agent-plugins.org) 1.0.0 spec. The `name`, `description`, and `version` must match `.claude-plugin/plugin.json` exactly, and it must satisfy `schemas/agent-plugins/1.0.0/plugin.schema.json`. Skills are discovered from the fixed `skills/` location, so do not declare component paths.
+
+```json
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "{plugin-name}",
+  "version": "0.0.1",
+  "description": "{description}",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/{plugin-name}",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": ["trogonstack", "{topic}"]
+}
+```
+
+### 6. Create README.md
 
 ````markdown
 # {plugin-name}
@@ -103,7 +125,7 @@ claude plugin install {plugin-name}@trogonstack
 ```
 ````
 
-### 6. Register in Marketplaces
+### 7. Register in Marketplaces
 
 Add an entry to `.claude-plugin/marketplace.json` in the `plugins` array:
 
@@ -126,7 +148,7 @@ Add an entry to `.cursor-plugin/marketplace.json` in the `plugins` array, with t
 }
 ```
 
-### 7. Register in Release Please Config
+### 8. Register in Release Please Config
 
 Add the package to `.github/release-please-config.json` in the `packages` object:
 
@@ -136,7 +158,7 @@ Add the package to `.github/release-please-config.json` in the `packages` object
 }
 ```
 
-### 8. Register in Release Please Manifest
+### 9. Register in Release Please Manifest
 
 Add the initial version to `.github/release-please-manifest.json`:
 
@@ -146,7 +168,7 @@ Add the initial version to `.github/release-please-manifest.json`:
 
 It must be `0.0.1`.
 
-### 9. Commit
+### 10. Commit
 
 Use conventional commit format:
 
@@ -159,6 +181,7 @@ feat({plugin-name}): scaffold plugin for {short purpose}
 - [ ] Plugin directory exists at `plugins/{plugin-name}/`
 - [ ] `plugins/{plugin-name}/.claude-plugin/plugin.json` exists with correct name, description, version `0.0.1`, and author
 - [ ] `plugins/{plugin-name}/.cursor-plugin/plugin.json` exists with name, description, and version matching the Claude manifest
+- [ ] `plugins/{plugin-name}/plugin.json` exists with name, description, and version matching the Claude manifest
 - [ ] `plugins/{plugin-name}/README.md` exists with install command
 - [ ] `plugins/{plugin-name}/skills/` directory exists (empty)
 - [ ] No CHANGELOG.md was created
@@ -166,4 +189,4 @@ feat({plugin-name}): scaffold plugin for {short purpose}
 - [ ] `node scripts/validate-plugins.mjs` passes
 - [ ] `.github/release-please-config.json` has the new package
 - [ ] `.github/release-please-manifest.json` has the new version entry at `0.0.1`
-- [ ] Description is consistent across both plugin.json files, both marketplace.json files, and README.md
+- [ ] Description is consistent across all three plugin.json files, both marketplace.json files, and README.md

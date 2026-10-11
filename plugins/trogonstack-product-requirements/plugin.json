@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "trogonstack-product-requirements",
+  "version": "0.1.1",
+  "description": "Skills for writing and reviewing Product Requirements Documents (PRDs) and Feature Requirements Documents (FRDs)",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-product-requirements",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "prd",
+    "frd",
+    "product"
+  ]
+}
