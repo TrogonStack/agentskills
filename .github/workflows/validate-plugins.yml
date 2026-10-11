@@ -6,7 +6,7 @@ on:
       - "plugins/**"
       - ".claude-plugin/marketplace.json"
       - ".cursor-plugin/marketplace.json"
-      - "schemas/cursor-plugin/**"
+      - "schemas/**"
       - ".github/release-please-config.json"
       - ".github/release-please-manifest.json"
       - "scripts/validate-plugins.mjs"

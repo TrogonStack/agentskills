@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "trogonstack-gh",
+  "version": "0.0.2",
+  "description": "GitHub workflow skills for enriching PR descriptions, automating code review context, and streamlining collaboration through the gh CLI",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-gh",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "github",
+    "pull-requests",
+    "code-review"
+  ]
+}

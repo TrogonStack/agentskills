@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "trogonstack-eventmodeling",
+  "version": "0.1.2",
+  "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-eventmodeling",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "event-modeling",
+    "event-sourcing",
+    "design"
+  ]
+}
