@@ -45,9 +45,9 @@ message CreateProject {
 
 If the service treats `ACCESS_PRESET_UNSPECIFIED` as `ACCESS_PRESET_PUBLIC` "so something reasonable happens," an old client, a client with a bug, or a caller who genuinely forgot the field just made the resource public by omission. The creator never chose that, and the resource the creator meant to keep private is now exposed. The only safe reading of `UNSPECIFIED` for a field like this is "reject the request and ask the caller to choose," never "pick the widest option on their behalf."
 
-Contrast that with a field where `UNSPECIFIED` defaulting to the narrowest, most conservative option would be safe. The service-level decision depends entirely on what gets exposed by resolving the default one way or the other; the schema's job is to make `UNSPECIFIED` a visible, named state so that decision has to be made on purpose rather than falling out of whatever the zero value happens to be.
+The rule holds even when a narrow default looks harmless: `UNSPECIFIED` is rejected, never resolved. A default the service picks is a default nobody can see in the schema, and the next reader cannot tell a caller who chose `PRIVATE` from one who sent nothing. If a field genuinely has a safe default, make it an explicit value the caller sends, and let the client library fill it in where a human would otherwise forget.
 
-```protobuf
+```cpp
 // Avoid: service code that treats UNSPECIFIED as a convenient permissive default.
 switch (request.access_preset()) {
   case AccessPreset::ACCESS_PRESET_UNSPECIFIED:

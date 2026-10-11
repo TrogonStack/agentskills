@@ -39,6 +39,7 @@ package example.projects.v1alpha1;
 
 message Project {
   ProjectId project_id = 1;
+  reserved title;
   string name = 2;  // renamed from `title`; breaking, acceptable pre-v1
   string owner_id = 3;
 }
@@ -48,7 +49,7 @@ In CI, this PR carries the `breaking-change-acknowledged` label (or whatever a g
 
 ## Change 2: a Type Change, Handled With `reserved`
 
-`owner_id` becomes a wrapper message (`UserId`) instead of a bare string, per the protobuf-design-messages skill's no-primitive-obsession principle. The new field gets a new number; the old number and name are reserved:
+`owner_id` becomes a wrapper message (`UserId`) instead of a bare string, per the protobuf-design-messages skill's no-primitive-obsession principle. The new field gets a new number and the old number is reserved. The name stays `owner_id`, because a reference keeps its suffix for JSON readers who never see the type, so the name is not reserved (reserving a name the message still uses does not compile):
 
 ```protobuf
 package example.projects.v1alpha1;
@@ -59,14 +60,14 @@ message UserId {
 
 message Project {
   reserved 3;
-  reserved "owner_id";
+  reserved title;
   ProjectId project_id = 1;
   string name = 2;
-  UserId owner = 4;
+  UserId owner_id = 4;
 }
 ```
 
-Field 4 (`owner`) is deliberately not named `owner_id`: since it is now a typed reference rather than an identifier, `owner_ref` or a bare role name would both be defensible depending on whether `UserId` is treated as an id-wrapper or a richer reference; the point demonstrated here is the mechanic (new number, reserved old number and name), not the specific name chosen.
+The JSON key stays `ownerId`, but its value changes from a string to an object (`{"value": "..."}`), so JSON consumers still break; the new field number protects binary consumers, not JSON ones. That is acceptable here for the same reason as the rename: the package is pre-release and the break is acknowledged in CI.
 
 ## Change 3: the Package Stabilizes, Then Needs a Breaking Change
 
@@ -78,10 +79,10 @@ package example.projects.v1;
 
 message Project {
   ProjectId project_id = 1;
-  string name = 2;
-  UserId owner = 4;
   reserved 3;
-  reserved "owner_id";
+  reserved title;
+  string name = 2;
+  UserId owner_id = 4;
 }
 ```
 
@@ -93,7 +94,7 @@ message Project {
   ProjectId project_id = 1;
   string display_name = 2;
   string slug = 3;
-  UserId owner = 4;
+  UserId owner_id = 4;
 }
 ```
 
@@ -102,7 +103,7 @@ message Project {
 | Change | Principle |
 |---|---|
 | `title` -> `name` | A rename is wire-safe, JSON/codegen-breaking; acceptable pre-`v1`, made visible via a reviewed CI opt-out |
-| `owner_id` (string) -> `owner` (`UserId`) | A type change gets a new field number; the old number and name are `reserved`, never reused |
+| `string owner_id` -> `UserId owner_id` | A type change gets a new field number and the old number is `reserved`; the name stays, because a reference keeps its suffix |
 | `v1alpha1` -> `v1beta1` -> `v1` -> `v2` | A stable package's breaking change produces a new package version instead of mutating the one consumers already depend on |
 
 Note: `example.projects.*` does not refer to any real service; it is a placeholder package name for this worked example.

@@ -12,6 +12,7 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 ## Renames and Reserved Fields ([renames-and-reserved.md](renames-and-reserved.md))
 
 - [ ] No field, message, or enum value was renamed without accounting for the JSON/generated-code break that follows
+- [ ] A renamed field or enum value has its old name `reserved` (message names cannot be reserved)
 - [ ] No field's type changed at its existing field number; a new number was allocated instead
 - [ ] The old field number is `reserved`, and the old name is `reserved` unless it stays attached to the new number
 - [ ] No `reserved` statement was removed to reuse a number or name
@@ -21,7 +22,7 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 - [ ] `buf breaking` runs in CI against the correct base branch
 - [ ] No package's breaking-change check was permanently disabled or weakened to let one change through
 - [ ] An intentional break carries a visible, per-change, reviewed opt-out (e.g. a PR label), not a standing exemption
-- [ ] Any package excluded from breaking-change checks is actually pre-codegen, with no consumers yet
+- [ ] Any package excluded from breaking-change checks is confirmed to have no consumers on any surface (generated code, JSON, binary)
 
 ## Package Versioning ([package-versioning.md](package-versioning.md))
 

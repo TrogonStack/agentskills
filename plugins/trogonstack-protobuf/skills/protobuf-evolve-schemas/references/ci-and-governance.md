@@ -7,17 +7,17 @@ Use this reference when setting up or reviewing breaking-change detection in CI,
 Compare the working tree against the base branch using buf's git input syntax (see [buf docs: Breaking usage](https://buf.build/docs/breaking/usage/) and [buf docs: Inputs](https://buf.build/docs/reference/inputs/)):
 
 ```bash
-buf breaking --against '.git#branch=main'
+buf breaking --against ".git#branch=${BASE_BRANCH}"
 ```
 
-Run this in CI on every pull request, against whatever branch the PR targets, so a break is caught before merge rather than discovered by a downstream consumer after release.
+Set `BASE_BRANCH` to the branch the pull request targets (in GitHub Actions, `github.base_ref`), never a hard-coded `main`: a PR into a release or feature branch must be compared against that branch. The checkout also needs that branch's history fetched (a shallow clone of only the PR head has nothing to compare against). Run this in CI on every pull request, so a break is caught before merge rather than discovered by a downstream consumer after release. Locally, substitute the branch you will merge into.
 
 ## Local Tip: Breaking Global Git Config
 
 Running `buf breaking` against a git ref clones into a temporary directory and can trip over global git hooks or config that assume a normal working tree (commit signing hooks, credential helpers, or custom templates). If the local run fails for reasons that look like git configuration rather than an actual schema break, isolate it from global config:
 
 ```bash
-GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null buf breaking --against '.git#branch=main'
+GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null buf breaking --against '.git#branch=main'  # main: the branch you will merge into
 ```
 
 This is a local troubleshooting step, not something to bake into CI, where the environment is already clean.
@@ -37,18 +37,18 @@ Prefer an opt-out that is explicit and scoped to the one PR that needs it: a PR 
 if pr.has_label("breaking-change-acknowledged"):
     skip buf breaking
 else:
-    run buf breaking --against '.git#branch=main'
+    run buf breaking --against ".git#branch=${pr.base_branch}"
 ```
 
 The exact mechanism (a label, a required commit trailer, a specific reviewer's approval) matters less than the property it has to preserve: the opt-out is a per-change, reviewed decision, not a standing exemption.
 
-## Pre-Codegen Packages Cost Nothing to Break
+## Packages With No Consumers Cost Nothing to Break
 
-A package that is excluded from code generation entirely (nothing in the build consumes its generated bindings yet) has no consumers to break, so `buf breaking` findings against it are not really "breaks," they are just diff noise. It is reasonable to exclude such a package from the breaking-change check altogether until it is wired into code generation for the first time; at that point, treat its current shape as the new baseline and start enforcing `buf breaking` on it like any other package.
+A package with no consumers on any compatibility surface has nobody to break, so `buf breaking` findings against it are diff noise rather than breaks. Excluding it from code generation is not evidence of that on its own: a service can already serve it as JSON, or a client can already read its binary payloads, without any generated bindings in this build. Exclude a package from the breaking-change check only after confirming it has no consumers on any surface, and record that confirmation where reviewers will see it. The moment it gains its first consumer (it is wired into code generation, served, or published), treat its current shape as the new baseline and start enforcing `buf breaking` on it like any other package.
 
 ## Review Questions
 
 - Does CI run `buf breaking` against the correct base branch on every pull request?
 - Is any package's breaking-change check permanently disabled or weakened, rather than opted out of per-change?
 - When a break was intentional, is there a visible, reviewed record of that decision on the PR, rather than a silent config change?
-- Is a package excluded from breaking-change checks actually pre-codegen, or does it already have consumers?
+- Is a package excluded from breaking-change checks confirmed to have no consumers on any surface (generated code, JSON, binary)?

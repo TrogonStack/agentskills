@@ -23,11 +23,23 @@ A change can be safe for one surface and a break for another. [buf's breaking ch
 
 `WIRE` alone only protects binary gRPC consumers. If the schema is exposed through a JSON-speaking transport (gRPC-Gateway, Connect, a webhook payload, a REST-ish proxy, or any client library that round-trips through JSON instead of binary), `WIRE_JSON` is the floor, not `WIRE`. A field rename passes a `WIRE`-only check and fails `WIRE_JSON`, because the wire format never cared about the name but the JSON key is the name.
 
-```text
-# A rename is wire-compatible, JSON-incompatible.
-buf breaking --against '.git#branch=main' (category: WIRE)        -> passes
-buf breaking --against '.git#branch=main' (category: WIRE_JSON)   -> fails: field name change
+`buf breaking` takes its category from `breaking.use` in `buf.yaml`, and an unset `breaking` section means `FILE`. The same rename gives a different result under each configuration:
+
+```yaml
+# buf.yaml: a field rename passes. Only binary decoding is checked.
+breaking:
+  use:
+    - WIRE
 ```
+
+```yaml
+# buf.yaml: the same rename fails with FIELD_SAME_JSON_NAME.
+breaking:
+  use:
+    - WIRE_JSON
+```
+
+Under the default (`FILE`) the rename fails too, on both the JSON check and the generated-code name check.
 
 `FILE` and `PACKAGE` are supersets of `WIRE_JSON` (buf's docs say so in the `FIELD_SAME_JSON_NAME` rule), so when generated source code is a first-class consumer, which it is in most codebases, pick `FILE` or `PACKAGE` instead of `WIRE_JSON`; you keep every JSON check and add the generated-code ones. Pick one category per module rather than combining them.
 

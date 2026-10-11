@@ -22,14 +22,14 @@ message StartSession {
 
 The collision rarely shows up by reading the file the new field lives in; it shows up by checking the new name against every other place the product already uses that word. Before naming a new message, field, or package, search the existing schemas (and the product's domain language more broadly) for the candidate name. A hit does not automatically rule the name out, but it does mean the two concepts need to be distinguishable at a glance, which a shared bare word cannot do.
 
-## The Cheapest Moment to Rename Is Before Anything Generates Code
+## The Cheapest Moment to Rename Is Before Anything Depends on the Name
 
-Once generated code exists, a rename is a breaking change (the protobuf-evolve-schemas skill covers why a rename breaks JSON and generated source even when it is wire-compatible). Before that point, a rename costs nothing: it is a text edit in a file nobody depends on yet.
+Once anything depends on the schema, a rename is a breaking change (the protobuf-evolve-schemas skill covers why a rename breaks JSON and generated source even when it is wire-compatible). Dependence is not only generated code: a client that reads the JSON form depends on the field names without ever seeing the schema. Before anything depends on the names, a rename costs nothing: it is a text edit in a file nobody reads yet.
 
-This is one of the reasons a package still under active design is worth excluding from code generation entirely (for example, via `buf.gen.yaml` exclusions or simply not wiring the package into the build) until its shape has settled. While a package generates no code, every name in it can change for free; the moment it does, every rename has a cost that scales with how many consumers pulled in the generated bindings.
+This is one of the reasons a package still under active design is worth excluding from code generation entirely (for example, via `buf.gen.yaml` exclusions or simply not wiring the package into the build) until its shape has settled. Excluding codegen keeps generated bindings from depending on the names, but it does not prove nothing else does: confirm no service serves the package over JSON or binary and no client reads its payloads. Only then can every name change for free; the moment any consumer appears, every rename has a cost that scales with how many depend on it.
 
 ## Review Questions
 
 - Does a new name reuse a word the product already assigns to a different concept elsewhere?
 - Has the name been checked against the broader schema set, not just the file it lives in?
-- Is the package still pre-codegen, meaning names in it can still be fixed for free?
+- Is the package still free of consumers on every surface (generated code, JSON, binary), meaning names in it can still be fixed for free?

@@ -37,7 +37,9 @@ message NodeId {
 
 message Money {
   int64 amount_micros = 1;
-  string currency_code = 2 [(buf.validate.field).string.len = 3];  // ISO 4217
+  // ISO 4217 alphabetic code. The pattern checks the shape only; membership in
+  // the ISO 4217 code list is checked by the service, which owns that list.
+  string currency_code = 2 [(buf.validate.field).string.pattern = "^[A-Z]{3}$"];
 }
 
 // --- Enums (principle 3: exhaustive choice, UNSPECIFIED is rejected) ---
@@ -57,13 +59,15 @@ enum ProjectState {
 
 // --- State (folded from events) ---
 
+// Only facts this aggregate's own events keep current. Placement and access
+// are recorded once on ProjectCreated, but their later changes are owned
+// elsewhere, so folding them in here would freeze a stale copy. A reader
+// that needs them joins the owning systems in a read model.
 message Project {
   ProjectId project_id = 1;
   string name = 2;
-  NodeId parent = 3;
-  AccessPreset access_preset = 4;
-  ProjectState state = 5;
-  Money budget = 6;
+  ProjectState state = 3;
+  Money budget = 4;
 }
 
 // --- Commands: imperative (principle 5) ---
@@ -145,10 +149,11 @@ message RenameProjectFault {
 |---|---|
 | `ProjectId`, `UserId`, `NodeId` as wrapper messages | No primitive obsession |
 | `NodeId parent` bare, no `_id` suffix | `parent` names hierarchy position, never qualified |
-| `Money` with `amount_micros` + `currency_code` | Units and currency travel together, never a bare float |
+| `Money` with `amount_micros` + `currency_code` | Units and currency travel together, never a bare float; the schema checks the code's shape, the service checks it is a real ISO 4217 code |
 | `AccessPreset` zero value rejected via `buf.validate.field.enum` | An omitted choice cannot silently widen access |
 | `CreateProject.name` marked `required` via `string.min_len = 1` | Schema-checkable invariant expressed portably |
 | `ProjectCreated` carries `parent` and `initial_access_preset` | Creation-time facts recorded even though later changes are owned elsewhere |
+| `Project` state omits `parent` and access | Folded state holds only facts the aggregate's own events keep current |
 | No `ProjectMoved` or `ProjectAccessChanged` event | The aggregate does not emit events for facts it does not own |
 | `RenameProjectFault` as a `oneof` | Specific, matchable fault types instead of a generic error |
 | `package example.projects.v1alpha1` | Pre-release versioning; the protobuf-evolve-schemas skill covers when and how this graduates to `v1beta1` and `v1` |

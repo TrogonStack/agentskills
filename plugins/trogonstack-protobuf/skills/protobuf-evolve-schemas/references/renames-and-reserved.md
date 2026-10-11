@@ -16,12 +16,16 @@ message Project {
 // JSON breaks: a client sending {"title": "..."} now sets nothing, and a
 // client reading the response no longer finds a "title" key.
 // Generated code breaks: callers of project.title() / project.Title no longer compile.
+// The old name is reserved so nothing reintroduces "title" with another meaning.
 message Project {
+  reserved title;
   string name = 1;
 }
 ```
 
 A rename is a `WIRE_JSON`-category and `FILE`/`PACKAGE`-category break even though it is a `WIRE`-category no-op; see [references/compatibility-surfaces.md](compatibility-surfaces.md). If a rename is still necessary (the old name was wrong, or collided with other vocabulary per the protobuf-design-messages skill), treat it as a breaking change requiring the same coordination as any other: a new package version, or a deliberate opt-out in CI for a pre-release package (see [references/ci-and-governance.md](ci-and-governance.md)).
+
+Reserved names in these examples use editions syntax, a bare identifier. In proto2 and proto3 files the name is quoted (`reserved "title";`). Field and enum-value names can be reserved; message names cannot.
 
 ## An Enum Value Rename Breaks JSON Too
 
@@ -38,6 +42,7 @@ enum ProjectState {
 // that was matching the string "PROJECT_STATE_DONE" now sees
 // "PROJECT_STATE_COMPLETED" and silently fails to match.
 enum ProjectState {
+  reserved PROJECT_STATE_DONE;
   PROJECT_STATE_UNSPECIFIED = 0;
   PROJECT_STATE_COMPLETED = 1;
 }
@@ -70,7 +75,8 @@ A `reserved` statement is permanent. Removing it to "free up" the number for an 
 
 ## Review Questions
 
-- Does the diff rename a field, message, or enum value without reserving the old name/number and without a plan for the resulting JSON/generated-code break?
+- Does the diff rename a field or enum value without reserving the old name, or without a plan for the resulting JSON/generated-code break?
+- Does the diff rename a message? Message names cannot be reserved, so the plan has to cover every consumer that names the type: generated code, `google.protobuf.Any` type URLs, and anything that stores the full name.
 - Does the diff change a field's type at the same field number, instead of allocating a new number and reserving the old one?
 - Does the diff remove a `reserved` statement to reuse a number or name?
 - Does the diff rename an enum value, and has it been checked against `WIRE_JSON`, not just `WIRE`?
