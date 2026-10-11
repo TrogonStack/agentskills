@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-diataxis",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Documentation skills following the Diataxis framework for organizing and generating docs into tutorials, how-to guides, reference, and explanation sections",
   "author": {
     "name": "TrogonStack",
