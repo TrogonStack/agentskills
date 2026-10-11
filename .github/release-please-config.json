@@ -63,6 +63,9 @@
     },
     "plugins/trogonstack-elixir": {
       "component": "trogonstack-elixir"
+    },
+    "plugins/trogonstack-protobuf": {
+      "component": "trogonstack-protobuf"
     }
   },
   "plugins": [

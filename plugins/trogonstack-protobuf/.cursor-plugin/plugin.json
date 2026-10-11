@@ -1,0 +1,25 @@
+{
+  "name": "trogonstack-protobuf",
+  "displayName": "TrogonStack Protobuf",
+  "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-protobuf",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "protobuf",
+    "buf",
+    "schema-evolution"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "protobuf",
+    "buf",
+    "schema-evolution"
+  ],
+  "skills": "./skills/"
+}
