@@ -22,7 +22,7 @@ Run `buf format -w` and `buf lint` (with `STANDARD`, buf's default) before anyth
 2. **No primitive obsession.** Identifiers, references, and out-of-line content pointers are value objects, not bare strings; units, money, and instants follow the ecosystem's naming patterns.
 3. **Enums encode an exhaustive choice, not a growable boolean.** The zero value is always `<ENUM>_UNSPECIFIED`, code must reject it, and a boolean that might need a third state should be an enum instead.
 4. **Know what the schema can and cannot guarantee.** Editions presence and `protovalidate` constraints are schema-level tools with real limits; some invariants need live state and belong in the service.
-5. **Event-sourced contracts separate commands, events, state, and faults.** Commands are imperative, events are past tense, who and when live in the event envelope rather than the payload, and an aggregate never gets an event for a fact it does not own.
+5. **Event-sourced contracts separate commands, events, state, and faults.** Commands are imperative, events are past tense, provenance (who issued it, when it was recorded) lives in an envelope the infrastructure guarantees, domain time stays in the payload, and an aggregate never gets an event for a fact it does not own.
 6. **Rename early when words collide with product vocabulary.** The cheapest moment to fix a name is before anything generates code from it.
 7. **A file is named after what it defines.** One top-level definition per file in `lower_snake_case`, a service in `<name>_service.proto` named `<Name>Service`, and its own `<Method>Request` and `<Method>Response` for every RPC.
 

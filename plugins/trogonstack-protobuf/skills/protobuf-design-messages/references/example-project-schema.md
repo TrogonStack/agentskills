@@ -147,7 +147,7 @@ message RenameProjectFault {
 | `AccessPreset` zero value rejected via `buf.validate.field.enum` | An omitted choice cannot silently widen access |
 | `CreateProject.name` marked `required` via `string.min_len = 1` | Schema-checkable invariant expressed portably |
 | `ProjectCreated` carries `parent` and `initial_access_preset` | Creation-time facts recorded even though later changes are owned elsewhere |
-| No `created_by`, `created_at`, or `archived_at` on commands or events | Who and when are provenance, recorded in the event envelope |
+| No `created_by`, `created_at`, or `archived_at` on commands or events | Who issued it and when it was recorded are provenance the event envelope carries; the project has no separate domain time |
 | `Project` state omits `parent` and access | Folded state holds only facts the aggregate's own events keep current |
 | No `ProjectMoved` or `ProjectAccessChanged` event | The aggregate does not emit events for facts it does not own |
 | `RenameProjectFault` as a `oneof` | Specific, matchable fault types instead of a generic error |

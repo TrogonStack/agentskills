@@ -47,7 +47,7 @@ int64 created = 1;
 google.protobuf.Timestamp created_at = 1;
 ```
 
-On an event-sourced command or event, the time it happened is provenance and belongs in the envelope, not a payload `_at` field; see [event-sourced-contracts.md](event-sourced-contracts.md).
+On an event-sourced command or event, the time it was recorded is provenance for the envelope, while the time it happened in the domain is a payload fact named for its meaning; see [event-sourced-contracts.md](event-sourced-contracts.md).
 
 ## Review Questions
 
