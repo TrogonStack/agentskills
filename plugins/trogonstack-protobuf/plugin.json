@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-protobuf",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers",
   "author": {
     "name": "TrogonStack",
