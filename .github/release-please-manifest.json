@@ -9,5 +9,5 @@
   "plugins/trogonstack-eda": "0.2.0",
   "plugins/trogonstack-product-requirements": "0.2.0",
   "plugins/trogonstack-elixir": "0.2.0",
-  "plugins/trogonstack-protobuf": "0.1.0"
+  "plugins/trogonstack-protobuf": "0.1.1"
 }

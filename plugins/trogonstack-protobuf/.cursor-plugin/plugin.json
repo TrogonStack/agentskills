@@ -2,7 +2,7 @@
   "name": "trogonstack-protobuf",
   "displayName": "TrogonStack Protobuf",
   "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "TrogonStack"
   },
