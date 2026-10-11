@@ -15,15 +15,10 @@ edition = "2023";
 package example.projects.v1alpha1;
 
 import "buf/validate/validate.proto";
-import "google/protobuf/timestamp.proto";
 
 // --- Identifiers and references (principle 2: no primitive obsession) ---
 
 message ProjectId {
-  string value = 1 [(buf.validate.field).string.min_len = 1];
-}
-
-message UserId {
   string value = 1 [(buf.validate.field).string.min_len = 1];
 }
 
@@ -76,8 +71,10 @@ message CreateProject {
   string name = 1 [(buf.validate.field).string.min_len = 1];
   NodeId parent = 2;
   AccessPreset access_preset = 3 [
-    (buf.validate.field).enum.defined_only = true,
-    (buf.validate.field).enum = {not_in: [0]}
+    (buf.validate.field).enum = {
+      defined_only: true
+      not_in: [0]
+    }
   ];
   Money budget = 4;
 }
@@ -96,24 +93,21 @@ message ArchiveProject {
 message ProjectCreated {
   ProjectId project_id = 1;
   string name = 2;
-  UserId created_by = 3;
   // Placement and access at birth. Later moves and access changes are owned
   // by other systems; this event only records the facts true at creation.
-  NodeId parent = 4;
-  AccessPreset initial_access_preset = 5;
-  Money initial_budget = 6;
-  google.protobuf.Timestamp created_at = 7;
+  // Who created it and when live in the event envelope, not here.
+  NodeId parent = 3;
+  AccessPreset initial_access_preset = 4;
+  Money initial_budget = 5;
 }
 
 message ProjectRenamed {
   ProjectId project_id = 1;
   string name = 2;
-  google.protobuf.Timestamp renamed_at = 3;
 }
 
 message ProjectArchived {
   ProjectId project_id = 1;
-  google.protobuf.Timestamp archived_at = 2;
 }
 
 // Deliberately absent: ProjectMoved, ProjectAccessChanged. Placement and
@@ -147,12 +141,13 @@ message RenameProjectFault {
 
 | Choice | Principle |
 |---|---|
-| `ProjectId`, `UserId`, `NodeId` as wrapper messages | No primitive obsession |
+| `ProjectId`, `NodeId` as wrapper messages | No primitive obsession |
 | `NodeId parent` bare, no `_id` suffix | `parent` names hierarchy position, never qualified |
 | `Money` with `amount_micros` + `currency_code` | Units and currency travel together, never a bare float; the schema checks the code's shape, the service checks it is a real ISO 4217 code |
 | `AccessPreset` zero value rejected via `buf.validate.field.enum` | An omitted choice cannot silently widen access |
 | `CreateProject.name` marked `required` via `string.min_len = 1` | Schema-checkable invariant expressed portably |
 | `ProjectCreated` carries `parent` and `initial_access_preset` | Creation-time facts recorded even though later changes are owned elsewhere |
+| No `created_by`, `created_at`, or `archived_at` on commands or events | Who issued it and when it was recorded are provenance the event envelope carries; the project has no separate domain time |
 | `Project` state omits `parent` and access | Folded state holds only facts the aggregate's own events keep current |
 | No `ProjectMoved` or `ProjectAccessChanged` event | The aggregate does not emit events for facts it does not own |
 | `RenameProjectFault` as a `oneof` | Specific, matchable fault types instead of a generic error |
