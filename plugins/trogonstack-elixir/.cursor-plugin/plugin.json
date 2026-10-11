@@ -2,7 +2,7 @@
   "name": "trogonstack-elixir",
   "displayName": "TrogonStack Elixir",
   "description": "Elixir skills for designing and reviewing OTP processes such as GenServers",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "TrogonStack"
   },
