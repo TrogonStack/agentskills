@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-eda",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Event-driven architecture skills for designing event definitions, schemas, contracts, and catalogs following good practices for domain and integration events",
   "author": {
     "name": "TrogonStack",
