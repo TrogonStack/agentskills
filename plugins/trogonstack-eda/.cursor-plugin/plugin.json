@@ -2,7 +2,7 @@
   "name": "trogonstack-eda",
   "displayName": "TrogonStack Event-Driven Architecture",
   "description": "Event-driven architecture skills for designing event definitions, schemas, contracts, and catalogs following good practices for domain and integration events",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": {
     "name": "TrogonStack"
   },

@@ -6,7 +6,7 @@
   "plugins/trogonstack-ask": "0.3.0",
   "plugins/trogonstack-otel": "0.2.0",
   "plugins/trogonstack-eventmodeling": "0.2.0",
-  "plugins/trogonstack-eda": "0.1.2",
+  "plugins/trogonstack-eda": "0.2.0",
   "plugins/trogonstack-product-requirements": "0.2.0",
   "plugins/trogonstack-elixir": "0.2.0",
   "plugins/trogonstack-protobuf": "0.1.0"
