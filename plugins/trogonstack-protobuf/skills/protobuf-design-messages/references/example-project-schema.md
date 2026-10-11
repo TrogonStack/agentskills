@@ -1,6 +1,11 @@
 # Worked Example: a Project Resource
 
-A complete, small `.proto` package for a generic `Project` resource, applying every principle in [SKILL.md](../SKILL.md): wrapped identifiers, a hierarchy position, a bare-vs-qualified parent distinction, an access preset enum that rejects its unspecified value, a money value object, and a decider's commands, events, state, and faults.
+Use this reference when you want to see every principle in [SKILL.md](../SKILL.md) applied together in one complete, small `.proto` package for a generic `Project` resource: wrapped identifiers, a hierarchy position, a bare-vs-qualified parent distinction, an access preset enum that rejects its unspecified value, a money value object, and a decider's commands, events, state, and faults.
+
+## Contents
+
+- The `.proto` package, in full
+- What Each Choice Demonstrates
 
 ```protobuf
 edition = "2023";
@@ -144,6 +149,6 @@ message RenameProjectFault {
 | `ProjectCreated` carries `parent` and `initial_access_preset` | Creation-time facts recorded even though later changes are owned elsewhere |
 | No `ProjectMoved` or `ProjectAccessChanged` event | The aggregate does not emit events for facts it does not own |
 | `RenameProjectFault` as a `oneof` | Specific, matchable fault types instead of a generic error |
-| `package example.projects.v1alpha1` | Pre-release versioning; see [protobuf-evolve-schemas](../../protobuf-evolve-schemas/SKILL.md) for when and how this graduates to `v1beta1` and `v1` |
+| `package example.projects.v1alpha1` | Pre-release versioning; the protobuf-evolve-schemas skill covers when and how this graduates to `v1beta1` and `v1` |
 
 Note: `example.projects.v1alpha1` does not refer to any real service; it is a placeholder package name for this worked example.

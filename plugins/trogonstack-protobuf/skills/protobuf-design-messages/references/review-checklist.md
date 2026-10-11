@@ -1,5 +1,7 @@
 # Review Checklist
 
+Use this reference when reviewing or auditing message and field definitions.
+
 Each item is a symptom of a principle, not a rule on its own. When an item fails, read the linked reference and judge the schema by the principle behind it; a justified exception passes, a compliant schema that misses the point does not.
 
 ## JSON Field Naming ([json-field-naming.md](json-field-naming.md))
@@ -8,11 +10,17 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 - [ ] Single opaque identifiers are suffixed `_id`; structured references are suffixed `_ref`
 - [ ] `parent` is used only for hierarchy position; kinship is qualified with a type (`parent_session_id`), never spelled `parent_id`
 
-## Value Objects ([value-objects.md](value-objects.md))
+## Identifiers and References ([identifiers-and-references.md](identifiers-and-references.md))
 
 - [ ] No identifier is a bare `string` or numeric type; each is a single-field wrapper message
 - [ ] No reference scatters its fields across siblings instead of one value object
+
+## Claim Checks ([claim-checks.md](claim-checks.md))
+
 - [ ] Any out-of-line content pointer carries its locator and its digest together in one message
+
+## Units, Money, and Time ([units-money-and-time.md](units-money-and-time.md))
+
 - [ ] Numeric fields with a unit carry that unit in the field name
 - [ ] Monetary fields pair a fixed-point amount with an ISO 4217 currency code, never a bare float
 - [ ] Instants use `google.protobuf.Timestamp` with an `_at` suffix

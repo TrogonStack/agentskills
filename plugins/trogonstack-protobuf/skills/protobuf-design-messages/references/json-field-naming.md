@@ -73,6 +73,6 @@ This rule and its rationale come from the public straw-hat-team ADR on hierarchy
 ## Review Questions
 
 - Does any field name read as inline content (`project`, `result`, `owner`) while its type is an id or ref wrapper? Rename it with the matching suffix.
-- Does any `_id` or `_ref` field have a type that is a bare `string` instead of a wrapper message? See [references/value-objects.md](value-objects.md).
+- Does any `_id` or `_ref` field have a type that is a bare `string` instead of a wrapper message? See [references/identifiers-and-references.md](identifiers-and-references.md).
 - Is `parent` used for anything other than hierarchy position? Rename the kinship use to `parent_<type>_id`.
 - Does any field spell kinship as `parent_id` or `parentId` with no type qualifier? That spelling is disallowed under this convention; it reads as a role with no type.

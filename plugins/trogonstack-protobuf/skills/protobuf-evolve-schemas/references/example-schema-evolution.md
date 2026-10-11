@@ -1,6 +1,16 @@
 # Worked Example: Evolving a Project Schema
 
-The same kind of `Project` resource as the [protobuf-design-messages worked example](../../protobuf-design-messages/references/example-project-schema.md), carried through real changes: a rename, a type change, and a breaking change in a stable package.
+Use this reference when you want to see a field rename, a type change, and a package version bump applied to one schema, each handled the compatible way.
+
+The same kind of `Project` resource as the worked example in the protobuf-design-messages skill, carried through real changes: a rename, a type change, and a breaking change in a stable package.
+
+## Contents
+
+- Starting Point
+- Change 1: a Rename, Handled as a Breaking Change
+- Change 2: a Type Change, Handled With `reserved`
+- Change 3: the Package Stabilizes, Then Needs a Breaking Change
+- What Each Change Demonstrates
 
 ## Starting Point
 
@@ -38,7 +48,7 @@ In CI, this PR carries the `breaking-change-acknowledged` label (or whatever a g
 
 ## Change 2: a Type Change, Handled With `reserved`
 
-`owner_id` becomes a wrapper message (`UserId`) instead of a bare string, per [protobuf-design-messages](../../protobuf-design-messages/SKILL.md)'s no-primitive-obsession principle. The new field gets a new number; the old number and name are reserved:
+`owner_id` becomes a wrapper message (`UserId`) instead of a bare string, per the protobuf-design-messages skill's no-primitive-obsession principle. The new field gets a new number; the old number and name are reserved:
 
 ```protobuf
 package example.projects.v1alpha1;

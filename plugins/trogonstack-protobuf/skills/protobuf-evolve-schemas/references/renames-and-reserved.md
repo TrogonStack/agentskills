@@ -21,7 +21,7 @@ message Project {
 }
 ```
 
-A rename is a `WIRE_JSON`-category and `FILE`/`PACKAGE`-category break even though it is a `WIRE`-category no-op; see [references/compatibility-surfaces.md](compatibility-surfaces.md). If a rename is still necessary (the old name was wrong, or collided with other vocabulary per [protobuf-design-messages](../../protobuf-design-messages/SKILL.md)), treat it as a breaking change requiring the same coordination as any other: a new package version, or a deliberate opt-out in CI for a pre-release package (see [references/ci-and-governance.md](ci-and-governance.md)).
+A rename is a `WIRE_JSON`-category and `FILE`/`PACKAGE`-category break even though it is a `WIRE`-category no-op; see [references/compatibility-surfaces.md](compatibility-surfaces.md). If a rename is still necessary (the old name was wrong, or collided with other vocabulary per the protobuf-design-messages skill), treat it as a breaking change requiring the same coordination as any other: a new package version, or a deliberate opt-out in CI for a pre-release package (see [references/ci-and-governance.md](ci-and-governance.md)).
 
 ## An Enum Value Rename Breaks JSON Too
 

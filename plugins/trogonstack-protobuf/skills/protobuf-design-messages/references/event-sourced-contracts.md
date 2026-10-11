@@ -2,6 +2,15 @@
 
 Use this reference when designing commands, events, state, or faults for an event-sourced resource (a decider: command in, events out, state folded from events). Skip it for plain CRUD-shaped or RPC request/response schemas; it does not apply to them.
 
+## Contents
+
+- Name by Tense
+- Record Creation-Time Facts on the Creation Event, Even When Another System Owns What Happens Later
+- Do Not Add an Event for a Fact the Aggregate Does Not Own
+- State and Faults
+- Comments Document Invariants, Not Mechanics
+- Review Questions
+
 ## Name by Tense
 
 Commands are imperative, because a command is a request that something happen and might be refused. Events are past tense, because an event is a fact that already happened and cannot be refused after the fact:
