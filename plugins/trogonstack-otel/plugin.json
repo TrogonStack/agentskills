@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-otel",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions",
   "author": {
     "name": "TrogonStack",

@@ -2,7 +2,7 @@
   "name": "trogonstack-otel",
   "displayName": "TrogonStack OpenTelemetry",
   "description": "OpenTelemetry skills for naming metrics and spans following OTel Semantic Conventions",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": {
     "name": "TrogonStack"
   },
