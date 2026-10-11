@@ -12,6 +12,10 @@ allowed-tools:
 
 A `.proto` file is read by more than the compiler: ProtoJSON consumers see only field names, never types, and reviewers see only names and comments, never runtime behavior. A field, message, or enum that relies on tribal knowledge to interpret correctly is a defect, not a style nit. Apply the principles below in order; a design that fails an earlier one makes the later ones moot.
 
+## Run buf First
+
+Run `buf format -w` and `buf lint` (with `STANDARD`, buf's default) before anything below, and fix every finding the tool reports. Naming case, file/package/directory layout, enum zero-value and prefix conventions, service and RPC naming, and element ordering are mechanical checks a linter makes faster and more reliably than a manual pass; do not re-check them by hand. The principles below cover what `buf lint` has no way to judge: whether a name means what it says, whether a value is a primitive in disguise, and whether a shape fits the domain.
+
 ## Principles
 
 1. **Names must survive schema-less JSON readers.** A field whose value points at something stored or owned elsewhere keeps a suffix in its name even when its type already says so.

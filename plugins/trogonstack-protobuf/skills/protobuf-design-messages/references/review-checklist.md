@@ -2,7 +2,9 @@
 
 Use this reference when reviewing or auditing message and field definitions.
 
-Each item is a symptom of a principle, not a rule on its own. When an item fails, read the linked reference and judge the schema by the principle behind it; a justified exception passes, a compliant schema that misses the point does not.
+- [ ] `buf format -d --exit-code` and `buf lint` (`STANDARD`) both pass
+
+Each remaining item is a symptom of a principle `buf lint` cannot check, not a rule on its own. When an item fails, read the linked reference and judge the schema by the principle behind it; a justified exception passes, a compliant schema that misses the point does not.
 
 ## JSON Field Naming ([json-field-naming.md](json-field-naming.md))
 
@@ -27,14 +29,14 @@ Each item is a symptom of a principle, not a rule on its own. When an item fails
 
 ## Enums and Presets ([enums-and-presets.md](enums-and-presets.md))
 
-- [ ] Every enum's zero value is named `<ENUM>_UNSPECIFIED`
-- [ ] Every enum value is prefixed with the enum's name
 - [ ] Service code rejects `UNSPECIFIED` rather than resolving it to a default, especially a permissive one
 - [ ] No boolean field models a concept that could plausibly need a third state
 
+(Zero-value naming and value prefixing are `ENUM_ZERO_VALUE_SUFFIX`/`ENUM_VALUE_PREFIX`, caught by `buf lint`.)
+
 ## Presence and Validation ([presence-and-validation.md](presence-and-validation.md))
 
-- [ ] No field uses `LEGACY_REQUIRED` (or proto2 `required`) in a stable, non-pre-release package
+- [ ] Any `LEGACY_REQUIRED`/`required` field flagged by `buf lint`'s `FIELD_NOT_REQUIRED` is a deliberate, visible pre-release decision, not an oversight
 - [ ] Schema-checkable invariants (presence, range, pattern, enum exclusion, cross-field rules) carry `buf.validate` annotations
 - [ ] Every `buf.validate` annotation is backed by a validator actually running on every path that accepts the message
 - [ ] No invariant that needs live state (uniqueness, existence, authorization) is expressed only as a schema-level constraint
@@ -56,7 +58,7 @@ Skip this section for plain CRUD/RPC schemas.
 
 ## File and Service Layout ([file-layout.md](file-layout.md))
 
-- [ ] Each file holds one top-level definition named after it in `lower_snake_case`, or a deliberately grouped family named for the family
-- [ ] Every `service` ends in `Service` and lives in `<name>_service.proto`
-- [ ] Every RPC has its own `<Method>Request` and `<Method>Response`, shared with no other RPC
-- [ ] The directory path matches the package and ends in the version segment
+- [ ] Each file holds one top-level definition, or a deliberately grouped family named for the family, rather than an arbitrary mix
+- [ ] One layout (one-definition-per-file or AIP-191) is applied consistently across the package
+
+(Service suffix, RPC request/response naming and uniqueness, file naming case, and package/directory match are `buf lint` `STANDARD` rules; see [file-layout.md](file-layout.md) for the rule IDs.)

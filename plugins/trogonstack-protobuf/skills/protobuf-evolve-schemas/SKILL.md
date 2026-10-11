@@ -12,6 +12,10 @@ allowed-tools:
 
 A `.proto` file has audiences that can each break independently: the binary wire, JSON consumers, and generated source code. "Non-breaking" has no meaning until you say non-breaking for whom, so check every change against every compatibility surface that applies to the package's actual consumers, not just the one that is easiest to verify.
 
+## Run buf First
+
+Run `buf format -w`, `buf lint` (`STANDARD`), and `buf breaking` against the base branch, using the category that matches this package's actual consumers (see [references/compatibility-surfaces.md](references/compatibility-surfaces.md)). Fix every finding the tool reports; do not re-derive by hand what `buf breaking` already flags (a rename, a type change, a deleted field, a removed `reserved`). The principles below cover what the tool cannot decide: which category matches your consumers, whether a flagged break is actually acceptable, and when a break means a new package version instead of an opt-out.
+
 ## Principles
 
 1. **Know every compatibility surface.** Binary wire, JSON, and generated source code each have their own rules for what counts as breaking; if anyone consumes JSON, `WIRE` alone is not enough.

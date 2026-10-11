@@ -4,7 +4,7 @@ Use this reference for the versioning progression a package's name signals, and 
 
 ## The Progression
 
-buf's `PACKAGE_VERSION_SUFFIX` lint rule requires the last component of a package name to be a version in one of these forms: `v\d+`, `v\d+test.*`, `v\d+(alpha|beta)\d*`, or `v\d+p\d+(alpha|beta)\d*` (see [buf docs: Lint rules](https://buf.build/docs/lint/rules/)). In practice, most packages move through:
+`buf lint`'s `PACKAGE_VERSION_SUFFIX` rule (part of `STANDARD`) already requires the package name to end in a valid version segment; run the tool instead of checking the format by hand. What it cannot tell you is which stage a package should be at, or when to move to the next one. In practice, most packages move through:
 
 ```text
 example.projects.v1alpha1  ->  example.projects.v1beta1  ->  example.projects.v1

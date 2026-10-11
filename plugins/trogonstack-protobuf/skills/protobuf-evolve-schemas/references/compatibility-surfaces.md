@@ -33,13 +33,13 @@ breaking:
 ```
 
 ```yaml
-# buf.yaml: the same rename fails with FIELD_SAME_JSON_NAME.
+# buf.yaml: the same rename fails with FIELD_SAME_NAME.
 breaking:
   use:
     - WIRE_JSON
 ```
 
-Under the default (`FILE`) the rename fails too, on both the JSON check and the generated-code name check.
+Under the default (`FILE`) the rename fails too, on both the JSON check and the generated-code name check. (A `json_name` override alone, with the field name unchanged, is what `FIELD_SAME_JSON_NAME` catches instead.)
 
 `FILE` and `PACKAGE` are supersets of `WIRE_JSON` (buf's docs say so in the `FIELD_SAME_JSON_NAME` rule), so when generated source code is a first-class consumer, which it is in most codebases, pick `FILE` or `PACKAGE` instead of `WIRE_JSON`; you keep every JSON check and add the generated-code ones. Pick one category per module rather than combining them.
 

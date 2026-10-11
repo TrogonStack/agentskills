@@ -83,7 +83,8 @@ When two or more fields are mutually exclusive ways of saying the same thing (a 
 
 ## Review Questions
 
-- Does every enum's zero value end in `_UNSPECIFIED`, and are all values prefixed with the enum name?
+(Zero-value naming and value prefixing are checked by `buf lint`'s `ENUM_ZERO_VALUE_SUFFIX`/`ENUM_VALUE_PREFIX`; run the tool instead of eyeballing a diff.)
+
 - Is there service code anywhere that treats an enum's `UNSPECIFIED` value as a usable default rather than rejecting it?
 - Would resolving `UNSPECIFIED` to a default ever widen access, cost, or scope beyond what the caller explicitly chose?
 - Is there a boolean field describing something that could plausibly need a third state?

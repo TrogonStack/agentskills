@@ -45,7 +45,7 @@ message Project {
 }
 ```
 
-In CI, this PR carries the `breaking-change-acknowledged` label (or whatever a given repository's equivalent is) so the `buf breaking` job's finding is reviewed and consciously accepted rather than the check being disabled for the package; see [references/ci-and-governance.md](ci-and-governance.md).
+In CI, this PR carries the `buf skip breaking` label so `buf-action`'s breaking-change finding is reviewed and consciously accepted rather than the check being disabled for the package; see [references/ci-and-governance.md](ci-and-governance.md).
 
 ## Change 2: a Type Change, Handled With `reserved`
 
