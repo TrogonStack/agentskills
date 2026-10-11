@@ -2,7 +2,7 @@
   "name": "trogonstack-ask",
   "displayName": "TrogonStack Ask",
   "description": "Structured question-asking skill for gathering requirements and context through deliberate, one-at-a-time questions",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": {
     "name": "TrogonStack"
   },
