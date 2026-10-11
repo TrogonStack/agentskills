@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-eventmodeling",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Event Modeling skills for brainstorming, designing, slicing, and validating software systems following the Event Modeling methodology",
   "author": {
     "name": "TrogonStack",
