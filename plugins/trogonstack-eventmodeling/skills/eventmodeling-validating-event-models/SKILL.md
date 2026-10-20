@@ -147,11 +147,11 @@ Verify that every command has explicit actor attribution from the Role Catalog:
 If no Role Catalog exists → **REJECT MODEL — Role Catalog is a prerequisite**
 If any command lacks actor attribution → **REJECT MODEL — all commands must have explicit role/actor**
 
-### 6. Command State Read Models Validation (CRITICAL)
+### 6. Command Decision State Validation (CRITICAL)
 
- **This is the PRIMARY validation gate. Violations are CRITICAL and must be fixed before approval.** Validate that **command state read models** are **minimal and command-specific**, not bundled like DDD aggregates.
+ **This is the PRIMARY validation gate. Violations are CRITICAL and must be fixed before approval.** Validate that **command decision state** is **minimal and command-specific**, not bundled like DDD aggregates.
 
-**Note**: These are read models semantically categorized as "Command State" (optimized for command validation), as opposed to "Query Models" (optimized for UI queries).
+**Note**: Decision state is internal to each command handler. It is not a read model and should not appear as one on the board; only query read models do.
 
 **CRITICAL RULE CHECK**:
 
@@ -207,6 +207,8 @@ Confirmed ↛ Draft (invalid)
 - [ ] **Read Models Separate from Command State**: Read models are rich projections, NOT the command-validation state
 - [ ] **Read Models Optional**: Are they needed or just convenience?
 - [ ] **Serve Real Queries**: Each read model answers a specific question
+- [ ] **No Duplicate Read Models**: No two read models share the same source events and fields. Consumers that read the same data share one read model; split only for a different shape
+  - WARNING: `PendingPayouts` and `PayoutsToRetry` project the same events with the same fields
   - "OrderSummaryView serves 'get orders by customer' query"
   - "OrderDetailsView duplicates all data from OrderState"
 - [ ] **Consistent Update**: All relevant events update the read model
