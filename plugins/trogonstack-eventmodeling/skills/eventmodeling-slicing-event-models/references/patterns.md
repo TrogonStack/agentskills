@@ -417,6 +417,7 @@ How handlers in different slices connect:
      - Slice A projects read model
      - Slice B queries read model
      - Works if A's projections deployed first
+     - Preferred when B reads the shape A projects; don't clone a read model per consumer
 
    Shared State Classes (tightly coupled, avoid)
      - Both slices share one [CommandHandler]State class
