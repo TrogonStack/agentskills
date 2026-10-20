@@ -112,10 +112,10 @@ OrderSummaryView { orderId, customerId, items[], total, status, paymentId, ... }
 ## Purpose
 Converts domain analysis into the event sourcing architecture pattern:
 
-**UI/Processor** → **Command** → [Command State Read Model] → **Event** → **Query Read Models** - **UI/Processor**: Entry points that trigger intent
+**UI/Processor** → **Command** → [Command Decision State] → **Event** → **Query Read Models** - **UI/Processor**: Entry points that trigger intent
 - **Command**: Intent data (can be rejected)
 - **Stream Root**: Logical grouping of immutable events (NOT a DDD aggregate bundle)
-- **Command State Read Model**: Minimal projection derived from events, optimized for this specific command's validation. Each command gets its own read model interface. Different commands = different shapes. (Categorized as "Command State" for semantic clarity)
+- **Command Decision State**: Minimal state the handler folds from its stream's events to decide this command. It lives inside the handler and is not a read model, so do not draw it on the board as one. Different commands = different shapes.
 - **Event**: Result of successful command (immutable fact: command data + implicit context)
 - **Query Read Models**: Rich projections of events optimized for UI/Processor queries. Separate from command state. (Categorized as "Query Models" for semantic clarity)
 
@@ -162,27 +162,27 @@ Events (chronological):
 - Never modify or delete events
 - Events only exist if command succeeded
 
-### 2. Design Command State Read Models (Minimal Per-Command)
+### 2. Design Command Decision State (Minimal Per-Command)
 
- **Critical Rule: Each command must have its own read model (command state). NEVER share read models between commands.** **Naming Convention (for Automation)**:
-- `[CommandName]State` = Implemented command state read model
-- `[CommandName]StateToDo` = Planned command state read model (marked for implementation)
+ **Critical Rule: Each command handler folds its own decision state. NEVER share decision state between commands.** Decision state is not a read model and never appears as one on the board. **Naming Convention (for Automation)**:
+- `[CommandName]State` = Implemented command decision state
+- `[CommandName]StateToDo` = Planned command decision state (marked for implementation)
 
 Examples:
 - `PublishReviewState` = implemented
 - `EditReviewStateToDo` = planned, needs implementation
 - `SellerRespondState` = implemented
 
-**Semantic Categorization**: These are read models, but categorized as "Command State" based on their purpose (command validation, not UI queries).
+**Not a read model**: decision state is internal to the command handler. On an event model board it shows up as the command's given events, not as a read model.
 
-Command state read models are **derived** from events and **minimal**:
+Command decision state is **derived** from events and **minimal**:
 - Read only events needed for a specific command's decision
 - Build state by replaying only relevant events
-- **ENFORCEMENT**: Different commands = different read model interfaces. Period.
+- **ENFORCEMENT**: Different commands = different decision state interfaces. Period.
 - Each command handler defines what state projection it needs (and ONLY what it needs)
 - Projection can be regenerated from events at any time
 
-Example for Order stream with separate command state read model for EACH command:
+Example for Order stream with separate decision state for EACH command:
 
 ```text
 ## ConfirmOrder Command (IMPLEMENTED)
@@ -264,6 +264,8 @@ Read models are **projections of events for UI/Processor queries**:
 - Optimized for specific query patterns
 - Consumed by UI or Processor (for display/decision)
 - Can be regenerated from events anytime
+- **Split by shape, not by consumer**: add a read model only when a consumer needs different fields, key or source events. Screens and processors that read the same data share one read model; the example below serves a UI and a Processor.
+- Two read models with the same source events and fields are a duplicate; merge them
 
 Format:
 ```text
@@ -421,7 +423,7 @@ ShipOrderState:
 3. **State is Minimal and Command-Driven**: State is built by replaying events, but ONLY for what a specific command needs to validate. Not all stream fields are needed for all commands.
 4. **Not DDD Aggregates**: Stream roots group events logically, but aren't bundles of related data like DDD aggregates. State is determined per-command, not designed upfront for the whole stream.
 5. **Commands are Pure**: No side effects, just decision logic against minimal state
-6. **Read Models are Separate**: Read models (projections) are separate from command-validation state. Read models can have rich data; command state stays minimal.
+6. **Read Models are Separate**: Read models (projections) are separate from command-validation state. Read models can have rich data; command state stays minimal. Split read models by shape, not by consumer.
 7. **Event Causality**: Commands → [minimal state] → Events → [read models]
 
 ## Design Patterns
