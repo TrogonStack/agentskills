@@ -1,2 +1,2 @@
 [tools]
-"github:TrogonStack/rusty-monorepo" = { version = "trg@v0.11.0", exe = "trg" }
+"github:TrogonStack/rusty-monorepo" = { version = "trg@v0.11.0" }
