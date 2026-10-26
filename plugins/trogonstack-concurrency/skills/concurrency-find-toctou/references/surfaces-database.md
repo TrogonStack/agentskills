@@ -2,7 +2,7 @@
 
 A row read in one statement says nothing about the row when the next statement runs. The database is the only actor that can see every writer, so the condition has to be expressed where the database enforces it: a constraint, a conditional `WHERE`, a row lock, or an expected version.
 
-A transaction on its own does not help. Under `READ COMMITTED` (the default in Postgres, MySQL InnoDB defaults to `REPEATABLE READ` with the same outcome here), two transactions can both `SELECT` nothing and both `INSERT`. Only a unique constraint or a lock makes one of them lose.
+A transaction on its own does not help. Under `READ COMMITTED` (the Postgres default) and under InnoDB's default `REPEATABLE READ`, two transactions can both `SELECT` nothing and both `INSERT`. Only a unique constraint or a lock makes one of them lose.
 
 ## Find Or Create
 
@@ -22,19 +22,9 @@ ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
 RETURNING id;
 ```
 
-`DO UPDATE` on a no-op column makes `RETURNING` fire on both paths. `DO NOTHING` returns no row on conflict, so a second `SELECT` is needed, which is acceptable because the row now certainly exists. MySQL: `INSERT ... ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`.
+`DO UPDATE` on a no-op column makes `RETURNING` fire on both paths. `DO NOTHING` returns no row on conflict, so a follow-up `SELECT` is needed, which is acceptable because the row now certainly exists. MySQL spells it `INSERT ... ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`.
 
-Ecto:
-
-```elixir
-Repo.insert(changeset,
-  on_conflict: [set: [email: email]],
-  conflict_target: :email,
-  returning: true
-)
-```
-
-`unique_constraint/3` in a changeset only translates the database error into a changeset error. Without the unique index in a migration it prevents nothing.
+An ORM helper that translates the unique violation into a validation error prevents nothing without the unique index in the schema.
 
 `SELECT ... FOR UPDATE` does not solve find-or-create. Locking a row that does not exist locks nothing, and two inserters still race. The constraint is the primitive.
 
@@ -42,11 +32,10 @@ Repo.insert(changeset,
 
 Avoid:
 
-```ts
-const account = await db.one("SELECT balance FROM accounts WHERE id = $1", [id]);
-if (account.balance >= amount) {
-  await db.none("UPDATE accounts SET balance = $1 WHERE id = $2", [account.balance - amount, id]);
-}
+```
+row = SELECT balance FROM accounts WHERE id = $1
+if row.balance >= amount:
+    UPDATE accounts SET balance = row.balance - amount WHERE id = $1
 ```
 
 Two debits read the same balance and both succeed. Prefer the condition and the arithmetic inside one statement, and treat zero rows as the failure:
@@ -82,7 +71,7 @@ SET body = $1, version = version + 1
 WHERE id = $2 AND version = $3;
 ```
 
-Zero rows means stale read: reload, re-decide, retry or surface the conflict. Ecto: `optimistic_lock(:version)` in the changeset, which raises `Ecto.StaleEntryError`.
+Zero rows means stale read: reload, re-decide, retry or surface the conflict.
 
 ## Pessimistic Row Lock
 
@@ -96,11 +85,11 @@ UPDATE subscriptions SET ... WHERE id = $1;
 COMMIT;
 ```
 
-Everything that mutates the same row must also take the lock, or the lock protects nothing. Ecto: `lock: "FOR UPDATE"` on the query.
+Everything that mutates the same row must also take the lock, or the lock protects nothing.
 
 ## Cross-Row Invariants
 
-"At most three active sessions per user" cannot be a unique constraint. Serialize the invariant with an advisory lock scoped to the key, inside the transaction:
+"At most N active sessions per user" cannot be a unique constraint. Serialize the invariant with an advisory lock scoped to the key, inside the transaction:
 
 ```sql
 SELECT pg_advisory_xact_lock(hashtext('sessions:' || $1));
@@ -117,3 +106,7 @@ The lock releases at commit. Hash collisions only make the lock coarser, never u
 ## What The Finding Must Cite
 
 The `SELECT`, the write it gates, the isolation level in effect, and whether a constraint or lock already exists for that key. Name the constraint or index when claiming a pair is safe.
+
+## Idiomatic Forms
+
+Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for how the driver or ORM under review spells the upsert, reads the rowcount, and takes the row lock.

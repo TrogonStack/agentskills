@@ -1,108 +1,76 @@
 # Async And In-Process Surfaces
 
-Inside one process the interleaver is another task on the same event loop, another thread, or another process in the same VM. The gap that lets it in is any point where control yields: an `await`, a message round trip, a second call into the same server. A check and an act with a yield between them are two separate moments.
+Inside one process the interleaver is another task on the same event loop, another thread, or another process in the same VM. The gap that lets it in is any point where control yields: an `await`, a message round trip, a lock released and re-taken, a second call into the same server. A check and an act with a yield between them are two separate moments.
 
-## JavaScript: Check, Await, Set
-
-Avoid:
-
-```ts
-if (!connections.has(host)) {
-  const conn = await connect(host);
-  connections.set(host, conn);
-}
-```
-
-Every caller that arrives during `connect` sees the map empty and opens its own connection; the last one wins and the rest leak. Prefer storing the promise synchronously, so the map is populated before the first yield:
-
-```ts
-let pending = connections.get(host);
-if (!pending) {
-  pending = connect(host).catch((err) => {
-    connections.delete(host);
-    throw err;
-  });
-  connections.set(host, pending);
-}
-const conn = await pending;
-```
-
-The rule for an event loop: everything between the check and the write must be synchronous. If it is, the pair is atomic. If there is an `await`, it is not.
-
-A boolean guard set synchronously (`if (this.flushing) return; this.flushing = true;`) is safe for the same reason. The finding should confirm there is no `await` between the read and the assignment.
-
-## Rust: Lock, Await, Lock Again
+## Check, Yield, Set
 
 Avoid:
 
-```rust
-if !state.lock().await.contains_key(&key) {
-    let value = build(&key).await;
-    state.lock().await.insert(key, value);
-}
+```
+if not connections.has(host):
+    conn = await connect(host)
+    connections.set(host, conn)
 ```
 
-The lock is released after `contains_key`, so two tasks both miss and both insert. Prefer one of:
+Every caller that arrives during `connect` sees the map empty and opens its own connection; the last one wins and the rest leak. Prefer publishing the claim before the first yield, so later callers find it:
 
-- Hold a `tokio::sync::Mutex` guard across the whole decision when the critical section must await. This serializes all callers through the mutex, which is a throughput choice the finding should note.
-- Use an entry API that is atomic per key: `DashMap::entry(key).or_insert_with(...)` for synchronous construction, or a per-key `OnceCell` / `moka` cache `get_with` for async construction with built-in single-flight.
-- For a scalar, `AtomicU64::compare_exchange` and loop on failure.
+```
+pending = connections.get(host)
+if pending is missing:
+    pending = start(connect(host))          # the in-flight work, not its result
+    connections.set(host, pending)          # no yield between get and set
+    on failure: connections.delete(host)
+conn = await pending
+```
 
-A `std::sync::Mutex` guard must not be held across an `await`. The future stops being `Send`, so `tokio::spawn` rejects it, and on a current-thread runtime it deadlocks the moment another task needs the lock. Either reshape the code so the guard drops before the await, or switch to the async mutex.
+The rule for a single-threaded event loop: everything between the check and the write must be synchronous. If it is, the pair is atomic. If there is a yield, it is not. A boolean guard set synchronously (`if busy: return; busy = true`) is safe for the same reason.
 
-## Elixir: Two Calls Into One Server
+## Lock, Release, Yield, Lock Again
 
 Avoid:
 
-```elixir
-case GenServer.call(server, {:get, key}) do
-  nil -> GenServer.call(server, {:put, key, value})
-  existing -> existing
-end
+```
+with lock: present = map.contains(key)
+if not present:
+    value = await build(key)
+    with lock: map.insert(key, value)
 ```
 
-Each call is serialized, but the pair is not. Another process can `put` between them. Prefer one message that carries the decision:
+The lock is released after the check, so two tasks both miss and both insert. Prefer one of:
 
-```elixir
-GenServer.call(server, {:put_new, key, value})
+- Hold the lock across the whole decision, using a lock type that may be held across a yield. This serializes all callers through the lock, which is a throughput choice the finding should note.
+- Use an entry API that is atomic per key: insert-if-absent, get-or-insert-with, or a cache with built-in single-flight for async construction.
+- For a scalar, compare-and-swap in a loop.
 
-def handle_call({:put_new, key, value}, _from, state) do
-  case Map.fetch(state, key) do
-    {:ok, existing} -> {:reply, {:exists, existing}, state}
-    :error -> {:reply, {:ok, value}, Map.put(state, key, value)}
-  end
-end
+A lock type that must not be held across a yield (a plain OS mutex in an async runtime) has to be dropped before the yield, which puts the race back. Switch the lock type or the data structure instead.
+
+## Two Calls Into One Server
+
+Avoid:
+
+```
+case server.call(get, key):
+    missing -> server.call(put, key, value)
+    existing -> existing
 ```
 
-The same shape against ETS, where there is no server to serialize anything:
+Each call is serialized by the server, but the pair is not. Another caller can `put` between them. Prefer one message that carries the decision, so the server does the check and the act inside a single handler:
 
-```elixir
-# avoid
-case :ets.lookup(table, key) do
-  [] -> :ets.insert(table, {key, value})
-  [{_, existing}] -> existing
-end
-
-# prefer
-:ets.insert_new(table, {key, value})   # false when the key already exists
+```
+server.call(put_new, key, value)
+# handler: if key present reply exists, else insert and reply ok
 ```
 
-`:ets.update_counter/4` with a default increments atomically and creates the row if missing. `:ets.select_replace/2` is a compare-and-swap on a match spec. `:atomics.compare_exchange/4` covers plain integers. For "one process per key", `Registry.register/3` on a `:unique` registry returns `{:error, {:already_registered, pid}}` to the loser; checking `Registry.lookup` first is the race.
+The same shape applies to a shared in-memory table that has no server: use its insert-if-absent, atomic counter, or compare-and-swap primitive instead of lookup then insert.
 
-## Go: Check Then Store
+## Claim Then Act
 
-```go
-// avoid
-if _, ok := m[key]; !ok {
-    m[key] = build(key)
-}
-
-// prefer
-actual, loaded := m.LoadOrStore(key, build(key))   // sync.Map
-```
-
-If `build` is expensive, `singleflight.Group.Do(key, ...)` dedupes the construction and `LoadOrStore` the publication. A `sync.Mutex` held across the whole check-and-store is also correct and simpler when contention is low.
+"Check that no process owns this key, then register as owner" is lookup-then-insert on a registry. Prefer the registry's own register call as the claim: it succeeds for exactly one caller and tells the others who won.
 
 ## What The Finding Must Cite
 
-The exact yield point between the check and the act (the `await`, the second `call`, the lock release), and which other task or process can run at that point. If no yield exists, the pair is atomic and the finding says so.
+The exact yield point between the check and the act (the `await`, the second call, the lock release), and which other task or process can run at that point. If no yield exists, the pair is atomic and the finding says so.
+
+## Idiomatic Forms
+
+Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), [lang-python.md](lang-python.md), or [lang-c.md](lang-c.md) for the promise map, the async-aware lock, the entry API, the single `call`, and the compare-and-swap in the language under review.

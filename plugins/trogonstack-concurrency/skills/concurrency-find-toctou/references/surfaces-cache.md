@@ -6,36 +6,30 @@ A cache miss is a check. Filling the cache is the act. Between them, every other
 
 Avoid:
 
-```ts
-let value = await cache.get(key);
-if (value === undefined) {
-  value = await computeExpensive(key);
-  await cache.set(key, value, { ttl });
-}
-return value;
+```
+value = cache.get(key)
+if value is missing:
+    value = compute_expensive(key)
+    cache.set(key, value, ttl)
+return value
 ```
 
 When the key expires under load, every concurrent request recomputes. Prefer single-flight inside the process, so one computation serves all concurrent callers for that key:
 
-```ts
-const inflight = new Map<string, Promise<Value>>();
+```
+inflight: map key -> pending result
 
-async function getOrCompute(key: string): Promise<Value> {
-  const cached = await cache.get(key);
-  if (cached !== undefined) return cached;
+value = cache.get(key)
+if value present: return value
 
-  let p = inflight.get(key);
-  if (!p) {
-    p = computeExpensive(key)
-      .then(async (v) => { await cache.set(key, v, { ttl }); return v; })
-      .finally(() => inflight.delete(key));
-    inflight.set(key, p);
-  }
-  return p;
-}
+pending = inflight.get(key)
+if pending is missing:
+    pending = start(compute_expensive(key) then cache.set(key, result, ttl))
+    inflight.set(key, pending)       # no yield between get and set
+return await pending                 # remove from inflight when settled
 ```
 
-The `inflight.get` and `inflight.set` run with no `await` between them, which is what makes the dedupe atomic on a single-threaded event loop. Go has `golang.org/x/sync/singleflight` for the same shape.
+The `inflight.get` and `inflight.set` must run with no yield between them; that is what makes the dedupe atomic.
 
 ## Cross-Process Stampede
 
@@ -58,7 +52,7 @@ The lease bounds the stampede; it does not guarantee a single computation. A hol
 
 ## Check Then Set
 
-Avoid `if not exists(key) then set(key, v)`. Prefer the conditional write the store already offers: `SET key v NX` in Redis, `add` in Memcached, `insert_new` in ETS. The reply tells you whether you won.
+Avoid `if not exists(key) then set(key, v)`. Prefer the conditional write the store already offers: `SET key v NX` in Redis, `add` in Memcached, an insert-if-absent in an in-memory table. The reply tells you whether you won.
 
 ## Negative Caching
 
@@ -71,3 +65,7 @@ Any decision that reads a cached count, balance, or permission and then writes t
 ## What The Finding Must Cite
 
 The key, the TTL, whether the fill path dedupes in-process and across processes, and whether a double fill produces a wrong value or just wasted work.
+
+## Idiomatic Forms
+
+Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for the single-flight shape and the `NX` call in the client library under review.

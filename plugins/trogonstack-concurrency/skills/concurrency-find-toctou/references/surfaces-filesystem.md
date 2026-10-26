@@ -6,24 +6,19 @@ A path is a name, not a file. Anything checked by name (`exists`, `stat`, `acces
 
 Avoid:
 
-```ts
-if (!fs.existsSync(path)) {
-  fs.writeFileSync(path, data);
-}
+```
+if not exists(path):
+    write(path, data)
 ```
 
 Two processes both see "missing" and both write; the second silently overwrites the first. Prefer an exclusive create and treat the failure as the answer:
 
-```ts
-try {
-  fs.writeFileSync(path, data, { flag: "wx" });
-} catch (err) {
-  if (err.code !== "EEXIST") throw err;
-  // someone else created it; decide what that means here
-}
 ```
-
-The `wx` flag is `O_CREAT | O_EXCL`. Rust: `OpenOptions::new().write(true).create_new(true).open(path)`. Python: `open(path, "x")`. C: `open(path, O_WRONLY | O_CREAT | O_EXCL, mode)`.
+try:
+    create_exclusive(path, data)      # O_CREAT | O_EXCL
+except AlreadyExists:
+    decide what "someone else created it" means here
+```
 
 The same applies to directories. `mkdir` already fails with `EEXIST`; checking first adds a race and removes nothing.
 
@@ -31,51 +26,49 @@ The same applies to directories. `mkdir` already fails with `EEXIST`; checking f
 
 Avoid:
 
-```c
-struct stat st;
-if (stat(path, &st) == 0 && S_ISREG(st.st_mode) && st.st_uid == getuid()) {
-  fd = open(path, O_RDONLY);
-}
+```
+st = stat(path)
+if is_regular(st) and owner(st) == me:
+    fd = open(path)
 ```
 
 Between `stat` and `open` the path can be replaced by a symlink to a file you must not read. Prefer opening first and checking what you hold:
 
-```c
-fd = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-if (fd < 0) return -1;
-if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) || st.st_uid != getuid()) {
-  close(fd);
-  return -1;
-}
+```
+fd = open(path, NOFOLLOW)
+st = fstat(fd)
+if not is_regular(st) or owner(st) != me:
+    close(fd); fail
 ```
 
-`fstat` describes the open descriptor, which cannot be swapped. `O_NOFOLLOW` rejects a symlink at the final component.
+`fstat` describes the open descriptor, which cannot be swapped. `NOFOLLOW` rejects a symlink at the final component.
 
 ## Walking Untrusted Directory Trees
 
-Each component of a path can be swapped while you walk it. Open the directory once and resolve children relative to that descriptor with `openat(dirfd, "child", O_NOFOLLOW | ...)` rather than rebuilding the full path per step. In Rust, `cap-std` and `rustix` expose `openat`; the standard library does not.
+Each component of a path can be swapped while you walk it. Open the directory once and resolve children relative to that descriptor (`openat`) rather than rebuilding the full path per step.
 
 ## Temp Files
 
-Avoid building a temp name, checking it is free, and then creating it. Use a primitive that creates atomically: `mkstemp` in C, `tempfile.mkstemp` or `NamedTemporaryFile` in Python, `fs.mkdtemp` in Node (then create inside that private directory).
+Avoid building a temp name, checking it is free, and then creating it. Use a primitive that creates atomically with a unique name (`mkstemp` and its library equivalents), or create inside a private directory made with `mkdtemp`.
 
 ## Replace A File Atomically
 
-Avoid writing directly into the target; readers can observe a partial file, and a crash leaves it truncated. Prefer write-to-temp, `fsync`, then `rename` onto the target. `rename` is atomic within one filesystem on POSIX, so readers see either the old file or the new one.
+Avoid writing directly into the target; readers can observe a partial file, and a crash leaves it truncated. Prefer write-to-temp in the same directory, `fsync`, then `rename` onto the target. `rename` is atomic within one filesystem on POSIX, so readers see either the old file or the new one.
 
-```ts
-const tmp = `${target}.${process.pid}.${randomUUID()}`;
-const fd = fs.openSync(tmp, "wx");
-fs.writeSync(fd, data);
-fs.fsyncSync(fd);
-fs.closeSync(fd);
-fs.renameSync(tmp, target);
+```
+tmp = create_exclusive(target + "." + unique_suffix)
+write(tmp, data); fsync(tmp); close(tmp)
+rename(tmp, target)
 ```
 
 ## Check Then Delete Or Move
 
-`if exists then unlink` and `if exists then rename` have the same shape. Call the operation and handle `ENOENT`. Node: `fs.rmSync(path, { force: true })` is the idempotent form.
+`if exists then unlink` and `if exists then rename` have the same shape. Call the operation and handle `ENOENT`.
 
 ## What The Finding Must Cite
 
 Name the path-based check, the open or create that follows, and whether the directory is writable by anyone other than the process owner. A path in a private directory that only this process writes is still a bug if the process can run twice; say which is the case.
+
+## Idiomatic Forms
+
+Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), [lang-python.md](lang-python.md), or [lang-c.md](lang-c.md) for the exclusive-create flag, the temp-file primitive, and the atomic rename in the language under review.

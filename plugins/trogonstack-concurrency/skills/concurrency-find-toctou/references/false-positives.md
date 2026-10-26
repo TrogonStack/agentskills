@@ -6,8 +6,8 @@ A check-then-act pair is safe only when something already serializes the actors 
 
 The strongest proof is that only one actor can ever reach the act for a given key. Accepted forms, each with what must be cited:
 
-- **Partition key ownership.** Messages for a key always land on the same consumer instance (a Kafka partition keyed by the aggregate id, a NATS queue group is not enough on its own because a queue group balances without affinity). Cite the partitioner or the subject-to-consumer mapping, and the config that keeps one instance per partition.
-- **One process per entity.** A `GenServer` registered under the entity id handles every write to that entity. Cite the registry, the `:unique` key, and that no other code path writes the same state outside that process.
+- **Partition key ownership.** Messages for a key always land on the same consumer instance (a Kafka partition keyed by the aggregate id). A NATS queue group is not enough on its own, because a queue group balances without affinity. Cite the partitioner or the subject-to-consumer mapping, and the config that keeps one instance per partition.
+- **One process per entity.** A single process registered under the entity id (an Elixir `GenServer` in a `:unique` registry, an actor keyed by the id) handles every write to that entity. Cite the registry key and confirm no other code path writes the same state outside that process.
 - **Single consumer on the subject.** A JetStream consumer with `max_ack_pending: 1` on an ordered stream, or a single-instance worker by deployment. Cite the consumer config and the deployment constraint, and note that redelivery after `ack_wait` still re-enters the same consumer, which is fine only if the effect is idempotent or the dedupe is transactional.
 - **Already inside a lock.** The enclosing transaction holds `FOR UPDATE` on the row, or an advisory lock on the key, before the check runs. Cite the lock statement and confirm every other writer to that state takes the same lock. A lock taken by this code path alone proves nothing.
 - **Synchronous section.** On a single-threaded event loop with no `await`, `yield`, or callback between the check and the act. Cite the function and state that it contains no yield point.
@@ -16,7 +16,7 @@ The strongest proof is that only one actor can ever reach the act for a given ke
 
 The pair is also safe when the act is itself conditional and the earlier check is only a fast path:
 
-- A unique constraint exists on the key and the insert handles the violation. Cite the index name.
+- A unique constraint exists on the key and the insert handles the violation. Cite the index name from the migration, not the ORM-level validation.
 - The update has `WHERE status = ...`, `WHERE version = ...`, or `WHERE owner_id = ...` and the code checks the rowcount. Cite the statement.
 - The KV `update` passes the revision, the publish carries the expected sequence header, the append carries the expected version. Cite the call.
 

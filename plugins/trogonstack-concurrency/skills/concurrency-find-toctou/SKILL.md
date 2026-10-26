@@ -76,3 +76,12 @@ Read [references/surfaces-cache.md](references/surfaces-cache.md) when the check
 Read [references/surfaces-distributed.md](references/surfaces-distributed.md) when the state lives in NATS KV, a JetStream stream, an event store, or behind an at-least-once consumer.
 
 Read [references/surfaces-async.md](references/surfaces-async.md) when the check and the act are in the same process but separated by an `await`, a message to another process, or a second call into the same server.
+
+After the surface reference, read the language file for the code under review, for the idiomatic spelling of the primitive in its driver, ORM, or client library:
+
+- [references/lang-typescript.md](references/lang-typescript.md) for TypeScript and Node (fs, node-postgres, Prisma, Drizzle, ioredis, nats.js).
+- [references/lang-rust.md](references/lang-rust.md) for Rust (std, tempfile, sqlx, tokio, moka, DashMap, async-nats).
+- [references/lang-elixir.md](references/lang-elixir.md) for Elixir (File, Ecto, ETS, GenServer, Registry).
+- [references/lang-go.md](references/lang-go.md) for Go (os, database/sql, sync, singleflight, nats.go jetstream).
+- [references/lang-python.md](references/lang-python.md) for Python (os, psycopg, SQLAlchemy, asyncio, nats-py).
+- [references/lang-c.md](references/lang-c.md) for C (POSIX open flags, openat, mkstemp, C11 atomics).

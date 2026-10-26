@@ -17,11 +17,11 @@ Prefer the revision-guarded update. Every KV entry carries a revision; `update` 
 ```
 entry = kv.get("config.limits")
 next  = bump(entry.value)
-kv.update("config.limits", next, entry.revision)
-# on "wrong last sequence": re-get, re-decide, retry
+kv.update("config.limits", next, expected_revision = entry.revision)
+# on revision mismatch: re-get, re-decide, retry
 ```
 
-For first-time creation use `create`, which fails if the key already holds a live value. `create` then `update` on the error path is the correct find-or-create for KV. A `put` is only safe when the writer does not care what it overwrites.
+For first-time creation use `create`, which fails if the key already holds a live value. `create`, then `update` on the error path, is the correct find-or-create for KV. A plain `put` is only safe when the writer does not care what it overwrites.
 
 ## JetStream Publish
 
@@ -44,7 +44,7 @@ The same shape with explicit vocabulary. Load the stream, fold to current state,
 events, version = store.read(stream)
 state = fold(events)
 new_events = decide(state, command)
-store.append(stream, new_events, expected_version: version)
+store.append(stream, new_events, expected_version = version)
 # on wrong-expected-version: reload and retry, bounded
 ```
 
@@ -83,3 +83,7 @@ A relay that reads unsent rows, publishes them, and marks them sent has the same
 ## What The Finding Must Cite
 
 The store, the read that produced the decision, the write that followed, and whether the write carried the expected revision, sequence, or version. For consumers, the ack mode, `ack_wait`, and whether the dedupe record and the effect commit together.
+
+## Idiomatic Forms
+
+Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for how the NATS client under review passes the KV revision and the expected-sequence publish option. Elixir clients are covered at the concept level only in [lang-elixir.md](lang-elixir.md).

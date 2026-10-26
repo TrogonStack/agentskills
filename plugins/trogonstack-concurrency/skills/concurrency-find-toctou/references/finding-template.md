@@ -64,4 +64,4 @@ The finding:
 - Residual: a crash between the claim and the discount leaves a consumed use with no discount applied. Acceptable if the compensation runs from a reconciliation job; otherwise wrap the claim and a pending-discount row in one transaction and apply the discount from an outbox.
 ```
 
-What makes this finding complete: the interleaver names a realistic actor (double submit, retry), the consequence is stated in domain terms (money, wrong count), the fix is a conditional write at the store that owns the count, and the residual is honest about what the fix moves rather than removes.
+What makes this finding complete: the interleaver names a realistic actor (double submit, retry), the consequence is stated in domain terms (money, wrong count), the fix is a conditional write at the store that owns the count, and the residual is honest about what the fix moves rather than removes. The example is TypeScript; the finding format is the same for every language, and the fix is spelled for the driver in use by the matching language reference.
