@@ -85,7 +85,22 @@ Check the consumer configuration while here: `ack_wait` must exceed the worst-ca
 
 ## Outbox And Relay
 
-A relay that reads unsent rows, publishes them, and marks them sent has the same two-instance problem. Claim the rows with a conditional update first (`UPDATE outbox SET claimed_by = $1 WHERE claimed_by IS NULL AND id = ANY($2)`), then publish only what was claimed, and rely on `Nats-Msg-Id` deduplication for the publish retry path.
+A relay that reads unsent rows, publishes them, and marks them sent has the same two-instance problem. A permanent claim (`SET claimed_by = $1 WHERE claimed_by IS NULL`) fixes the race between relays and creates a new one with the crash: a relay that dies after the claim and before the publish leaves a row that no relay will ever pick up again. The claim has to expire, and the publish has to be safe to repeat.
+
+```sql
+UPDATE outbox
+SET claimed_by = $1, claimed_until = now() + interval '30 seconds'
+WHERE id = ANY($2)
+  AND sent_at IS NULL
+  AND (claimed_until IS NULL OR claimed_until < now())
+RETURNING id, payload;
+```
+
+The relay publishes only the rows the `UPDATE` returned, with `Nats-Msg-Id` set to the outbox row id, then marks them with `UPDATE outbox SET sent_at = now() WHERE id = $1 AND claimed_by = $2`. A crashed relay's rows become claimable again when `claimed_until` passes; the next relay republishes them with the same `Nats-Msg-Id`, and the stream drops the duplicate if the first publish did land. The claim window has to exceed the relay's worst-case publish time, or a slow relay and a reclaiming relay both publish, which the same message id absorbs inside the stream's duplicate window and nothing absorbs after it.
+
+`SELECT ... FOR UPDATE SKIP LOCKED` inside one transaction that also marks the rows sent is the other shape: the lock is released by the crash itself, so there is nothing to reclaim. It holds a transaction open across the publish, which is the cost.
+
+The residual either way is the stream's duplicate window: a reclaim that happens after it expires publishes the row twice, so consumers still dedupe on the message id.
 
 ## What The Finding Must Cite
 

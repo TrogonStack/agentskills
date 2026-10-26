@@ -33,7 +33,7 @@ Principle abbreviations: Condition is [the write must carry its condition](../pr
 | Event store | load then append | Condition, Retry | append with `expected_version` equal to the loaded version | [distributed](../surfaces/distributed.md) |
 | Consumer | contains(id) then apply then record | Idempotence | insert the id (unique) and the effect in one transaction | [distributed](../surfaces/distributed.md) |
 | Consumer | effect in a non-transactional store | Idempotence | idempotent effect keyed by a deterministic id | [distributed](../surfaces/distributed.md) |
-| Outbox | read unsent, publish, mark sent | Condition | claim rows with `UPDATE ... WHERE claimed_by IS NULL`, then publish | [distributed](../surfaces/distributed.md) |
+| Outbox | read unsent, publish, mark sent | Condition | claim rows with an expiring `UPDATE ... WHERE claimed_until < now() RETURNING`, publish with `Nats-Msg-Id` = row id, reclaim after expiry | [distributed](../surfaces/distributed.md) |
 | In-process | check, yield, set | Condition | publish the in-flight claim before the first yield | [in-process](../surfaces/in-process.md) |
 | In-process | lock, release, yield, lock, insert | Lock | hold an async-aware lock across the decision, or a per-key entry API | [in-process](../surfaces/in-process.md) |
 | In-process | two calls into one server | Owner | one call whose handler checks and writes | [in-process](../surfaces/in-process.md) |
