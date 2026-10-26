@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-eventmodeling@v0.2.0...trogonstack-eventmodeling@v0.2.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **trogonstack-eventmodeling:** Split read models by shape, not by consumer ([#106](https://github.com/TrogonStack/agentskills/issues/106)) ([7bb3e29](https://github.com/TrogonStack/agentskills/commit/7bb3e29f8ade80cc22fa03e7c454b534059fa369))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-eventmodeling@v0.1.2...trogonstack-eventmodeling@v0.2.0) (2026-10-11)
 
 
