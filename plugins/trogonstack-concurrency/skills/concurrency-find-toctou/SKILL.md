@@ -122,11 +122,11 @@ Read [references/systems/nats.md](references/systems/nats.md) when the state liv
 
 ## Libraries
 
-After the surface and system references, read the file for the library under review. Each covers one library and spells what the system file guarantees, organized by the surfaces it touches.
+After the surface and system references, read the file for the library under review when one exists. Each covers one library, organized by the surfaces it touches. Redis and NATS clients have no separate file; their spellings live at the end of the system file.
 
-- TypeScript: [node-fs](references/typescript/node-fs.md), [node-postgres](references/typescript/node-postgres.md), [prisma](references/typescript/prisma.md), [drizzle](references/typescript/drizzle.md), [ioredis](references/typescript/ioredis.md), [nats-js](references/typescript/nats-js.md), [event-loop](references/typescript/event-loop.md).
-- Rust: [std-fs](references/rust/std-fs.md), [sqlx](references/rust/sqlx.md), [tokio](references/rust/tokio.md), [moka-dashmap](references/rust/moka-dashmap.md), [async-nats](references/rust/async-nats.md), [atomics](references/rust/atomics.md).
-- Elixir: [file](references/elixir/file.md), [ecto](references/elixir/ecto.md), [ets](references/elixir/ets.md), [genserver](references/elixir/genserver.md), [registry](references/elixir/registry.md), [redix](references/elixir/redix.md).
-- Go: [os](references/go/os.md), [database-sql](references/go/database-sql.md), [sync](references/go/sync.md), [singleflight](references/go/singleflight.md), [go-redis](references/go/go-redis.md), [nats-go](references/go/nats-go.md).
-- Python: [os](references/python/os.md), [psycopg](references/python/psycopg.md), [sqlalchemy](references/python/sqlalchemy.md), [asyncio](references/python/asyncio.md), [redis-py](references/python/redis-py.md), [nats-py](references/python/nats-py.md).
+- TypeScript: [node-fs](references/typescript/node-fs.md), [node-postgres](references/typescript/node-postgres.md), [prisma](references/typescript/prisma.md), [drizzle](references/typescript/drizzle.md), [event-loop](references/typescript/event-loop.md).
+- Rust: [std-fs](references/rust/std-fs.md), [sqlx](references/rust/sqlx.md), [tokio](references/rust/tokio.md), [moka-dashmap](references/rust/moka-dashmap.md), [atomics](references/rust/atomics.md).
+- Elixir: [file](references/elixir/file.md), [ecto](references/elixir/ecto.md), [ets](references/elixir/ets.md), [genserver](references/elixir/genserver.md), [registry](references/elixir/registry.md).
+- Go: [os](references/go/os.md), [database-sql](references/go/database-sql.md), [sync](references/go/sync.md), [singleflight](references/go/singleflight.md).
+- Python: [os](references/python/os.md), [psycopg](references/python/psycopg.md), [sqlalchemy](references/python/sqlalchemy.md), [asyncio](references/python/asyncio.md).
 - C: [posix-fs](references/c/posix-fs.md), [atomics](references/c/atomics.md).

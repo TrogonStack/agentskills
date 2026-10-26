@@ -31,7 +31,7 @@ The same shape covers `WHERE status = 'pending'`, `WHERE version = %s`, and `WHE
 
 ## Row Lock
 
-Every statement of the decision runs on the same connection inside one transaction; psycopg 3 opens a transaction on the first statement and `with conn.transaction():` commits at the end of the block.
+Every statement of the decision runs on the same connection inside one transaction; psycopg 3 opens a transaction on the first statement and `with conn.transaction():` commits at the end of the block when no transaction was already open. Inside an open transaction the block is only a savepoint, so the lock lives until the outer transaction ends.
 
 ```python
 with conn.transaction():
@@ -45,4 +45,4 @@ A connection in autocommit mode commits after the `SELECT`, which releases the l
 
 ## Serializable Retry
 
-`conn.isolation_level = psycopg.IsolationLevel.SERIALIZABLE` and a bounded loop that retries the whole transaction on `psycopg.errors.SerializationFailure` (`40001`) and `psycopg.errors.DeadlockDetected` (`40P01`). `UniqueViolation` is retried only when the code can show the duplicate came from a value it chose after a read.
+`conn.isolation_level = psycopg.IsolationLevel.SERIALIZABLE`, set while no transaction is active because the setting is rejected mid-transaction, and a bounded loop that retries the whole transaction on `psycopg.errors.SerializationFailure` (`40001`) and `psycopg.errors.DeadlockDetected` (`40P01`). `UniqueViolation` is retried only when the code can show the duplicate came from a value it chose after a read.

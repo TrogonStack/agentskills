@@ -22,6 +22,6 @@ v, err, shared := group.Do(key, func() (any, error) {
 
 ## What It Does Not Cover
 
-- It dedupes within one process. Across a fleet the lease in [go-redis.md](go-redis.md) bounds the stampede.
+- It dedupes within one process. Across a fleet the lease in [redis.md](../systems/redis.md) bounds the stampede.
 - The `ctx` captured by the closure belongs to the first caller. If that caller cancels, every joined caller gets its error. Use `DoChan` and a detached context when callers can cancel independently.
 - An error is shared too. A failed computation is handed to every joined caller; nothing is cached, so the next wave recomputes.

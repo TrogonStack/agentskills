@@ -72,10 +72,12 @@ A pull consumer's `fetch` hands the caller a batch that is ack-pending from the 
 
 For a publish: the subject, the sequence or revision the decision was made from, and the header that carries it. For a consumer: the ack policy, `ack_wait`, `max_deliver`, whether the ack is synchronous, and whether the dedupe record commits with the effect.
 
-## Library Files
+## Client Spellings
 
-- TypeScript: [nats-js](../typescript/nats-js.md)
-- Rust: [async-nats](../rust/async-nats.md)
-- Go: [nats-go](../go/nats-go.md)
-- Python: [nats-py](../python/nats-py.md)
-- Elixir: the clients differ in how they expose headers and KV; see the Elixir line in [distributed.md](../surfaces/distributed.md). The transactional dedupe is in [ecto](../elixir/ecto.md).
+Every client sets the same headers and sends the same revision-guarded KV requests, so the finding cites the header and the revision or sequence it carries, not the client. No client can make the consumer's effect transactional: record the message id and the effect in one database transaction through the database library in use, then ack, and confirm `ack_wait` exceeds worst-case processing time and `max_deliver` is set.
+
+- nats.js: `js.publish(subject, data, { msgID, expect: { lastSubjectSequence, lastSequence, lastMsgID, streamName } })`. KV: `kv.create(key, data)`, `kv.update(key, data, revision)`, which throws when the revision is 0 or less, so never pass a default; `kv.delete(key, { previousSeq })` and `kv.purge(key, { previousSeq })` guard the removal.
+- async-nats: `async_nats::jetstream::message::PublishMessage::build().payload(bytes).message_id(id).expected_last_subject_sequence(seq)`, with `.expected_last_sequence(seq)`, `.expected_last_message_id(id)`, and `.expected_stream(name)` for the other headers. Send with `js.send_publish(subject, publish).await?.await?`; the first `await` sends and the second awaits the ack, which is where the mismatch surfaces. `jetstream::context::Publish` is the deprecated name of the same builder. KV: `kv.entry(key)` returns the revision, then `kv.create(key, bytes)`, `kv.update(key, bytes, revision)`, `kv.delete_expect_revision(key, Some(rev))`, and `kv.purge_expect_revision(key, Some(rev))`.
+- nats.go, module `github.com/nats-io/nats.go` with the `jetstream` subpackage (there is no v2 module): `js.Publish(ctx, subject, data, jetstream.WithMsgID(id), jetstream.WithExpectLastSequencePerSubject(seq))`, with `WithExpectLastSequence`, `WithExpectLastMsgID`, and `WithExpectStream` for the other headers. KV: `kv.Create(ctx, key, value)`, `kv.Update(ctx, key, value, revision)`, `kv.Delete(ctx, key, jetstream.LastRevision(rev))`, `kv.Purge(ctx, key, jetstream.LastRevision(rev))`. `Create` on a key whose last entry is a delete or purge retries internally as an `Update` against that revision.
+- nats-py: `js.publish(subject, payload, headers={...}, stream=...)` takes the raw headers and has no typed expectation options, so spell `Nats-Msg-Id` and `Nats-Expected-Last-Subject-Sequence` (as a string) in the dict. KV: `kv.create(key, value)` and `kv.update(key, value, last=revision)`; `last` must always be passed, because the default sends expected sequence 0, which is create-if-absent and fails on an existing key instead of guarding the update. `kv.purge(key)` takes no revision guard.
+- Elixir: the clients differ in how they expose headers and KV, so cite the exact call from the library in use. Gnat accepts headers on publish through the `headers:` option of `Gnat.pub/4` (confirm against the version in use); a KV update with no revision-guarded call in the client is the underlying JetStream publish with `Nats-Expected-Last-Subject-Sequence` set to the entry's revision. The transactional dedupe is in [ecto](../elixir/ecto.md).

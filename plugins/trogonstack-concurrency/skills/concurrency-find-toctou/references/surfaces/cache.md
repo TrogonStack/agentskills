@@ -75,10 +75,10 @@ The key, the TTL, whether the fill path dedupes in-process and across processes,
 
 ## Library Files
 
-For what the store itself guarantees, read [redis](../systems/redis.md) first.
+For what the store itself guarantees, read [redis](../systems/redis.md) first; the lease and release spellings for ioredis, Redix, go-redis, and redis-py live at the end of that file.
 
-- TypeScript: [event-loop](../typescript/event-loop.md) for single-flight, [ioredis](../typescript/ioredis.md) for the lease
+- TypeScript: [event-loop](../typescript/event-loop.md) for single-flight
 - Rust: [moka-dashmap](../rust/moka-dashmap.md)
-- Elixir: [ets](../elixir/ets.md), [redix](../elixir/redix.md)
-- Go: [singleflight](../go/singleflight.md), [sync](../go/sync.md), [go-redis](../go/go-redis.md)
-- Python: [asyncio](../python/asyncio.md), [redis-py](../python/redis-py.md)
+- Elixir: [ets](../elixir/ets.md)
+- Go: [singleflight](../go/singleflight.md), [sync](../go/sync.md)
+- Python: [asyncio](../python/asyncio.md)

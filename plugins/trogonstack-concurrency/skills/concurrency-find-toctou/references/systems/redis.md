@@ -81,9 +81,11 @@ A script that reads `{order:42}:lock` and writes `{order:42}:state` is atomic. S
 
 The commands issued between the read and the write, whether they are one command, one script, or one `WATCH` sequence on one connection, the expiry on any lease, whether the resource checks a fencing token, and whether failover is accepted as a residual.
 
-## Library Files
+## Client Spellings
 
-- TypeScript: [ioredis](../typescript/ioredis.md)
-- Elixir: [redix](../elixir/redix.md)
-- Go: [go-redis](../go/go-redis.md)
-- Python: [redis-py](../python/redis-py.md)
+Every client passes the command through unchanged, and the server evaluates `NX`, the `WATCH` check, and the script atomically, so the finding cites the command and the connection it ran on, not the client. The compare-and-delete release script above is the same text in every client.
+
+- ioredis: `redis.set(key, token, "PX", 5000, "NX")` returns `"OK"` for the winner and `null` for everyone else. Scripts go through `redis.defineCommand(name, { numberOfKeys, lua })`. For a `WATCH`, `MULTI`, `EXEC` sequence use a connection the sequence owns, for example one from `redis.duplicate()`; the ioredis docs do not document `WATCH`, so cite the connection the code actually uses.
+- Redix: `Redix.command(conn, ["SET", key, token, "NX", "PX", "5000"])` returns `{:ok, "OK"}` for the winner and `{:ok, nil}` otherwise; pass every argument as a string. Scripts are `["EVAL", script, "1", key, token]`. The Redix docs say to use an isolated connection for a manual `MULTI` and `EXEC`, and `Redix.transaction_pipeline/3` cannot hold a `WATCH` across a read, so a compare-and-set needs a manual sequence on one dedicated connection.
+- go-redis: `rdb.SetNX(ctx, key, token, 5*time.Second).Result()` returns `true` only for the winner. `rdb.SetArgs(ctx, key, value, redis.SetArgs{Mode: "NX", TTL: ttl})` returns a `*StatusCmd`; what a lost race returns from it is not confirmed in the docs, so prefer `SetNX` when the reply is the decision. Scripts are `redis.NewScript(src).Run(ctx, rdb, []string{key}, token)`. Compare-and-set is `rdb.Watch(ctx, fn, keys...)` with `tx.TxPipelined` inside `fn`, retried on `errors.Is(err, redis.TxFailedErr)`.
+- redis-py: `r.set(key, token, nx=True, px=5000)` returns `True` for the winner and `None` otherwise, not `False`. Scripts are `r.register_script(src)`, called as `script(keys=[...], args=[...])`. Compare-and-set is `pipe = r.pipeline()`, `pipe.watch(key)`, the read with `pipe.get(key)` immediately after, `pipe.multi()`, the writes, then `pipe.execute()`, retried on `redis.WatchError`; `r.transaction(func, *keys)` wraps that loop.

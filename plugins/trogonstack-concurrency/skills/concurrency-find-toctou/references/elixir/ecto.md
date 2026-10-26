@@ -50,7 +50,7 @@ The count is the verdict. Zero rows means the balance was too low or the account
 
 `optimistic_lock(changeset, :version)` adds `WHERE version = ^current` and raises `Ecto.StaleEntryError` when the row moved; the caller reloads and retries, bounded.
 
-Row lock inside `Repo.transaction/1`:
+Row lock inside `Repo.transaction/1` (`Repo.transact/2` on Ecto versions that deprecate it; the lock scope is the same):
 
 ```elixir
 Repo.transaction(fn ->

@@ -55,4 +55,4 @@ Every other writer to that row must lock the same way.
 
 ## Serializable Retry
 
-`create_engine(url, isolation_level="SERIALIZABLE")` or `connection.execution_options(isolation_level="SERIALIZABLE")`, and a bounded loop that retries the whole transaction on `OperationalError` whose `orig` has `pgcode` of `"40001"` or `"40P01"`. A `23505` inside `IntegrityError` is retried only when the code can show the duplicate came from a value it chose after a read.
+`create_engine(url, isolation_level="SERIALIZABLE")` or `connection.execution_options(isolation_level="SERIALIZABLE")`, and a bounded loop that retries the whole transaction on `OperationalError` whose `orig` carries SQLSTATE `40001` or `40P01` (`orig.sqlstate` on psycopg 3, `orig.pgcode` on psycopg2 and asyncpg). A `23505` inside `IntegrityError` is retried only when the code can show the duplicate came from a value it chose after a read.

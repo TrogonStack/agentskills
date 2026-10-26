@@ -108,10 +108,4 @@ The store, the read that produced the decision, the write that followed, and whe
 
 ## Library Files
 
-For what the store itself guarantees, read [nats](../systems/nats.md) first.
-
-- TypeScript: [nats-js](../typescript/nats-js.md)
-- Rust: [async-nats](../rust/async-nats.md)
-- Elixir: no per-client file. The clients differ in how they expose headers and KV, so cite the exact call from the library in use. Gnat accepts headers on publish through the `headers:` option of `Gnat.pub/4` (confirm against the version in use); a KV update with no revision-guarded call in the client is the underlying JetStream publish with `Nats-Expected-Last-Subject-Sequence` set to the entry's revision. The transactional dedupe is in [ecto](../elixir/ecto.md).
-- Go: [nats-go](../go/nats-go.md)
-- Python: [nats-py](../python/nats-py.md)
+For what the store itself guarantees, read [nats](../systems/nats.md) first; the publish, KV, and consumer spellings for nats.js, async-nats, nats.go, nats-py, and the Elixir clients live at the end of that file. The transactional dedupe on the consumer side is in the database library file for the language, for example [ecto](../elixir/ecto.md).
