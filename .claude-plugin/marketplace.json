@@ -72,6 +72,12 @@
       "description": "Protobuf skills for designing messages and fields and for evolving schemas without breaking consumers",
       "source": "./plugins/trogonstack-protobuf",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-concurrency",
+      "description": "Concurrency skills for finding and fixing time-of-check to time-of-use races in files, databases, caches, authorization, and distributed stores",
+      "source": "./plugins/trogonstack-concurrency",
+      "category": "development"
     }
   ]
 }

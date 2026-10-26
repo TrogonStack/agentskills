@@ -66,6 +66,9 @@
     },
     "plugins/trogonstack-protobuf": {
       "component": "trogonstack-protobuf"
+    },
+    "plugins/trogonstack-concurrency": {
+      "component": "trogonstack-concurrency"
     }
   },
   "plugins": [
