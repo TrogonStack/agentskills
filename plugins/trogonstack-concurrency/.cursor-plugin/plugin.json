@@ -2,7 +2,7 @@
   "name": "trogonstack-concurrency",
   "displayName": "TrogonStack Concurrency",
   "description": "Concurrency skills for finding and fixing time-of-check to time-of-use races in files, databases, caches, authorization, and distributed stores",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "TrogonStack"
   },

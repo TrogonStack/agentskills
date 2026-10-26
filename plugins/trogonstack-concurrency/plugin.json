@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-concurrency",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Concurrency skills for finding and fixing time-of-check to time-of-use races in files, databases, caches, authorization, and distributed stores",
   "author": {
     "name": "TrogonStack",
