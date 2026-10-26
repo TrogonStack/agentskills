@@ -12,12 +12,13 @@ One finding per check-then-act pair. The format forces the reviewer to name the 
 - Act: <what is written>
 - Window: <what runs between them: an await, a network call, a queue hop, a second request>
 - Interleaver: <who else can run between the check and the act, and how>
+- Principle: <the principle the pair violates, by name>
 - Consequence: <the concrete wrong outcome: duplicate row, negative balance, write by a revoked user>
 - Fix: <the atomic primitive, and the code shape that uses it>
 - Residual: <what the fix still does not cover, or "none">
 ```
 
-Pairs judged safe go in a separate list using the format in [false-positives.md](false-positives.md).
+Pairs judged safe go in a separate list using the safe-verdict format in [serializer-is-named.md](../principles/serializer-is-named.md).
 
 ## Worked Example
 
@@ -52,6 +53,7 @@ The finding:
 - Act: UPDATE uses = uses + 1, after a discount has already been applied
 - Window: the SELECT, the applyDiscount network call, then the UPDATE; tens to hundreds of milliseconds
 - Interleaver: any concurrent redeem of the same code, including the same user double-submitting the form or retrying a timed-out request. Each reads uses = max_uses - 1, passes the check, applies a discount, and increments.
+- Principle: the write must carry its condition. The UPDATE at line 16 is unconditional; the condition lives only in the application check at line 9.
 - Consequence: N concurrent requests at the last use all receive the discount; uses ends at max_uses + N - 1. Money is given away and the stored count no longer matches reality.
 - Fix: claim the use before applying the discount, with the condition inside the statement:
 
@@ -64,4 +66,4 @@ The finding:
 - Residual: a crash between the claim and the discount leaves a consumed use with no discount applied. Acceptable if the compensation runs from a reconciliation job; otherwise wrap the claim and a pending-discount row in one transaction and apply the discount from an outbox.
 ```
 
-What makes this finding complete: the interleaver names a realistic actor (double submit, retry), the consequence is stated in domain terms (money, wrong count), the fix is a conditional write at the store that owns the count, and the residual is honest about what the fix moves rather than removes. The example is TypeScript; the finding format is the same for every language, and the fix is spelled for the driver in use by the matching language reference.
+What makes this finding complete: the interleaver names a realistic actor (double submit, retry), the principle is named so the fix follows from it, the consequence is stated in domain terms (money, wrong count), the fix is a conditional write at the store that owns the count, and the residual is honest about what the fix moves rather than removes. The example is TypeScript; the finding format is the same for every language, and the fix is spelled for the driver in use by the matching library file.

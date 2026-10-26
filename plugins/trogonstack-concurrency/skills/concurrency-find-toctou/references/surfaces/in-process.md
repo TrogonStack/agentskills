@@ -1,6 +1,13 @@
-# Async And In-Process Surfaces
+# In-Process Surfaces
 
 Inside one process the interleaver is another task on the same event loop, another thread, or another process in the same VM. The gap that lets it in is any point where control yields: an `await`, a message round trip, a lock released and re-taken, a second call into the same server. A check and an act with a yield between them are two separate moments.
+
+## Principles At Work
+
+- [Serialization is proven by naming the serializer](../principles/serializer-is-named.md): a synchronous section with no yield is a serializer, and the finding names the function and states there is no yield in it.
+- [The write must carry its condition](../principles/write-carries-condition.md): insert-if-absent, `LoadOrStore`, compare-and-swap, the register call as the claim, the single message that carries the decision.
+- [A lock only helps when the read happens under it](../principles/lock-moves-the-race.md): lock, release, await, re-lock is two critical sections with a gap.
+- [Only the owner of the state can decide](../principles/owner-decides.md): the server process that owns the map decides inside one handler, not the caller across two calls.
 
 ## Check, Yield, Set
 
@@ -71,6 +78,11 @@ The same shape applies to a shared in-memory table that has no server: use its i
 
 The exact yield point between the check and the act (the `await`, the second call, the lock release), and which other task or process can run at that point. If no yield exists, the pair is atomic and the finding says so.
 
-## Idiomatic Forms
+## Library Files
 
-Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), [lang-python.md](lang-python.md), or [lang-c.md](lang-c.md) for the promise map, the async-aware lock, the entry API, the single `call`, and the compare-and-swap in the language under review.
+- TypeScript: [event-loop](../typescript/event-loop.md)
+- Rust: [tokio](../rust/tokio.md), [moka-dashmap](../rust/moka-dashmap.md), [atomics](../rust/atomics.md)
+- Elixir: [genserver](../elixir/genserver.md), [registry](../elixir/registry.md), [ets](../elixir/ets.md)
+- Go: [sync](../go/sync.md), [singleflight](../go/singleflight.md)
+- Python: [asyncio](../python/asyncio.md)
+- C: [atomics](../c/atomics.md)

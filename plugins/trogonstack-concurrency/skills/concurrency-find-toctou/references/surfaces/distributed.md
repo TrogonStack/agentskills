@@ -2,6 +2,13 @@
 
 Across nodes there is no shared memory and no shared lock that costs nothing. What the stores offer instead is a conditional write: "apply this only if the last thing you saw is still the last thing". Every check-then-act against a distributed store must be rewritten as one of these conditional writes, or it is a lost update waiting for load.
 
+## Principles At Work
+
+- [The write must carry its condition](../principles/write-carries-condition.md): the KV revision, the expected-sequence header, the expected version on append.
+- [Retry belongs around the conditional write](../principles/retry-wraps-the-write.md): a revision or sequence mismatch means reload, re-decide, retry, bounded.
+- [Idempotence absorbs what ordering cannot prevent](../principles/idempotence-absorbs.md): redelivery is a second run with the guards intact; only a transactional dedupe or an idempotent effect survives it.
+- [Serialization is proven by naming the serializer](../principles/serializer-is-named.md): a single consumer or a partition owner is a serializer only when the config is cited and redelivery is accounted for.
+
 ## NATS KV
 
 Avoid reading a key, deciding, and writing back with a plain put:
@@ -84,6 +91,10 @@ A relay that reads unsent rows, publishes them, and marks them sent has the same
 
 The store, the read that produced the decision, the write that followed, and whether the write carried the expected revision, sequence, or version. For consumers, the ack mode, `ack_wait`, and whether the dedupe record and the effect commit together.
 
-## Idiomatic Forms
+## Library Files
 
-Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for how the NATS client under review passes the KV revision and the expected-sequence publish option. Elixir clients are covered at the concept level only in [lang-elixir.md](lang-elixir.md).
+- TypeScript: [nats-js](../typescript/nats-js.md)
+- Rust: [async-nats](../rust/async-nats.md)
+- Elixir: no per-client file. The clients differ in how they expose headers and KV, so cite the exact call from the library in use. Gnat accepts headers on publish through the `headers:` option of `Gnat.pub/4` (confirm against the version in use); a KV update with no revision-guarded call in the client is the underlying JetStream publish with `Nats-Expected-Last-Subject-Sequence` set to the entry's revision. The transactional dedupe is in [ecto](../elixir/ecto.md).
+- Go: [nats-go](../go/nats-go.md)
+- Python: [nats-py](../python/nats-py.md)

@@ -2,6 +2,13 @@
 
 A cache miss is a check. Filling the cache is the act. Between them, every other caller that misses on the same key does the same work, and the last writer wins regardless of which value was freshest.
 
+## Principles At Work
+
+- [Only the owner of the state can decide](../principles/owner-decides.md): a cached count or permission is a copy; the write must still carry its condition against the store that owns the data.
+- [The write must carry its condition](../principles/write-carries-condition.md): `SET NX`, `add`, insert-if-absent, the in-flight claim published before the first yield.
+- [A lock only helps when the read happens under it](../principles/lock-moves-the-race.md): the `SET NX PX` lease bounds the stampede and is itself a check-then-act.
+- [Serialization is proven by naming the serializer](../principles/serializer-is-named.md): single-flight is safe only because the map read and write have no yield between them, and the finding says so.
+
 ## Get Or Compute Stampede
 
 Avoid:
@@ -66,6 +73,10 @@ Any decision that reads a cached count, balance, or permission and then writes t
 
 The key, the TTL, whether the fill path dedupes in-process and across processes, and whether a double fill produces a wrong value or just wasted work.
 
-## Idiomatic Forms
+## Library Files
 
-Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for the single-flight shape and the `NX` call in the client library under review.
+- TypeScript: [event-loop](../typescript/event-loop.md) for single-flight, [ioredis](../typescript/ioredis.md) for the lease
+- Rust: [moka-dashmap](../rust/moka-dashmap.md)
+- Elixir: [ets](../elixir/ets.md), [redix](../elixir/redix.md)
+- Go: [singleflight](../go/singleflight.md), [sync](../go/sync.md), [go-redis](../go/go-redis.md)
+- Python: [asyncio](../python/asyncio.md), [redis-py](../python/redis-py.md)

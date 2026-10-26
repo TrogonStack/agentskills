@@ -4,6 +4,14 @@ A row read in one statement says nothing about the row when the next statement r
 
 A transaction on its own does not help. Under `READ COMMITTED` (the Postgres default) and under InnoDB's default `REPEATABLE READ`, two transactions can both `SELECT` nothing and both `INSERT`. Only a unique constraint or a lock makes one of them lose.
 
+## Principles At Work
+
+- [Only the owner of the state can decide](../principles/owner-decides.md): the database sees every writer; application code sees one snapshot.
+- [The write must carry its condition](../principles/write-carries-condition.md): `ON CONFLICT`, `WHERE status = ...`, `WHERE balance >= ...`, `WHERE version = ...`.
+- [A lock only helps when the read happens under it](../principles/lock-moves-the-race.md): `FOR UPDATE` and advisory locks, taken before the read, by every writer.
+- [Retry belongs around the conditional write](../principles/retry-wraps-the-write.md): the zero-rowcount branch and the `40001` retry loop.
+- [Serialization is proven by naming the serializer](../principles/serializer-is-named.md): a safe verdict names the unique index from the migration, not from an ORM helper.
+
 ## Find Or Create
 
 Avoid:
@@ -107,6 +115,10 @@ The lock releases at commit. Hash collisions only make the lock coarser, never u
 
 The `SELECT`, the write it gates, the isolation level in effect, and whether a constraint or lock already exists for that key. Name the constraint or index when claiming a pair is safe.
 
-## Idiomatic Forms
+## Library Files
 
-Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), or [lang-python.md](lang-python.md) for how the driver or ORM under review spells the upsert, reads the rowcount, and takes the row lock.
+- TypeScript: [node-postgres](../typescript/node-postgres.md), [prisma](../typescript/prisma.md), [drizzle](../typescript/drizzle.md)
+- Rust: [sqlx](../rust/sqlx.md)
+- Elixir: [ecto](../elixir/ecto.md)
+- Go: [database-sql](../go/database-sql.md)
+- Python: [psycopg](../python/psycopg.md), [sqlalchemy](../python/sqlalchemy.md)

@@ -2,6 +2,13 @@
 
 A path is a name, not a file. Anything checked by name (`exists`, `stat`, `access`, `is_symlink`) can point at something else by the time the path is opened. The fix is to let the open itself carry the condition, then inspect the descriptor you actually got.
 
+## Principles At Work
+
+- [A read is a fact about the past](../principles/read-is-the-past.md): `stat` describes the path at the moment of the call, not at the moment of the `open`.
+- [Only the owner of the state can decide](../principles/owner-decides.md): the kernel owns the namespace, so only a flag the kernel evaluates at open time (`O_EXCL`, `O_NOFOLLOW`) can decide.
+- [The write must carry its condition](../principles/write-carries-condition.md): exclusive create, no-follow open, atomic rename.
+- [Idempotence absorbs what ordering cannot prevent](../principles/idempotence-absorbs.md): delete and `mkdir` are made idempotent by handling `ENOENT` and `EEXIST` instead of checking first.
+
 ## Exists Then Create
 
 Avoid:
@@ -67,8 +74,13 @@ rename(tmp, target)
 
 ## What The Finding Must Cite
 
-Name the path-based check, the open or create that follows, and whether the directory is writable by anyone other than the process owner. A path in a private directory that only this process writes is still a bug if the process can run twice; say which is the case.
+Name the path-based check, the open or create that follows, and whether the directory is writable by anyone other than the process owner. A path in a private directory that only this process writes is still a bug if the process can run twice; say which is the case. The principle violated is almost always "the write must carry its condition".
 
-## Idiomatic Forms
+## Library Files
 
-Read [lang-typescript.md](lang-typescript.md), [lang-rust.md](lang-rust.md), [lang-elixir.md](lang-elixir.md), [lang-go.md](lang-go.md), [lang-python.md](lang-python.md), or [lang-c.md](lang-c.md) for the exclusive-create flag, the temp-file primitive, and the atomic rename in the language under review.
+- TypeScript: [node-fs](../typescript/node-fs.md)
+- Rust: [std-fs](../rust/std-fs.md)
+- Elixir: [file](../elixir/file.md)
+- Go: [os](../go/os.md)
+- Python: [os](../python/os.md)
+- C: [posix-fs](../c/posix-fs.md)
