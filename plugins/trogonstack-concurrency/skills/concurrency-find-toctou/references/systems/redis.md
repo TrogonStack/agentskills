@@ -20,7 +20,7 @@ HSETNX sessions <sid> <data>                 -- field-level create
 GETDEL job:claim:9                           -- read and remove in one step
 ```
 
-`SET` with `NX` and an expiry in one command replaced the `SETNX` then `EXPIRE` pair. The pair is a TOCTOU in the other direction: a crash between the two leaves a key with no expiry, and the lease never releases. `SET ... GET` returns the previous value in the same step, which is the compare-and-swap for strings; combining `GET` with `NX` is allowed from 7.0, confirm against the version in use.
+`SET` with `NX` and an expiry in one command replaced the `SETNX` then `EXPIRE` pair. The pair is a TOCTOU in the other direction: a crash between the two leaves a key with no expiry, and the lease never releases. `SET ... GET` returns the previous value in the same step. That is an atomic swap, not a compare-and-swap: nothing is compared, and the write lands whatever the old value was. Compare-and-swap on a string is `SET key value IFEQ expected` (8.4 and later; `IFNE`, `IFDEQ`, and `IFDNE` arrived with it, confirm against the version in use), or on older servers a `WATCH` sequence or a script. Combining `GET` with `NX` is allowed from 7.0.
 
 `INCR` is the right counter and the right rate limiter. `GET` then `SET value+1` loses increments under any load.
 

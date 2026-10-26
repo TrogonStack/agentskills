@@ -38,7 +38,13 @@ end
 ```elixir
 from(a in Account, where: a.id == ^id and a.balance >= ^amount)
 |> Repo.update_all(inc: [balance: -amount])
+|> case do
+  {1, _} -> :ok
+  {0, _} -> {:error, :insufficient_funds_or_missing}
+end
 ```
+
+The count is the verdict. Zero rows means the balance was too low or the account is gone, and the caller decides which by reloading, not by assuming.
 
 ## Optimistic Version And Row Lock
 

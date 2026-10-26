@@ -76,7 +76,7 @@ The same shape applies to a shared in-memory table that has no server: use its i
 
 ## What The Finding Must Cite
 
-The exact yield point between the check and the act (the `await`, the second call, the lock release), and which other task or process can run at that point. If no yield exists, the pair is atomic and the finding says so.
+The exact yield point between the check and the act (the `await`, the second call, the lock release), and which other task or process can run at that point. A pair with no yield is atomic only when the serializer is a single thread of execution, such as one event loop or one GenServer, and the finding names that thread. Under OS threads another thread interleaves without any yield, so the pair needs a named lock or an atomic primitive.
 
 ## Library Files
 

@@ -109,7 +109,7 @@ The lock releases at commit. Hash collisions only make the lock coarser, never u
 
 ## Serializable Isolation
 
-`SERIALIZABLE` makes the database detect the interleaving and abort one transaction with SQLSTATE `40001`. It is correct only when every caller retries on that code. Without the retry loop it has turned a silent race into a user-facing error.
+`SERIALIZABLE` makes the database detect the interleaving and abort one transaction with SQLSTATE `40001`. It is correct only when every caller retries the whole transaction on that code and on `40P01`. Without the retry loop it has turned a silent race into a user-facing error. `23505` and `23P01` are retried only when the caller can show the conflict was a race on a value it chose from a prior read, because the same codes also mean a persistent error.
 
 ## What The Finding Must Cite
 

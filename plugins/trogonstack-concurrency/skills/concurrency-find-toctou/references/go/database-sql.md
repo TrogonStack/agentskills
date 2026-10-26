@@ -49,4 +49,4 @@ return tx.Commit()
 
 ## Serializable Retry
 
-`db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})` and a bounded loop that retries the whole transaction when the driver error's SQLSTATE is `40001` (`pgconn.PgError.Code` with pgx, `pq.Error.Code` with lib/pq).
+`db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})` and a bounded loop that retries the whole transaction when the driver error's SQLSTATE is `40001` or `40P01` (`pgconn.PgError.Code` with pgx, `pq.Error.Code` with lib/pq). Retry `23505` only when the code can show the duplicate came from a value it chose after a read; otherwise it is a persistent error.

@@ -16,7 +16,9 @@ Postgres decides every race with a unique or exclusion constraint, a row lock, a
 
 `REPEATABLE READ` takes one snapshot at the first statement. Reads never change inside the transaction. An `UPDATE` that reaches a row changed by a concurrent committed transaction does not re-evaluate; it fails with `40001` ("could not serialize access due to concurrent update"). First updater wins, the loser must retry the whole transaction. Two transactions that both `SELECT` nothing and both `INSERT` do not conflict here; only a unique index stops the second.
 
-`SERIALIZABLE` adds predicate tracking on top. Two transactions whose reads and writes would not be equivalent to some serial order abort one of them with `40001` ("could not serialize access due to read/write dependencies"). It catches the `SELECT count(*)` then `INSERT` invariant that no constraint can express. It is correct only when every caller retries on `40001`; without the loop it has turned a silent race into a user-facing error. It also does not stop a unique violation from surfacing as `23505` rather than `40001`, so the retry handler needs both codes.
+`SERIALIZABLE` adds predicate tracking on top. Two transactions whose reads and writes would not be equivalent to some serial order abort one of them with `40001` ("could not serialize access due to read/write dependencies"). It catches the `SELECT count(*)` then `INSERT` invariant that no constraint can express. It is correct only when every caller retries on `40001`; without the loop it has turned a silent race into a user-facing error.
+
+The retry contract is narrower than one code. `40001` is always a whole-transaction retry, including the logic that chose the SQL and the values. `40P01` (deadlock) is a retry in nearly every case. `23505` (unique violation) and `23P01` (exclusion violation) are retries only when the application can prove the conflict was a race on a value it chose from a prior read, such as picking the next free key; the same codes also mean a persistent error, and a blind retry loops forever on it.
 
 ## Constraint-Backed Writes
 
@@ -95,7 +97,7 @@ A transaction on its own serializes nothing. It is the frame inside which the co
 
 ## What The Finding Must Cite
 
-The isolation level the connection actually uses, the SQL of the check and the act, the arbiter or lock the act relies on, and where `40001`, `23505`, and the zero-rowcount branch are handled.
+The isolation level the connection actually uses, the SQL of the check and the act, the arbiter or lock the act relies on, and where `40001` and `40P01` are retried, whether `23505` and `23P01` are retried and on what evidence, and where the zero-rowcount branch is handled.
 
 ## Library Files
 

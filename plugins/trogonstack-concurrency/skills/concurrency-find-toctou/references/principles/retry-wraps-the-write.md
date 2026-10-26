@@ -12,7 +12,7 @@ A retry around a check-then-act does none of that. It re-runs the same stale sha
 
 - **Optimistic version.** `UPDATE ... WHERE version = $n` returning zero rows means reload and re-decide. Without the loop the caller surfaces "conflict" to a user who did nothing wrong.
 - **Expected revision or sequence.** `kv.update` with a stale revision, a JetStream publish with a stale expected sequence, an event-store append with a stale expected version. Same loop, bounded.
-- **`SERIALIZABLE` isolation.** The database aborts one transaction with SQLSTATE `40001`. It is correct only when every caller retries on that code; without the loop it has turned a silent race into a user-facing error.
+- **`SERIALIZABLE` isolation.** The database aborts one transaction with SQLSTATE `40001`. It is correct only when every caller retries the whole transaction on that code, and on `40P01`; without the loop it has turned a silent race into a user-facing error. A `23505` is retried only when the caller can show it was a race on a value chosen from a prior read.
 - **Exclusive create as find-or-create.** `create` fails because the key exists, so the fallback is `update` with the revision just learned, which can itself lose and loop.
 
 ## Where The Loop Is Wrong

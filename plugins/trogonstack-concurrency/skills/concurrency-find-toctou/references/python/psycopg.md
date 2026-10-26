@@ -45,4 +45,4 @@ A connection in autocommit mode commits after the `SELECT`, which releases the l
 
 ## Serializable Retry
 
-`conn.isolation_level = psycopg.IsolationLevel.SERIALIZABLE` and a bounded loop that retries the whole transaction on `psycopg.errors.SerializationFailure` (SQLSTATE `40001`).
+`conn.isolation_level = psycopg.IsolationLevel.SERIALIZABLE` and a bounded loop that retries the whole transaction on `psycopg.errors.SerializationFailure` (`40001`) and `psycopg.errors.DeadlockDetected` (`40P01`). `UniqueViolation` is retried only when the code can show the duplicate came from a value it chose after a read.

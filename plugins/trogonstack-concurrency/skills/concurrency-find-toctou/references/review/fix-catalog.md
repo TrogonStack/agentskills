@@ -17,7 +17,7 @@ Principle abbreviations: Condition is [the write must carry its condition](../pr
 | Database | read several columns then write | Condition, Retry | version column, `WHERE version = $n`, retry on zero rows | [database](../surfaces/database.md) |
 | Database | decide in app code from row data | Lock | `SELECT ... FOR UPDATE` inside the transaction, every writer locks | [database](../surfaces/database.md) |
 | Database | count then insert (per-key limit) | Lock | `pg_advisory_xact_lock(hashtext(key))` inside the transaction | [database](../surfaces/database.md) |
-| Database | complex multi-row invariant | Retry | `SERIALIZABLE` plus retry on `40001` | [database](../surfaces/database.md) |
+| Database | complex multi-row invariant | Retry | `SERIALIZABLE` plus whole-transaction retry on `40001` and `40P01` | [database](../surfaces/database.md) |
 | Authorization | check, await, write | Condition | fold the condition into the write (`WHERE owner_id = $u`, membership join) | [authorization](../surfaces/authorization.md) |
 | Authorization | check on preview, write on confirm | Owner | re-check on the confirm request | [authorization](../surfaces/authorization.md) |
 | Authorization | check, enqueue, worker writes | Owner | re-check in the worker, or a signed short-lived capability | [authorization](../surfaces/authorization.md) |

@@ -16,10 +16,10 @@ async def get_or_compute(key: str):
         fut = asyncio.ensure_future(_compute_and_store(key))
         inflight[key] = fut
         fut.add_done_callback(lambda _: inflight.pop(key, None))
-    return await fut
+    return await asyncio.shield(fut)
 ```
 
-The dict read and write have no `await` between them. `if key not in connections: connections[key] = await connect(key)` is the race.
+The dict read and write have no `await` between them. The `shield` matters: cancelling a task that is awaiting a future cancels that future too, so without it one caller's timeout would cancel the shared computation for every other waiter and leave the cache empty. With it the cancelled caller still gets `CancelledError`, and the computation finishes for the rest. `if key not in connections: connections[key] = await connect(key)` is the race.
 
 ## Hold The Lock Across The Decision
 

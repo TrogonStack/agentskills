@@ -41,7 +41,7 @@ History is bounded by the bucket's `history` setting; `get` returns the latest, 
 
 ## Streams As Claims
 
-A stream configured with `max_msgs_per_subject = 1`, `discard = new`, and `discard_new_per_subject = true` rejects a second publish to a subject that already holds a message. Publishing to `claims.<job-id>` is then a claim that exactly one publisher wins, with no header to carry. The discard-per-subject option is recent; confirm against the server version in use.
+A stream configured with `max_msgs_per_subject = 1`, `discard = new`, and `discard_new_per_subject = true` rejects a second publish to a subject that already holds a message. Publishing to `claims.<job-id>` is then a claim that exactly one publisher wins, with no header to carry. The discard-per-subject option arrived in nats-server 2.9.1 and is rejected unless `discard = new` and `max_msgs_per_subject` is set.
 
 The object store has no conditional put. Two writers to the same object name are last-writer-wins, and a KV entry beside the object is the claim.
 

@@ -53,4 +53,4 @@ Every other writer to that row must lock the same way.
 
 ## Serializable Retry
 
-Set the isolation with `sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")` as the first statement on the transaction, and retry the whole transaction, bounded, when the error's SQLSTATE (`e.as_database_error().and_then(|d| d.code())`) is `40001`.
+Set the isolation with `sqlx::query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")` as the first statement on the transaction, and retry the whole transaction, bounded, when the error's SQLSTATE (`e.as_database_error().and_then(|d| d.code())`) is `40001` or `40P01`. Retry `23505` only when the code can show the duplicate came from a value it chose after a read; otherwise it is a persistent error.

@@ -57,4 +57,4 @@ Running `BEGIN` and `FOR UPDATE` through `pool.query` sends each statement on wh
 
 ## Serializable Retry
 
-A transaction at `SERIALIZABLE` surfaces the conflict as an error whose `code` is `40001`. Wrap the whole transaction in a bounded loop that retries on that code only.
+A transaction at `SERIALIZABLE` surfaces the conflict as an error whose `code` is `40001`. Wrap the whole transaction in a bounded loop that retries on `40001` and `40P01`. Retry `23505` only when the code can show the duplicate came from a value it chose after a read; otherwise it is a persistent error.
