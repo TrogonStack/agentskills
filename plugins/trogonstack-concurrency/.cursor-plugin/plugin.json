@@ -1,0 +1,25 @@
+{
+  "name": "trogonstack-concurrency",
+  "displayName": "TrogonStack Concurrency",
+  "description": "Concurrency skills for finding and fixing time-of-check to time-of-use races in files, databases, caches, authorization, and distributed stores",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-concurrency",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "concurrency",
+    "toctou",
+    "race-condition"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "concurrency",
+    "toctou",
+    "race-condition"
+  ],
+  "skills": "./skills/"
+}
