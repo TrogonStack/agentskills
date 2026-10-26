@@ -2,6 +2,8 @@
 
 Spells the NATS KV and JetStream primitives from [distributed.md](../surfaces/distributed.md). The revision-guarded shape is stable across versions; the exact argument order and builder method names are what to confirm against the `async-nats` version in use.
 
+Read [references/systems/nats.md](../systems/nats.md) for what the store guarantees; this file covers how async-nats spells it.
+
 ## KV Update With Revision
 
 `update` takes the expected revision and fails on mismatch; `create` fails when the key already holds a live value.

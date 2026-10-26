@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) with psycopg 3. The SQL carries the condition; the cursor exposes `RETURNING` rows and `rowcount`.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how psycopg spells it.
+
 ## Upsert With Identity On Both Paths
 
 ```python

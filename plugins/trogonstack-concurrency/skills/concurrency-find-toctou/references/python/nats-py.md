@@ -2,6 +2,8 @@
 
 Spells the NATS KV and JetStream primitives from [distributed.md](../surfaces/distributed.md).
 
+Read [references/systems/nats.md](../systems/nats.md) for what the store guarantees; this file covers how nats-py spells it.
+
 ## KV Update With Revision
 
 `update` takes the revision you read as `last`; `create` fails when the key already holds a live value.

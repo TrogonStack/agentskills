@@ -117,6 +117,8 @@ The `SELECT`, the write it gates, the isolation level in effect, and whether a c
 
 ## Library Files
 
+For what the store itself guarantees, read [postgres](../systems/postgres.md), [mysql](../systems/mysql.md), or [sqlite](../systems/sqlite.md) first.
+
 - TypeScript: [node-postgres](../typescript/node-postgres.md), [prisma](../typescript/prisma.md), [drizzle](../typescript/drizzle.md)
 - Rust: [sqlx](../rust/sqlx.md)
 - Elixir: [ecto](../elixir/ecto.md)

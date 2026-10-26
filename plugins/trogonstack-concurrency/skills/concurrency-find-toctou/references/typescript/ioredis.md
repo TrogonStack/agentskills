@@ -2,6 +2,8 @@
 
 Spells the Redis primitives from [cache.md](../surfaces/cache.md). The server evaluates `NX` and the Lua script atomically; the client only passes them through.
 
+Read [references/systems/redis.md](../systems/redis.md) for what the store guarantees; this file covers how ioredis spells it.
+
 ## Lease For Cross-Process Single-Flight
 
 The reply is `"OK"` for the winner and `null` for everyone else.

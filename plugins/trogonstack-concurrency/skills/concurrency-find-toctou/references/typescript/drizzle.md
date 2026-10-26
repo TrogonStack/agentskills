@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) with Drizzle ORM on Postgres. The unique index must be declared in the table schema for `onConflict` to have a target.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how Drizzle spells it.
+
 ## Find Or Create
 
 ```ts

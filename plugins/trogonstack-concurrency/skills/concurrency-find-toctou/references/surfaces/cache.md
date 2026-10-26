@@ -75,6 +75,8 @@ The key, the TTL, whether the fill path dedupes in-process and across processes,
 
 ## Library Files
 
+For what the store itself guarantees, read [redis](../systems/redis.md) first.
+
 - TypeScript: [event-loop](../typescript/event-loop.md) for single-flight, [ioredis](../typescript/ioredis.md) for the lease
 - Rust: [moka-dashmap](../rust/moka-dashmap.md)
 - Elixir: [ets](../elixir/ets.md), [redix](../elixir/redix.md)

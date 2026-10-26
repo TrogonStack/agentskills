@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md). The SQL carries the condition; the package exposes `RETURNING` through `QueryRowContext` and the rowcount through `RowsAffected`.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how `database/sql` spells it. On MySQL, read [references/systems/mysql.md](../systems/mysql.md) instead.
+
 ## Upsert With Identity On Both Paths
 
 ```go

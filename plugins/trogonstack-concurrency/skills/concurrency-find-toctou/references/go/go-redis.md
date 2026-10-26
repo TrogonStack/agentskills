@@ -2,6 +2,8 @@
 
 Spells the Redis primitives from [cache.md](../surfaces/cache.md). The server evaluates `NX` and the Lua script atomically.
 
+Read [references/systems/redis.md](../systems/redis.md) for what the store guarantees; this file covers how go-redis spells it.
+
 ## Lease For Cross-Process Single-Flight
 
 `SetNX` returns `true` only for the winner.

@@ -106,9 +106,23 @@ Read [references/surfaces/distributed.md](references/surfaces/distributed.md) wh
 
 Read [references/surfaces/in-process.md](references/surfaces/in-process.md) when the check and the act are in the same process but separated by an `await`, a message to another process, or a second call into the same server.
 
+## Systems
+
+Each system file states what the store itself guarantees, independent of the client library: its isolation or execution model, the writes that carry a condition, the locks it offers, and what does not serialize despite looking like it does.
+
+Read [references/systems/postgres.md](references/systems/postgres.md) when the state lives in PostgreSQL: isolation levels, `ON CONFLICT` arbiters, `FOR UPDATE` and `FOR NO KEY UPDATE`, advisory locks, `40001`.
+
+Read [references/systems/mysql.md](references/systems/mysql.md) when the state lives in MySQL or InnoDB: snapshot versus locking reads, gap locks on missing rows, `ON DUPLICATE KEY UPDATE`, affected rows versus found rows, `GET_LOCK`.
+
+Read [references/systems/sqlite.md](references/systems/sqlite.md) when the state lives in SQLite: one writer, `BEGIN IMMEDIATE` versus deferred, `SQLITE_BUSY` after a read, WAL mode, `:memory:` per connection.
+
+Read [references/systems/redis.md](references/systems/redis.md) when the state lives in Redis: single-command atomicity, `SET NX PX`, `WATCH` and `EXEC`, scripts, leases versus locks, failover, cluster slots.
+
+Read [references/systems/nats.md](references/systems/nats.md) when the state lives in NATS: expected sequence headers, `Nats-Msg-Id`, KV revisions, streams as claims, at-least-once consumers and their configuration.
+
 ## Libraries
 
-After the surface reference, read the file for the library under review. Each covers one library, organized by the surfaces it touches.
+After the surface and system references, read the file for the library under review. Each covers one library and spells what the system file guarantees, organized by the surfaces it touches.
 
 - TypeScript: [node-fs](references/typescript/node-fs.md), [node-postgres](references/typescript/node-postgres.md), [prisma](references/typescript/prisma.md), [drizzle](references/typescript/drizzle.md), [ioredis](references/typescript/ioredis.md), [nats-js](references/typescript/nats-js.md), [event-loop](references/typescript/event-loop.md).
 - Rust: [std-fs](references/rust/std-fs.md), [sqlx](references/rust/sqlx.md), [tokio](references/rust/tokio.md), [moka-dashmap](references/rust/moka-dashmap.md), [async-nats](references/rust/async-nats.md), [atomics](references/rust/atomics.md).

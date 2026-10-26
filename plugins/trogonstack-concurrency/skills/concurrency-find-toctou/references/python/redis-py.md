@@ -2,6 +2,8 @@
 
 Spells the Redis primitives from [cache.md](../surfaces/cache.md). The server evaluates `nx` and the Lua script atomically.
 
+Read [references/systems/redis.md](../systems/redis.md) for what the store guarantees; this file covers how redis-py spells it.
+
 ## Lease For Cross-Process Single-Flight
 
 `set(..., nx=True)` returns `True` only for the winner.

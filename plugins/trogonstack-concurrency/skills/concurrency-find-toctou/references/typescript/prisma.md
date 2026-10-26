@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) with Prisma Client. The constraint still has to exist in the schema as `@unique` or `@@unique`; Prisma does not add one for `upsert`.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how Prisma spells it.
+
 ## Find Or Create
 
 `upsert` with an empty `update` is the atomic find-or-create against a unique field.

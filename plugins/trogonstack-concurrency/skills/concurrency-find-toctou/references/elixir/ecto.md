@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) and the transactional dedupe from [distributed.md](../surfaces/distributed.md).
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how Ecto spells it.
+
 ## Find Or Create
 
 The upsert returns the id on both paths. `unique_constraint/3` in a changeset only translates the database error into a changeset error; without the unique index in a migration it prevents nothing.

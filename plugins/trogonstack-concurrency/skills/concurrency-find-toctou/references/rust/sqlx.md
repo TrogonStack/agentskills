@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md). The SQL carries the condition; sqlx exposes `RETURNING` rows and `rows_affected()`.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how sqlx spells it.
+
 ## Upsert With Identity On Both Paths
 
 ```rust

@@ -2,6 +2,8 @@
 
 Spells the NATS KV and JetStream primitives from [distributed.md](../surfaces/distributed.md) with the `jetstream` package of nats.go v2.
 
+Read [references/systems/nats.md](../systems/nats.md) for what the store guarantees; this file covers how nats.go spells it.
+
 ## KV Update With Revision
 
 `Update` takes the revision you read and fails on mismatch; `Create` fails when the key already holds a live value.

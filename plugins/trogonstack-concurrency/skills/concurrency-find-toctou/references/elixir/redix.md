@@ -2,6 +2,8 @@
 
 Spells the Redis primitives from [cache.md](../surfaces/cache.md). Redix passes commands through unchanged, so the server evaluates `NX` and the Lua script atomically.
 
+Read [references/systems/redis.md](../systems/redis.md) for what the store guarantees; this file covers how Redix spells it.
+
 ## Lease For Cross-Process Single-Flight
 
 The reply is `"OK"` for the winner and `nil` for everyone else.

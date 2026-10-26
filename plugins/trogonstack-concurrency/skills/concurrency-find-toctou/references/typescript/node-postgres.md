@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) with the `pg` client. The SQL carries the condition; the client only exposes the result.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how node-postgres spells it.
+
 ## Upsert With Identity On Both Paths
 
 ```ts

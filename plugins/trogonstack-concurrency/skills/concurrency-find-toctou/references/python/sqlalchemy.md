@@ -2,6 +2,8 @@
 
 Spells the database primitives from [database.md](../surfaces/database.md) with SQLAlchemy 2 and the Postgres dialect.
 
+Read [references/systems/postgres.md](../systems/postgres.md) for what the store guarantees; this file covers how SQLAlchemy spells it. On MySQL, read [references/systems/mysql.md](../systems/mysql.md) instead.
+
 ## Upsert With Identity On Both Paths
 
 ```python
