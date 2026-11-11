@@ -7,3 +7,5 @@ publish gateway.rpc.v1.health
 subscribe gateway.rpc.v1.health
 publish gateway.work.v1.installation_sync
 deliver _INBOX.generated
+publish gateway.ingress.raw.slack.v1.event_callback
+subscribe gateway.ingress.raw.slack.v1.>

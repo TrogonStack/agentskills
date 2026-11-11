@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-nats",
   "version": "0.2.0",
-  "description": "NATS channel design across Core NATS and JetStream, including subjects, streams, consumers, tenancy, authorization, and migrations",
+  "description": "NATS channel design across Core NATS and JetStream, including AsyncAPI contracts, subjects, streams, consumers, tenancy, authorization, and migrations",
   "author": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"

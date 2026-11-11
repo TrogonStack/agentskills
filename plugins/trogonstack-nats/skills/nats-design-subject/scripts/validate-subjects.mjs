@@ -1,15 +1,24 @@
 #!/usr/bin/env node
 
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
 
+const markdownTag = "nats-subjects";
+const kinds = new Set(["publish", "subscribe", "stream", "consumer", "deliver"]);
 const usage = `Usage:
   node validate-subjects.mjs --subject <subject> [--kind publish|subscribe|stream|consumer|deliver]
   node validate-subjects.mjs --file <path>
+  node validate-subjects.mjs --root <directory>
 
-A file contains one entry per line: <kind> <subject>.
+A legacy fixture file contains one entry per line: <kind> <subject>.
+Markdown files contain YAML-like records in fenced blocks tagged with ${markdownTag}:
+
+\`\`\`yaml ${markdownTag}
+- kind: publish
+  subject: events.created
+\`\`\`
+
 Blank lines and lines beginning with # are ignored.`;
-
-const kinds = new Set(["publish", "subscribe", "stream", "consumer", "deliver"]);
 
 function fail(message) {
   console.error(`error: ${message}`);
@@ -55,14 +64,149 @@ function validate(subject, kind, location) {
   }
 }
 
+function unquote(value) {
+  const trimmed = value.trim();
+  if (trimmed.length >= 2) {
+    const first = trimmed[0];
+    const last = trimmed.at(-1);
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return trimmed.slice(1, -1);
+    }
+  }
+  return trimmed;
+}
+
+function parseLegacyFixture(content, file) {
+  let entries = 0;
+  for (const [index, line] of content.split(/\r?\n/).entries()) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+    const separator = trimmed.indexOf(" ");
+    if (separator < 1) {
+      fail(`${file}:${index + 1}: expected '<kind> <subject>'`);
+      continue;
+    }
+    const kind = trimmed.slice(0, separator);
+    const subject = trimmed.slice(separator + 1).trim();
+    validate(subject, kind, `${file}:${index + 1}`);
+    entries += 1;
+  }
+  return entries;
+}
+
+function parseTaggedBlock(lines, file, openingLine) {
+  let currentKind;
+  let awaitingSubject = false;
+  let entries = 0;
+
+  for (const [index, line] of lines.entries()) {
+    const location = `${file}:${openingLine + index + 1}`;
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    const kindMatch = trimmed.match(/^(?:-\s*)?kind:\s*([A-Za-z-]+)\s*$/);
+    if (kindMatch) {
+      if (awaitingSubject) {
+        fail(`${location}: previous kind has no subject`);
+      }
+      currentKind = kindMatch[1];
+      awaitingSubject = true;
+      continue;
+    }
+
+    const subjectMatch = trimmed.match(/^subject:\s*(.+)$/);
+    if (subjectMatch) {
+      if (!currentKind) {
+        fail(`${location}: subject must follow a kind`);
+      } else {
+        validate(unquote(subjectMatch[1]), currentKind, location);
+        entries += 1;
+        awaitingSubject = false;
+      }
+      continue;
+    }
+
+    fail(`${location}: expected 'kind: <kind>' or 'subject: <subject>'`);
+  }
+
+  if (awaitingSubject) {
+    fail(`${file}:${openingLine}: final kind has no subject`);
+  }
+  if (entries === 0) {
+    fail(`${file}:${openingLine}: tagged block has no subject entries`);
+  }
+  return entries;
+}
+
+function parseMarkdown(content, file) {
+  const lines = content.split(/\r?\n/);
+  let inFence = false;
+  let info = "";
+  let openingLine = 0;
+  let body = [];
+  let entries = 0;
+
+  for (const [index, line] of lines.entries()) {
+    const fence = line.match(/^```(.*)$/);
+    if (!inFence && fence) {
+      inFence = true;
+      info = fence[1].trim();
+      openingLine = index + 1;
+      body = [];
+      continue;
+    }
+    if (inFence && line.startsWith("```")) {
+      if (info.split(/\s+/).includes(markdownTag)) {
+        entries += parseTaggedBlock(body, file, openingLine);
+      }
+      inFence = false;
+      info = "";
+      body = [];
+      continue;
+    }
+    if (inFence) {
+      body.push(line);
+    }
+  }
+
+  if (inFence) {
+    fail(`${file}:${openingLine}: fenced block is not closed`);
+  }
+  return entries;
+}
+
+async function markdownFiles(root) {
+  const details = await stat(root);
+  if (details.isFile()) {
+    return root.endsWith(".md") ? [root] : [];
+  }
+  const files = [];
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const path = join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await markdownFiles(path));
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      files.push(path);
+    }
+  }
+  return files;
+}
+
 const args = process.argv.slice(2);
 let file;
+let root;
 let subject;
 let kind = "subscribe";
 for (let index = 0; index < args.length; index += 1) {
   const argument = args[index];
   if (argument === "--file") {
     file = args[++index];
+  } else if (argument === "--root") {
+    root = args[++index];
   } else if (argument === "--subject") {
     subject = args[++index];
   } else if (argument === "--kind") {
@@ -77,32 +221,28 @@ for (let index = 0; index < args.length; index += 1) {
   }
 }
 
-if (!file && !subject) {
+if (!file && !root && !subject) {
   console.error(usage);
   process.exit(1);
 }
 
+let entries = 0;
 if (subject) {
   validate(subject, kind, "command line");
+  entries = 1;
+} else if (file) {
+  const content = await readFile(file, "utf8");
+  entries = file.endsWith(".md") ? parseMarkdown(content, file) : parseLegacyFixture(content, file);
 } else {
-  const lines = (await readFile(file, "utf8")).split(/\r?\n/);
-  for (const [index, line] of lines.entries()) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-    const separator = trimmed.indexOf(" ");
-    if (separator < 1) {
-      fail(`${file}:${index + 1}: expected '<kind> <subject>'`);
-      continue;
-    }
-    const lineKind = trimmed.slice(0, separator);
-    const lineSubject = trimmed.slice(separator + 1).trim();
-    validate(lineSubject, lineKind, `${file}:${index + 1}`);
+  for (const path of await markdownFiles(root)) {
+    entries += parseMarkdown(await readFile(path, "utf8"), path);
   }
 }
 
+if (entries === 0) {
+  fail(`no subject entries found${root ? ` under ${root}` : ""}`);
+}
 if (process.exitCode) {
   process.exit(process.exitCode);
 }
-console.log("subjects valid");
+console.log(`subjects valid (${entries} entr${entries === 1 ? "y" : "ies"})`);

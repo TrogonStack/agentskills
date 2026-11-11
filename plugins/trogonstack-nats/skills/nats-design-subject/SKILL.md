@@ -52,7 +52,7 @@ Keep tenant identity out of normal tenant-local subjects when the account alread
 
 ### Write the channel contract
 
-Record one logical channel before creating subjects or streams:
+Record one logical channel before creating subjects or streams. Prefer the AsyncAPI 3.0 document in [gateway-asyncapi.yaml](references/gateway-asyncapi.yaml) for application send and receive behavior. The compact record below is review metadata, not a replacement wire specification:
 
 ```yaml
 id: gateway.ingress.raw.github.v1
@@ -133,6 +133,8 @@ Select the retention policy deliberately:
 
 Define storage, replicas, discard behavior, duplicate windows, maximum message size, and retention. Define consumers separately with durable identity, subject filters, pull or push delivery, acknowledgement policy, acknowledgement wait or backoff, maximum delivery attempts, and maximum pending acknowledgements.
 
+Create a consumer only when a reader needs durable delivery. A durable event stream may have zero, one, or many consumers. The producer's event contract does not imply a consumer.
+
 Keep stream subject filters disjoint unless overlap is intentional and documented. Work-queue consumers must not have overlapping filters. Use a subject filter for routing. Do not assume arbitrary header predicates are available in JetStream consumers.
 
 ### Define ownership and management
@@ -143,7 +145,7 @@ A single control-plane owner must provision each stream and consumer. The manage
 logical channel
   -> subject or subject filter
   -> Core or JetStream transport
-  -> stream and consumers, if durable
+  -> stream and any provisioned consumers
   -> owner
   -> desired state and observed state
   -> retention, backlog, and last error
@@ -198,16 +200,19 @@ Before presenting the design:
 - Verify that request replies use a generated inbox or an explicitly documented alternative.
 - Check stream and consumer filter overlap.
 - Check permissions against the actual subject and JetStream control-plane requirements.
+- Mark machine-readable Markdown fixtures with the `nats-subjects` info tag. For example, use ` ```yaml nats-subjects` and put one `kind` and `subject` pair in each YAML item. Ordinary examples stay untagged.
 - Run the bundled subject validator when it is available:
 
 ```bash
-node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs --file plugins/trogonstack-nats/skills/nats-design-subject/references/subject-fixtures.txt
+node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs --root plugins/trogonstack-nats/skills/nats-design-subject
 ```
 
 ## References
 
 - [Channel contracts and Core versus JetStream](references/channel-contract.md)
-- [Subject validation fixtures](references/subject-fixtures.txt)
+- [AsyncAPI channel template](references/gateway-asyncapi.yaml)
+- [Tagged subject validation examples](references/channel-contract.md#gateway-example)
+- [Legacy CLI subject fixture](references/subject-fixtures.txt)
 - [Subject patterns](references/patterns.md)
 - [JetStream streams and consumers](references/jetstream.md)
 - [Subject anti-patterns](references/anti-patterns.md)
