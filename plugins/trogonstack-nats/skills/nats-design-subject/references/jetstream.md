@@ -4,6 +4,14 @@ This reference covers subject patterns specific to NATS JetStream (streams, cons
 
 **Related references**: For core subject hierarchy patterns see [patterns.md](patterns.md). For stream-level security and tenant isolation see [security.md](security.md). For common design mistakes see [anti-patterns.md](anti-patterns.md).
 
+The configuration blocks in this reference are illustrative. Confirm field names, server support, and client behavior against the NATS server version and client library used by the deployment.
+
+## Core NATS and JetStream
+
+Core NATS delivers to subscribers that are connected at publish time and does not replay messages. JetStream stores messages in a stream and delivers them through stateful consumers with acknowledgements and redelivery.
+
+Use Core NATS for request-reply and best-effort live signals. Use JetStream for replayable events and durable work. If live observers also need an event, let them subscribe to the event subject while a JetStream consumer remains the correctness path. Do not silently switch a request subject between Core NATS and JetStream.
+
 ## JetStream Subject Basics
 
 ### Streams vs Publishers
@@ -39,7 +47,7 @@ consumer: {
 
 ## Pattern 1: Simple Domain Stream
 
-**Use when**: Single domain, simple event types, single consumer.
+**Use when**: One retention and ownership policy covers the domain and its consumers.
 
 **Stream Definition**:
 ```nats
@@ -76,7 +84,7 @@ consumer: {
 # Consumer 3: Regional (US West)
 consumer: {
   name: "us-west-orders"
-  filter_subject: "orders.>.us-west.>" # All order actions in US West
+  filter_subject: "orders.*.us-west.>" # All order actions in US West
 }
 ```
 
@@ -84,7 +92,7 @@ consumer: {
 
 ## Pattern 2: Multi-Domain Streams (One per Domain)
 
-**Use when**: Clear domain boundaries, separate scaling needs, independent retention.
+**Use when**: Streams have separate retention, scaling, replication, ownership, or consumer topologies.
 
 **Stream Definitions**:
 ```nats
@@ -334,20 +342,22 @@ stream: {
 consumer: {
   name: "transform-by-region"
   filter_subject: "orders.created.>" # Source
-  deliver_subject: "orders.region-{region}.created.>"  # Transform target
+  deliver_subject: "orders.transform.input"  # Concrete push destination
 }
 ```
 
 **Transform Flow**:
 ```
 Input: orders.created.us-west.order-123
-  ↓ (Consumer with subject transform)
-Output: orders.region-us-west.created.order-123
+  ↓ consumer delivers to orders.transform.input
+Transform service publishes: orders.region-us-west.created.order-123
 
 Input: orders.created.eu-central.order-456
-  ↓
-Output: orders.region-eu-central.created.order-456
+  ↓ consumer delivers to orders.transform.input
+Transform service publishes: orders.region-eu-central.created.order-456
 ```
+
+A push consumer delivery subject is a concrete subject. Wildcards and `{region}` placeholders do not transform a delivery subject. Use a server-supported stream subject transform for the target server version or perform the transform in a service that publishes the derived subject.
 
 **Use Cases**:
 - Normalize subject hierarchies
@@ -456,7 +466,7 @@ stream: {
 
 ## High-Volume Subject Design (IoT)
 
-**Challenge**: Device telemetry generates 1M+ events/sec with high cardinality device IDs.
+**Challenge**: Device telemetry generates high event volume with high-cardinality device IDs.
 
 **Subject Design**:
 ```
@@ -487,7 +497,7 @@ stream: {
 # Consumer 1: Temperature metrics only
 consumer: {
   name: "temp-aggregator"
-  filter_subject: "devices.telemetry.us-west.>.temperature"
+  filter_subject: "devices.telemetry.us-west.*.temperature"
 }
 
 # Consumer 2: Specific device
@@ -534,7 +544,7 @@ orders.created.order-1
 orders.updated.order-1      ← Same order-id, maintains ordering
 orders.shipped.order-1
 
-Consumer: filter_subject: "orders.>order-1"
+Consumer: filter_subject: "orders.*.order-1"
 Reads in insertion order: created → updated → shipped
 ```
 
@@ -558,7 +568,7 @@ Payload: { orderId: "order-123", total: 99.99, ... }
 - Subject stays readable (not bloated)
 - Headers for filtering/metadata
 - Payload for business data
-- Supports header-based filtering in consumers (future)
+- Consumer filters match subjects. Inspect message headers in application code when routing on metadata.
 
 ---
 
@@ -571,10 +581,11 @@ When designing JetStream subjects:
 - [ ] **Retention Policy**: max_age set appropriately per domain?
 - [ ] **Storage Strategy**: File vs memory decided per workload?
 - [ ] **Ordering Semantics**: Aggregate ID in subject for ordered consumers?
-- [ ] **Headers Used**: Heavy data in headers, not subject?
+- [ ] **Headers Used**: Metadata is in headers or payload instead of an unbounded subject?
 - [ ] **Mirroring**: Cross-region streams planned?
-- [ ] **Scaling Plan**: Stream per region/tenant/domain as needed?
-- [ ] **Backpressure**: flow_control enabled for slow consumers?
+- [ ] **Scaling Plan**: Stream boundaries follow retention, ownership, and consumer topology?
+- [ ] **Consumer Semantics**: Pull or push, ack policy, redelivery, backoff, and max pending are explicit?
+- [ ] **Backpressure**: Pull limits or flow control are configured for slow consumers?
 - [ ] **Monitoring**: Subjects planned for stream/consumer metrics?
 
 ---

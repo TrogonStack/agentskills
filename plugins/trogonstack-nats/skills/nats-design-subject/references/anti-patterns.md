@@ -23,12 +23,12 @@ orders.created.us-west.order-789
 - Kills hierarchical filtering
 - Subscriber must use wildcard: `orders.*.created.us-west.>` (matches thousands)
 - Cannot efficiently say "all orders created in US West"
-- High memory usage for wildcard subscriptions
+- Makes the intended subscriber filters harder to express
 
 **Detection**:
 ```nats
 # If you're writing subscribers like this, you have the problem:
-subscribers: orders.*.created.>      # Wildcard in middle = high-cardinality left
+subscribers: orders.*.created.>      # Wildcard in middle = high-cardinality identifiers early in the subject
 ```
 
 **Fix**:
@@ -57,7 +57,7 @@ Phase 3 (week 5):
 
 **Real Example (E-Commerce)**:
 ```
-BEFORE (❌ high-cardinality left):
+BEFORE (❌ high-cardinality identifiers early in the subject):
 orders.12345678.created       (customer ID on left)
 orders.12345678.shipped       (must filter by customer first)
 orders.12345679.created       (10 million customers = 10 million prefixes)
@@ -124,7 +124,7 @@ admins.us-west.updated.admin-456         (L2=region)
 
 Frustration: Subscriber needs:
 users.*.updated.>          # Some have profile in L2
-users.>.updated.>          # Others don't
+users.*.updated.>          # Others don't
 
 CONSISTENT ORDERING (✓):
 users.profile.updated.us-west.user-123   (always: domain.context.action.region.id)
@@ -133,7 +133,7 @@ users.admin.updated.us-west.user-456     (always same order)
 Subscriber:
 users.profile.updated.us-west.>
 users.admin.updated.us-west.>
-users.>.updated.us-west.>                # All same ordering!
+users.*.updated.us-west.>                # All same ordering!
 ```
 
 ---
@@ -145,7 +145,7 @@ users.>.updated.us-west.>                # All same ordering!
 ✗ BAD (9 segments):
 orders.created.v1.us-west.us-west-2a.customer-123.order-456.line-item-789.warehouse-101
 
-✓ GOOD (4-5 segments):
+✓ GOOD (bounded subject with details in the message):
 orders.created.us-west.order-456
   (other details in message headers/payload)
 ```
@@ -173,7 +173,7 @@ echo "orders.created.v1.us-west.customer.order-456.line-item.warehouse" | tr '.'
 **Fix**:
 1. Move low-cardinality data to message headers/properties
 2. Use JetStream consumer filters for fine-grained routing
-3. Keep subjects to 4-5 segments max
+3. Keep subjects within the project segment budget. Move details that do not need subject filtering into headers or payloads.
 
 **Better Approach Using JetStream**:
 ```
@@ -388,10 +388,12 @@ grep '[A-Z]' subjects.txt
 grep '_' subjects.txt
 ```
 
-**Standard**:
-- All lowercase
-- Use hyphens, never underscores
-- Never use CamelCase or snake_case in segments
+**Project convention example**:
+- Use lowercase segments
+- Use hyphens when separating words
+- Keep one casing and separator policy across the hierarchy
+
+NATS permits underscores and case-sensitive names. Enforce a stricter style only when the project has chosen it.
 
 **Real Example**:
 ```
@@ -429,7 +431,7 @@ orders.created.eu-central.order-456
 
 // Subscribers documented:
 Dashboard: orders.>                    (all regional order events)
-Region monitor: orders.>.us-west.>     (all orders in region)
+Region monitor: orders.*.us-west.>     (all orders in region)
 Created events only: orders.created.>  (all creations, all regions)
 ```
 
@@ -451,8 +453,8 @@ For each domain, document:
 2. Subscriber patterns:
    - All events: domain.>
    - Domain-specific: domain.action.>
-   - Scope-specific: domain.>.scope.>
-   - Specific resource: domain.>.scope.resource-id
+   - Scope-specific: domain.*.scope.>
+   - Specific resource: domain.*.scope.resource-id
 
 3. Validate each pattern works and is efficient
 ```
@@ -474,7 +476,7 @@ Planned subscribers:
 - All telemetry: devices.telemetry.>
 - Regional: devices.telemetry.us-west.>
 - Specific device: devices.telemetry.us-west.sensor-456.>
-- Specific metric: devices.telemetry.>.>.temperature
+- Specific metric: devices.telemetry.*.*.temperature
 ```
 
 ---
@@ -608,7 +610,7 @@ Using `{tenant}.>` as the main isolation boundary in a system that needs strict 
 ✓ Action/event type is always L2 unless a fixed namespace token is required
 ✓ No IDs or UUIDs before action/scope
 ✓ Consistent casing (lowercase) and separators (hyphens)
-✓ Max 5-6 segments per subject
+✓ Subject depth follows the project convention and stays within NATS limits
 ✓ Subscriber patterns documented
 ✓ No two wildcard subscriptions can match the same subject
 ✓ IDs at consistent positions across all subject types

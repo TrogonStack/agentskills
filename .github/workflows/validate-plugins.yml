@@ -27,3 +27,7 @@ jobs:
         run: npm install --no-save ajv@8 ajv-formats@3
       - name: Validate plugin registrations
         run: node scripts/validate-plugins.mjs
+      - name: Validate NATS subject fixtures
+        run: |
+          node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs \
+            --file plugins/trogonstack-nats/skills/nats-design-subject/references/subject-fixtures.txt

@@ -1,7 +1,7 @@
 {
   "name": "trogonstack-nats",
   "displayName": "TrogonStack NATS",
-  "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
+  "description": "NATS channel design across Core NATS and JetStream, including subjects, streams, consumers, tenancy, authorization, and migrations",
   "version": "0.2.0",
   "author": {
     "name": "TrogonStack"

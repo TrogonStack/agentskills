@@ -62,7 +62,7 @@ Shipping Service subscribes to:
 
 Order Dashboard subscribes to:
 - orders.>                      (all order events, any region)
-- orders.>.us-west.>            (regional dashboard)
+- orders.*.us-west.>            (regional dashboard)
 ```
 
 ### Multi-Region Deployment
@@ -127,10 +127,10 @@ Temperature Alerting:
 - devices.temperature.>              (all temperatures, any region)
 
 Regional Aggregator:
-- devices.>.us-west.>                (all metrics in region)
+- devices.*.us-west.>                (all metrics in region)
 
 Specific Sensor Debug:
-- devices.>.us-west.sensor-456       (all metrics from one sensor)
+- devices.*.us-west.sensor-456       (all metrics from one sensor)
 ```
 
 ### Aggregation Workflow
@@ -233,7 +233,7 @@ Account: {tenant}
 Subject: {domain}.{action}.{region}.{id}
 
 EU customers: events.*.eu-central.> in the tenant account
-US customers: events.*.us-*.> in the tenant account
+US customers: events.*.us-east.> in the tenant account
 ```
 
 For authorization configuration see [security.md](security.md) Pattern 1 (Tenant Isolation with NATS Accounts) and Pattern 4 (Cross-Tenant Analytics). For account-scoped stream setup see [jetstream.md](jetstream.md) Pattern 3.
@@ -412,10 +412,10 @@ For tenant isolation authorization see [security.md](security.md) Pattern 5 (AI 
 
 ## Comparison Matrix
 
-| Use Case | Subject Depth | Domain Count | Subscriber Count | Throughput | Retention |
+| Use Case | Subject Depth | Domain Count | Subscriber Count | Sizing input | Retention |
 |----------|---|---|---|---|---|
-| Microservices | 4 | 3-10 | 50-100 | 10k-100k/sec | 30d-7y |
-| IoT | 4 | 1 (many dimensions) | 20-50 | 1M+/sec | 1-7 days |
-| Multi-Tenant SaaS | 4 | 3-8 | 50-200 | 100k-1M/sec | 30-90d |
-| Event Sourcing | 4 | 5-20 | 100+ | 10k-100k/sec | forever |
-| Agentic AI | 4 | 2-3 | 100-1000+ | 10k-100k/sec | 30-365d |
+| Microservices | 4 | 3-10 | 50-100 | Request rate and latency | 30d-7y |
+| IoT | 4 | 1 (many dimensions) | 20-50 | Device rate and payload size | 1-7 days |
+| Multi-Tenant SaaS | 4 | 3-8 | 50-200 | Tenant and consumer load | 30-90d |
+| Event Sourcing | 4 | 5-20 | 100+ | Replay and retention load | forever |
+| Agentic AI | 4 | 2-3 | 100-1000+ | Task rate and worker concurrency | 30-365d |

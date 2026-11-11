@@ -18,6 +18,7 @@ Use tenant prefixes in subjects only when:
 ## Subject-Based Authorization Basics
 
 NATS authorization works by allowing/denying subjects via permissions. Your subject hierarchy directly enables or blocks access.
+Keep `$SYS`, `$JS`, `$KV`, `$O`, `$SRV`, and `_INBOX` under explicit control. A broad `>` permission includes JetStream control subjects and can grant more authority than the application needs.
 
 ### Permission Types
 
@@ -34,9 +35,8 @@ permissions:
 
 ### Wildcard Rules
 
-- `>` matches any number of segments (multi-level)
+- `>` matches one or more trailing tokens and must be the final token
 - `*` matches exactly one segment
-- Applied left-to-right
 
 ```nats
 Subject: orders.created.us-west.order-123
@@ -46,7 +46,7 @@ Matches:
 ✓ orders.created.>            (any created order)
 ✓ orders.created.us-west.>    (any created in region)
 ✓ orders.*.us-west.>          (any action in region)
-✗ orders.*.>                  (order action, but only one level)
+✓ orders.*.>                  (any action and its remaining tokens)
 ```
 
 ---
@@ -76,7 +76,7 @@ payments.authorized.eu-central.payment-101
 ```nats
 # ACME Corp user in account acme-corp
 user acme-admin {
-  username: "admin@acme-corp.com"
+  username: acme-admin
   permissions {
     publish {
       allow: ["orders.>", "payments.>"]
@@ -89,7 +89,7 @@ user acme-admin {
 
 # StartUp Inc user in account startup-inc
 user startup-admin {
-  username: "admin@startup-inc.com"
+  username: startup-admin
   permissions {
     publish {
       allow: ["orders.>", "payments.>"]
@@ -294,7 +294,7 @@ user system-service {
 **Effectiveness**: ✓ Excellent. Clean separation of concerns.
 
 **Pros**:
-- Tenant subjects remain simple (4-5 segments)
+- Tenant-local subjects remain short and follow the project segment convention
 - Admin operations completely separate
 - Platform observability isolated
 - Tenant accounts do not need broad platform-admin credentials

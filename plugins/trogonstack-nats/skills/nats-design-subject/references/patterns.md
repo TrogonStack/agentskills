@@ -1,6 +1,6 @@
 # NATS Subject Hierarchy Patterns
 
-This reference covers 6 proven subject hierarchy patterns and 5 segmentation strategies for different use cases.
+This reference gives reusable subject hierarchy patterns and segmentation strategies for common NATS designs.
 
 **Related references**: For authorization on these patterns see [security.md](security.md). For JetStream stream design see [jetstream.md](jetstream.md). For common mistakes see [anti-patterns.md](anti-patterns.md).
 
@@ -27,7 +27,7 @@ inventory.>           # All inventory events
 
 **Best For**: E-commerce backend, simple microservices, IoT with single location.
 
-**Scaling**: Works for 10k-100k events/sec with moderate subscriber count. Add region/tenant at layer 3 when scaling.
+**Scaling**: Start with one domain subject and add region or tenant only when a subscriber or authorization boundary requires it. Benchmark throughput and subscriber counts for the target deployment.
 
 ---
 
@@ -50,14 +50,14 @@ Examples:
 orders.>                    # All orders (any region)
 orders.created.>            # All order creations (any region)
 orders.created.us-west.>    # Order creations in US West
-orders.>.us-west.>          # All order actions in US West (less efficient)
+orders.*.us-west.>          # All order actions in US West
 ```
 
 **Best For**: Global e-commerce, distributed IoT networks, compliance-required data residency.
 
 **Patterns**:
-- Region as L3: Efficient regional filtering
-- Region as L4: Less efficient, use L3 for regional subscriptions
+- Region as L3: Makes the regional filter direct
+- Region as L4: Requires a one-token wildcard before the region
 
 ---
 
@@ -128,14 +128,14 @@ acme-corp.orders.created.order-123
 
 ```
 Request Subject: {service}.request.{request-type}
-Reply Subject: {service}.reply.{correlation-id}
+Reply-To: _INBOX.<generated-by-client>
 
 Examples:
 orders.request.get-order
 orders.request.calculate-total
 payments.request.authorize
 
-Reply inbox: _INBOX.{auto-generated-id}
+The client creates a unique `_INBOX.<generated>` reply subject and sends it as the request reply-to.
 ```
 
 **Implementation**:
@@ -228,7 +228,7 @@ devices.telemetry.2026-01-24.sensor-456
 devices.telemetry.2026-01-23.sensor-456
 
 Subscriber: devices.telemetry.2026-01-24.> (current day only)
-Subscriber: devices.telemetry.>.>           (all days)
+Subscriber: devices.telemetry.*.>           (all days)
 ```
 
 **Best For**: API evolution, device telemetry, multi-version deployments.
@@ -298,8 +298,8 @@ Organize by geographic region:
 **When**: Global systems, data residency requirements, compliance.
 
 **Subscribers**:
-- `orders.>.us-west.>` - Orders in US West
-- `orders.>.eu-central.>` - Orders in EU Central
+- `orders.*.us-west.>` - Orders in US West
+- `orders.*.eu-central.>` - Orders in EU Central
 - `orders.>` - All orders globally
 
 **Use Case**: GDPR compliance (EU data stays in EU).
@@ -327,7 +327,7 @@ sensors.humidity.us-west.sensor-456
 
 **Subscribers**:
 - `sensors.temperature.us-west.>` - All temperature in US West
-- `sensors.>.us-west.sensor-456` - All metrics from specific sensor
+- `sensors.*.us-west.sensor-456` - All metrics from specific sensor
 - `sensors.>` - All sensor data
 
 **JetStream Streams**:
@@ -338,7 +338,7 @@ Subject: sensors.>
 Consumers filter by:
 - sensors.temperature.> (temperature only)
 - sensors.humidity.> (humidity only)
-- sensors.>.us-west.> (region only)
+- sensors.*.us-west.> (region only)
 ```
 
 ---
@@ -391,8 +391,8 @@ Order Service: orders.>
 Payment Service: payments.>
 Inventory Service: inventory.>
 Shipping Service: shipping.>
-Regional Dashboard (US West): >.us-west.>
-Regional Dashboard (EU): >.eu-central.>
+Regional Dashboard (US West): *.us-west.>
+Regional Dashboard (EU): *.eu-central.>
 ```
 
 ---
@@ -434,9 +434,9 @@ devices.telemetry.ap-south.device-789.current
 
 **Subscribers**:
 ```
-Temperature Monitor: devices.telemetry.>.>.temperature
+Temperature Monitor: devices.telemetry.*.*.temperature
 US East Aggregator: devices.telemetry.us-east.>
-Device 456 Dashboard: devices.telemetry.>.sensor-456.>
+Device 456 Dashboard: devices.telemetry.*.sensor-456.>
 All Telemetry: devices.telemetry.>
 ```
 
@@ -446,13 +446,13 @@ Stream: iot-telemetry
 Subject: devices.telemetry.>
 
 Consumer: temperature-only
-Filter: devices.telemetry.>.>.temperature
+Filter: devices.telemetry.*.*.temperature
 
 Consumer: us-east-only
 Filter: devices.telemetry.us-east.>
 
 Consumer: sensor-456
-Filter: devices.telemetry.>.sensor-456.>
+Filter: devices.telemetry.*.sensor-456.>
 ```
 
 ---
@@ -491,11 +491,11 @@ LLM agent capability discovery: agents.capabilities.llm-agent
 
 ## Comparison Matrix
 
-| Pattern | Best For | Complexity | Scalability | Auth Support |
-|---------|----------|-----------|-------------|--------------|
-| Simple | Learning, single domain | Low | 100k events/sec | Good |
-| Multi-Region | Global systems | Medium | 1M+ events/sec | Good |
-| Multi-Tenant | SaaS, account isolation | Medium-High | 1M+ events/sec | Excellent |
-| Request/Reply | Sync services | Low | 10k req/sec | Good |
-| Event Sourcing | CQRS, event-sourced | Medium | 100k events/sec | Good |
-| Temporal | IoT, time-series | High | 10M+ events/sec | Good |
+| Pattern | Best For | Complexity | Scaling decision | Auth Support |
+|---------|----------|-------------|------------------|--------------|
+| Simple | Learning, single domain | Low | Add scope only when needed | Good |
+| Multi-Region | Global systems | Medium | Split by region when ownership or retention differs | Good |
+| Multi-Tenant | SaaS, account isolation | Medium-High | Prefer account boundaries before subject prefixes | Excellent |
+| Request/Reply | Sync services | Low | Size from request latency and responder capacity | Good |
+| Event Sourcing | CQRS, event-sourced | Medium | Size from retention and replay needs | Good |
+| Temporal | IoT, time-series | High | Partition by retention and consumer topology | Good |
