@@ -10,12 +10,13 @@ const usage = `Usage:
   node validate-subjects.mjs --file <path>
   node validate-subjects.mjs --root <directory>
 
-A legacy fixture file contains one entry per line: <kind> <subject>.
+A YAML fixture file contains kind records with a subjects list. Legacy line fixtures remain supported.
 Markdown files contain YAML-like records in fenced blocks tagged with ${markdownTag}:
 
 \`\`\`yaml ${markdownTag}
 - kind: publish
-  subject: events.created
+  subjects:
+    - events.created
 \`\`\`
 
 Blank lines and lines beginning with # are ignored.`;
@@ -98,7 +99,8 @@ function parseLegacyFixture(content, file) {
 
 function parseTaggedBlock(lines, file, openingLine) {
   let currentKind;
-  let awaitingSubject = false;
+  let awaitingSubjects = false;
+  let readingSubjects = false;
   let entries = 0;
 
   for (const [index, line] of lines.entries()) {
@@ -110,31 +112,37 @@ function parseTaggedBlock(lines, file, openingLine) {
 
     const kindMatch = trimmed.match(/^(?:-\s*)?kind:\s*([A-Za-z-]+)\s*$/);
     if (kindMatch) {
-      if (awaitingSubject) {
-        fail(`${location}: previous kind has no subject`);
+      if (awaitingSubjects) {
+        fail(`${location}: previous kind has no subjects`);
       }
       currentKind = kindMatch[1];
-      awaitingSubject = true;
+      awaitingSubjects = true;
+      readingSubjects = false;
       continue;
     }
 
-    const subjectMatch = trimmed.match(/^subject:\s*(.+)$/);
-    if (subjectMatch) {
+    if (trimmed === "subjects:") {
       if (!currentKind) {
-        fail(`${location}: subject must follow a kind`);
+        fail(`${location}: subjects must follow a kind`);
       } else {
-        validate(unquote(subjectMatch[1]), currentKind, location);
-        entries += 1;
-        awaitingSubject = false;
+        readingSubjects = true;
       }
       continue;
     }
 
-    fail(`${location}: expected 'kind: <kind>' or 'subject: <subject>'`);
+    const subjectMatch = trimmed.match(/^[-]\s+(.+)$/);
+    if (subjectMatch && readingSubjects) {
+      validate(unquote(subjectMatch[1]), currentKind, location);
+      entries += 1;
+      awaitingSubjects = false;
+      continue;
+    }
+
+    fail(`${location}: expected 'kind: <kind>', 'subjects:', or a subject list item`);
   }
 
-  if (awaitingSubject) {
-    fail(`${file}:${openingLine}: final kind has no subject`);
+  if (awaitingSubjects) {
+    fail(`${file}:${openingLine}: final kind has no subjects`);
   }
   if (entries === 0) {
     fail(`${file}:${openingLine}: tagged block has no subject entries`);
@@ -232,7 +240,11 @@ if (subject) {
   entries = 1;
 } else if (file) {
   const content = await readFile(file, "utf8");
-  entries = file.endsWith(".md") ? parseMarkdown(content, file) : parseLegacyFixture(content, file);
+  entries = file.endsWith(".md")
+    ? parseMarkdown(content, file)
+    : file.endsWith(".yaml") || file.endsWith(".yml")
+      ? parseTaggedBlock(content.split(/\r?\n/), file, 0)
+      : parseLegacyFixture(content, file);
 } else {
   for (const path of await markdownFiles(root)) {
     entries += parseMarkdown(await readFile(path, "utf8"), path);

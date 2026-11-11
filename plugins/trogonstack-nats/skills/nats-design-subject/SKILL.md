@@ -57,7 +57,8 @@ Record one logical channel before creating subjects or streams. Prefer the Async
 ```yaml
 id: gateway.ingress.raw.github.v1
 kind: durable-event
-subject: gateway.ingress.raw.github.v1.<event>
+subjects:
+  - gateway.ingress.raw.github.v1.<event>
 transport: jetstream
 stream: GATEWAY_GITHUB_PRIMARY
 owner: gitops
@@ -70,14 +71,16 @@ For an RPC channel:
 ```yaml
 id: gateway.rpc.v1.health
 kind: rpc
-request_subject: gateway.rpc.v1.health
-reply_subject: _INBOX.<generated-by-client>
+request_subjects:
+  - gateway.rpc.v1.health
+reply_subjects:
+  - _INBOX.<generated-by-client>
 transport: core
 storage: none
 owner: gateway
 ```
 
-The channel record is the source for the subject, stream filters, consumer filters, permissions, and management status. Do not make an application silently create production streams that are also declared by GitOps or an operator.
+The channel record is the source for the subjects, stream filters, consumer filters, permissions, and management status. Do not make an application silently create production streams that are also declared by GitOps or an operator.
 
 ### Choose the subject shape
 
@@ -200,7 +203,7 @@ Before presenting the design:
 - Verify that request replies use a generated inbox or an explicitly documented alternative.
 - Check stream and consumer filter overlap.
 - Check permissions against the actual subject and JetStream control-plane requirements.
-- Mark machine-readable Markdown fixtures with the `nats-subjects` info tag. For example, use ` ```yaml nats-subjects` and put one `kind` and `subject` pair in each YAML item. Ordinary examples stay untagged.
+- Mark machine-readable Markdown fixtures with the `nats-subjects` info tag. For example, use ` ```yaml nats-subjects` and put a `kind` and `subjects` list in each YAML item. Keep the list shape even when it has one value. Ordinary examples stay untagged.
 - Run the bundled subject validator when it is available:
 
 ```bash
@@ -212,7 +215,7 @@ node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjec
 - [Channel contracts and Core versus JetStream](references/channel-contract.md)
 - [AsyncAPI channel template](references/gateway-asyncapi.yaml)
 - [Tagged subject validation examples](references/channel-contract.md#gateway-example)
-- [Legacy CLI subject fixture](references/subject-fixtures.txt)
+- [Subject fixture YAML](references/subject-fixtures.yaml)
 - [Subject patterns](references/patterns.md)
 - [JetStream streams and consumers](references/jetstream.md)
 - [Subject anti-patterns](references/anti-patterns.md)

@@ -6,6 +6,8 @@ JetStream does not require a separate application subject namespace. A stream ca
 
 Use [AsyncAPI 3.0](https://www.asyncapi.com/docs/reference/specification/v3.0.0) in [gateway-asyncapi.yaml](gateway-asyncapi.yaml) to describe application behavior. Its `send` and `receive` operations belong to the application that owns the document. Do not put a downstream consumer into a loosely coupled producer contract. A reader can publish its own receive-side contract and own a JetStream consumer separately.
 
+The NATS-specific examples below use list-valued `subjects`, `request_subjects`, and `reply_subjects` fields, even when one value is present. AsyncAPI keeps its singular `address` field, and JetStream examples keep exact server fields such as `filter_subject`.
+
 | Concern | Core NATS | JetStream |
 | --- | --- | --- |
 | Delivery | Live publish-subscribe or request-reply | Stream-backed delivery through consumers |
@@ -23,8 +25,10 @@ Use Core NATS request-reply when the caller needs one response now:
 ```yaml
 id: gateway.rpc.v1.health
 kind: rpc
-request_subject: gateway.rpc.v1.health
-reply_subject: _INBOX.<generated-by-client>
+request_subjects:
+  - gateway.rpc.v1.health
+reply_subjects:
+  - _INBOX.<generated-by-client>
 transport: core
 storage: none
 ```
@@ -38,7 +42,8 @@ Use Core NATS publish-subscribe for best-effort notifications:
 ```yaml
 id: gateway.signal.v1.configuration_changed
 kind: live-signal
-subject: gateway.signal.v1.configuration_changed
+subjects:
+  - gateway.signal.v1.configuration_changed
 transport: core
 storage: none
 ```
@@ -52,7 +57,8 @@ Use JetStream for a fact that must survive a disconnect or be replayed:
 ```yaml
 id: gateway.ingress.raw.github.v1
 kind: durable-event
-subject: gateway.ingress.raw.github.v1.<event>
+subjects:
+  - gateway.ingress.raw.github.v1.<event>
 transport: jetstream
 stream: GITHUB_PRIMARY
 retention: 7d
@@ -68,7 +74,8 @@ Use the same shape for a second ingress source when it has a separate ownership 
 ```yaml
 id: gateway.ingress.slack.v1
 kind: durable-event
-subject: gateway.ingress.raw.slack.v1.<event>
+subjects:
+  - gateway.ingress.raw.slack.v1.<event>
 transport: jetstream
 stream: SLACK_PRIMARY
 retention: 7d
@@ -82,7 +89,8 @@ Use a JetStream work-queue stream and add a durable consumer only when worker in
 ```yaml
 id: gateway.work.v1.installation_sync
 kind: durable-work
-subject: gateway.work.v1.installation_sync
+subjects:
+  - gateway.work.v1.installation_sync
 transport: jetstream
 stream: GATEWAY_WORK
 retention: workqueue
@@ -110,22 +118,30 @@ The `nats-subjects` tag marks the examples that the bundled validator reads. The
 
 ```yaml nats-subjects
 - kind: publish
-  subject: gateway.ingress.raw.github.v1.pull_request
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
 - kind: subscribe
-  subject: gateway.ingress.raw.github.v1.>
+  subjects:
+    - gateway.ingress.raw.github.v1.>
 - kind: stream
-  subject: gateway.ingress.raw.github.v1.>
+  subjects:
+    - gateway.ingress.raw.github.v1.>
 # This validates an optional reader filter. It does not provision a consumer.
 - kind: consumer
-  subject: gateway.ingress.raw.github.v1.pull_request
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
 - kind: publish
-  subject: gateway.ingress.raw.slack.v1.event_callback
+  subjects:
+    - gateway.ingress.raw.slack.v1.event_callback
 - kind: subscribe
-  subject: gateway.ingress.raw.slack.v1.>
+  subjects:
+    - gateway.ingress.raw.slack.v1.>
 - kind: publish
-  subject: gateway.rpc.v1.health
+  subjects:
+    - gateway.rpc.v1.health
 - kind: deliver
-  subject: _INBOX.generated
+  subjects:
+    - _INBOX.generated
 ```
 
 ## Ownership
@@ -146,7 +162,8 @@ Management should expose the same descriptor with desired and observed state. Co
 
 ```text
 channel: gateway.ingress.raw.github.v1
-subject: gateway.ingress.raw.github.v1.>
+subjects:
+  - gateway.ingress.raw.github.v1.>
 transport: jetstream
 stream: GITHUB_PRIMARY
 stream_state: ready
