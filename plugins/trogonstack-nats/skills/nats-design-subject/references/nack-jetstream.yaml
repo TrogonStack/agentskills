@@ -56,4 +56,5 @@ spec:
   filterSubject: gateway.work.v1.installation_sync
   deliverPolicy: all
   ackPolicy: explicit
+  ackWait: 30s
   maxDeliver: 5

@@ -327,7 +327,8 @@ sensors.humidity.us-west.sensor-456
 
 **Subscribers**:
 - `sensors.temperature.us-west.>` - All temperature in US West
-- `sensors.*.us-west.sensor-456` - All metrics from specific sensor
+- `sensors.*.us-west.sensor-456` - All metrics from specific sensor (four-token form)
+- `sensors.*.us-west.sensor-456.*` - All metrics from specific sensor (timestamped form)
 - `sensors.>` - All sensor data
 
 **JetStream Streams**:
@@ -391,8 +392,8 @@ Order Service: orders.>
 Payment Service: payments.>
 Inventory Service: inventory.>
 Shipping Service: shipping.>
-Regional Dashboard (US West): *.us-west.>
-Regional Dashboard (EU): *.eu-central.>
+Regional Dashboard (US West): *.*.us-west.>
+Regional Dashboard (EU): *.*.eu-central.>
 ```
 
 ---

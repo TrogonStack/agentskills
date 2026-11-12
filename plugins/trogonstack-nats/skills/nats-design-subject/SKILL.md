@@ -138,7 +138,7 @@ Define storage, replicas, discard behavior, duplicate windows, maximum message s
 
 Create a consumer only when a reader needs durable delivery. A durable event stream may have zero, one, or many consumers. The producer's event contract does not imply a consumer.
 
-Keep stream subject filters disjoint unless overlap is intentional and documented. Work-queue consumers must not have overlapping filters. Use a subject filter for routing. Do not assume arbitrary header predicates are available in JetStream consumers.
+Keep stream subjects disjoint within an account. JetStream rejects a stream whose subjects overlap another stream in the same account. Use sourcing or mirroring to copy messages into another stream. Work-queue consumers must not have overlapping filters. Use a subject filter for routing. Do not assume arbitrary header predicates are available in JetStream consumers.
 
 ### Define ownership and management
 
@@ -167,7 +167,7 @@ Before changing a subject:
 5. Move consumers before removing the old subject.
 6. Observe old and new traffic before deleting the old path.
 
-Use `Nats-Msg-Id` or an application idempotency key when a migration can deliver a message twice.
+Make consumers idempotent with an application key when a migration can deliver a message twice. `Nats-Msg-Id` deduplicates only inside one stream and its duplicate window. It does not deduplicate across the old and new streams.
 
 ## Output
 

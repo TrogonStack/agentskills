@@ -124,7 +124,7 @@ admins.us-west.updated.admin-456         (L2=region)
 
 Frustration: Subscriber needs:
 users.*.updated.>          # Some have profile in L2
-users.*.updated.>          # Others don't
+users.updated.>            # Others don't
 
 CONSISTENT ORDERING (✓):
 users.profile.updated.us-west.user-123   (always: domain.context.action.region.id)

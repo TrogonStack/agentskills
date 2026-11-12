@@ -153,25 +153,29 @@ function parseTaggedBlock(lines, file, openingLine) {
 function parseMarkdown(content, file) {
   const lines = content.split(/\r?\n/);
   let inFence = false;
+  let fenceMarker = "";
   let info = "";
   let openingLine = 0;
   let body = [];
   let entries = 0;
 
   for (const [index, line] of lines.entries()) {
-    const fence = line.match(/^```(.*)$/);
+    const fence = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (!inFence && fence) {
       inFence = true;
-      info = fence[1].trim();
+      fenceMarker = fence[1];
+      info = fence[2].trim();
       openingLine = index + 1;
       body = [];
       continue;
     }
-    if (inFence && line.startsWith("```")) {
+    const closing = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+    if (inFence && closing && closing[1][0] === fenceMarker[0] && closing[1].length >= fenceMarker.length) {
       if (info.split(/\s+/).includes(markdownTag)) {
         entries += parseTaggedBlock(body, file, openingLine);
       }
       inFence = false;
+      fenceMarker = "";
       info = "";
       body = [];
       continue;

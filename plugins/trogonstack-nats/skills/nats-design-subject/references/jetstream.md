@@ -334,30 +334,28 @@ stream: {
 
 stream: {
   name: "orders-by-region"           # Derived stream
-  sources: [{
-    name: "orders-raw"
-  }]
+  subjects: ["orders-by-region.>"]   # Disjoint from orders.>
 }
 
 consumer: {
   name: "transform-by-region"
   filter_subject: "orders.created.>" # Source
-  deliver_subject: "orders.transform.input"  # Concrete push destination
+  deliver_subject: "transform.orders.input"  # Concrete push destination outside orders.>
 }
 ```
 
 **Transform Flow**:
 ```
 Input: orders.created.us-west.order-123
-  ↓ consumer delivers to orders.transform.input
-Transform service publishes: orders.region-us-west.created.order-123
+  ↓ consumer delivers to transform.orders.input
+Transform service publishes: orders-by-region.us-west.created.order-123
 
 Input: orders.created.eu-central.order-456
-  ↓ consumer delivers to orders.transform.input
-Transform service publishes: orders.region-eu-central.created.order-456
+  ↓ consumer delivers to transform.orders.input
+Transform service publishes: orders-by-region.eu-central.created.order-456
 ```
 
-A push consumer delivery subject is a concrete subject. Wildcards and `{region}` placeholders do not transform a delivery subject. Use a server-supported stream subject transform for the target server version or perform the transform in a service that publishes the derived subject.
+A push consumer delivery subject is a concrete subject. Wildcards and `{region}` placeholders do not transform a delivery subject. Use a server-supported stream subject transform for the target server version or perform the transform in a service that publishes the derived subject. Keep the delivery subject and the derived subjects outside the source stream filter. A delivery subject inside the filter forms a cycle, and a derived subject inside the filter is stored again in the raw stream.
 
 **Use Cases**:
 - Normalize subject hierarchies

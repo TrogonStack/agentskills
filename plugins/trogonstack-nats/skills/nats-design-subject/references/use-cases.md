@@ -233,7 +233,7 @@ Account: {tenant}
 Subject: {domain}.{action}.{region}.{id}
 
 EU customers: events.*.eu-central.> in the tenant account
-US customers: events.*.us-east.> in the tenant account
+US East customers: events.*.us-east.> in the tenant account
 ```
 
 For authorization configuration see [security.md](security.md) Pattern 1 (Tenant Isolation with NATS Accounts) and Pattern 4 (Cross-Tenant Analytics). For account-scoped stream setup see [jetstream.md](jetstream.md) Pattern 3.

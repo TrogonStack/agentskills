@@ -31,3 +31,5 @@ jobs:
         run: |
           node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs \
             --root plugins/trogonstack-nats/skills/nats-design-subject
+          node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs \
+            --file plugins/trogonstack-nats/skills/nats-design-subject/references/subject-fixtures.yaml
