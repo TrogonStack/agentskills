@@ -114,10 +114,14 @@ Do not claim a performance effect from token order without a benchmark. Place fi
 
 For every subject template, document the intended filters:
 
-```text
-gateway.ingress.raw.github.v1.>
-gateway.ingress.raw.github.v1.pull_request
-gateway.ingress.raw.slack.v1.>
+```yaml nats-subjects
+- kind: stream
+  subjects:
+    - gateway.ingress.raw.github.v1.>
+    - gateway.ingress.raw.slack.v1.>
+- kind: consumer
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
 ```
 
 For a request, document the request subject and reply-to behavior. NATS request-reply uses a generated inbox. Responders publish to the request's reply subject; they do not invent a shared reply subject for each correlation ID.
