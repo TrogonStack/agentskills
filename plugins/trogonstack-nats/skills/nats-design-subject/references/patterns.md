@@ -126,24 +126,23 @@ acme-corp.orders.created.order-123
 
 **Use when**: Synchronous microservices, command-response, RPC-like communication.
 
-```
-Request Subject: {service}.request.{request-type}
-Reply-To: _INBOX.<generated-by-client>
+Choose a concrete subject that identifies the requested operation. The caller supplies the reply-to address:
 
-Examples:
-orders.request.get-order
-orders.request.calculate-total
-payments.request.authorize
+```
+Request Subject: orders.get-order
+Reply-To: _INBOX.<generated-by-client>
+```
 
 The client creates a unique `_INBOX.<generated>` reply subject and sends it as the request reply-to.
-```
+
+`orders.calculate-total` and `payments.authorize` could use the same pattern. The request/reply behavior comes from the contract and reply-to address, not a required `request` or `rpc` token. Use a kind token when it helps the intended filters or permissions.
 
 **Implementation**:
 ```
-Requester publishes to: orders.request.get-order
+Requester publishes to: orders.get-order
 With reply-to: _INBOX.abc123
 
-Responder subscribes to: orders.request.>
+Responder subscribes to: orders.get-order
   Reads reply-to header
   Publishes response to: _INBOX.abc123
 ```

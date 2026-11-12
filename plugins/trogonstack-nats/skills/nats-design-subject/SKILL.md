@@ -10,17 +10,17 @@ allowed-tools:
 
 # Design NATS Channels
 
-Design a NATS channel contract that stays understandable as the system grows. A subject is the routing key. Core NATS and JetStream are delivery and storage choices that must remain explicit in the contract.
+Design a NATS channel contract that stays understandable as the system grows. A subject is the routing key, not a declaration of transport or storage. Record delivery, acknowledgement, and ownership separately.
 
 JetStream is not a second application subject tree. Streams bind to ordinary application subjects. The `$JS` subjects are the control plane and need separate permissions and management ownership.
 
-## Start with the channel kind
+## Start with the message behavior
 
-Choose the semantic kind before choosing the subject shape:
+Choose what the publisher and reader expect before choosing a subject shape. These kinds describe behavior; they are not required subject tokens:
 
-| Kind | Transport | Contract |
+| Kind | Typical transport | Contract |
 | --- | --- | --- |
-| RPC | Core NATS request-reply | A caller waits for one response or a timeout. |
+| Request/reply | Core NATS | A caller waits for a business response or a timeout. |
 | Live signal | Core NATS publish-subscribe | Delivery is best effort while subscribers are connected. |
 | Durable event | JetStream | The event can be replayed and consumers acknowledge progress. |
 | Durable work | JetStream | A worker pool shares a durable consumer and retries unacknowledged work. |
@@ -34,7 +34,7 @@ If a stream captures a subject, a Core publish can be stored without giving the 
 Skip questions that the user already answered. Ask for the missing contract decisions:
 
 - Is this a new design or a migration?
-- What channel kinds are needed: RPC, live signal, durable event, or durable work?
+- What behavior is needed: request/reply, live signal, durable event, or durable work?
 - Is tenancy an NATS account boundary, a shared-account subject prefix, or both?
 - Which principals publish, subscribe, request, respond, or manage JetStream resources?
 - What must survive a disconnect, and what can be lost?
@@ -60,19 +60,19 @@ kind: durable-event
 subjects:
   - gateway.ingress.raw.github.v1.<event>
 transport: jetstream
-stream: GATEWAY_GITHUB_PRIMARY
+stream: GITHUB_PRIMARY
 owner: gitops
 retention: 7d
 ack: explicit
 ```
 
-For an RPC channel:
+For a request/reply channel:
 
 ```yaml
-id: gateway.rpc.v1.health
-kind: rpc
+id: gateway.health.v1.check
+kind: request-reply
 request_subjects:
-  - gateway.rpc.v1.health
+  - gateway.health.v1.check
 reply_subjects:
   - _INBOX.<generated-by-client>
 transport: core
@@ -80,15 +80,11 @@ storage: none
 owner: gateway
 ```
 
-The channel record is the source for the subjects, stream filters, consumer filters, permissions, and management status. Do not make an application silently create production streams that are also declared by GitOps or an operator.
+The request subject has no `.rpc.` token. Such a token is an optional local naming convention, not a NATS requirement. The channel contract states the behavior. Combine it with provisioned resources, such as NACK manifests, and observed state to show topology; do not infer transport from spelling. An application must not create a stream that GitOps or an operator already owns.
 
 ### Choose the subject shape
 
-Use a stable, low-cardinality prefix followed by the fields subscribers need to filter:
-
-```text
-<domain>.<event-or-action>.<bounded-scope>.<identifier>
-```
+Choose tokens that identify the message and support the intended subscriptions and permissions. A stable, low-cardinality prefix helps with bounded filters. Use a kind token such as `rpc` or `event` only when it serves that design; no kind token or universal token order is required.
 
 Examples:
 
@@ -126,6 +122,8 @@ For every subject template, document the intended filters:
 
 For a request, document the request subject and reply-to behavior. NATS request-reply uses a generated inbox. Responders publish to the request's reply subject; they do not invent a shared reply subject for each correlation ID.
 
+Compare request subjects with stream filters. A request that expects a business response should not be captured by an unrelated JetStream stream. The [NACK example](references/nack-jetstream.yaml) captures ingress events and work, not `gateway.health.v1.check`.
+
 For each principal, list publish and subscribe permissions separately. A broad `>` permission also reaches the JetStream control plane, so scope permissions to the channel and the required `$JS` or `_INBOX` subjects.
 
 ### Design JetStream storage and consumers
@@ -158,7 +156,7 @@ logical channel
   -> retention, backlog, and last error
 ```
 
-For the Trogon gateway, GitOps applies the NACK resources while the gateway publishes and validates the ingress subjects. The application must not create or update competing stream definitions. The ownership must be visible in the channel contract.
+In the gateway example, GitOps applies the NACK resources while the gateway publishes ingress events. The request/reply channel has no NACK resource. Show that separation in the channel contract and management view.
 
 ### Plan migrations
 
@@ -175,27 +173,7 @@ Make consumers idempotent with an application key when a migration can deliver a
 
 ## Output
 
-Write a design that includes:
-
-```markdown
-# NATS Channel Architecture: [System]
-
-## Account and tenancy boundary
-
-## Channel contracts
-
-## Subject templates and valid wildcard paths
-
-## Core NATS request-reply and live signals
-
-## JetStream streams and consumers
-
-## Permissions and reserved subjects
-
-## Provisioning owner and management readback
-
-## Migration and validation plan
-```
+Present a topology a reader can trace from application behavior to the deployed resources. Use the sections that fit the system. Include the relevant account boundary, channel contracts, subject filters, permissions, provisioning owner, and desired versus observed state. Include a migration plan when changing an existing hierarchy.
 
 ## Validation
 
@@ -205,6 +183,7 @@ Before presenting the design:
 - Validate every wildcard expression.
 - Verify that `>` appears only as the final token.
 - Verify that request replies use a generated inbox or an explicitly documented alternative.
+- Compare request subjects with stream filters. Document any intentional capture and its response behavior.
 - Check stream and consumer filter overlap.
 - Check permissions against the actual subject and JetStream control-plane requirements.
 - Mark machine-readable Markdown fixtures with the `nats-subjects` info tag. For example, use ` ```yaml nats-subjects` and put a `kind` and `subjects` list in each YAML item. Keep the list shape even when it has one value. Ordinary examples stay untagged.
@@ -213,6 +192,8 @@ Before presenting the design:
 ```bash
 node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs --root plugins/trogonstack-nats/skills/nats-design-subject
 ```
+
+The bundled validator checks subject syntax and tagged examples. It does not verify stream overlap, permissions, responder availability, or deployed topology.
 
 ## References
 
