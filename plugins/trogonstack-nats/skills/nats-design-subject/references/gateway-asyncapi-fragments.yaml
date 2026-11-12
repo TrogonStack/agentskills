@@ -26,7 +26,7 @@ channels:
       slackWebhook:
         $ref: '#/components/messages/slackWebhook'
   healthRequest:
-    address: gateway.rpc.v1.health
+    address: gateway.health.v1.check
     messages:
       healthRequest:
         $ref: '#/components/messages/healthRequest'

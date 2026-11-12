@@ -1,6 +1,6 @@
 # NATS Channel Contracts
 
-A NATS subject is a routing key. Core NATS and JetStream determine how the message is delivered and whether it is stored. Keep those decisions in one channel contract.
+A NATS subject is a routing key. Its tokens need not encode transport, storage, or whether a response is expected. Describe those behaviors in the channel contract, then show how the deployed resources implement them.
 
 JetStream does not require a separate application subject namespace. A stream captures ordinary subjects. `$JS` subjects are the JetStream control plane and must remain separate from application channels.
 
@@ -18,22 +18,22 @@ The NATS-specific examples below use list-valued `subjects`, `request_subjects`,
 
 ## Channel kinds
 
-### RPC
+### Request/reply
 
 Use Core NATS request-reply when the caller needs one response now:
 
 ```yaml
-id: gateway.rpc.v1.health
-kind: rpc
+id: gateway.health.v1.check
+kind: request-reply
 request_subjects:
-  - gateway.rpc.v1.health
+  - gateway.health.v1.check
 reply_subjects:
   - _INBOX.<generated-by-client>
 transport: core
 storage: none
 ```
 
-The client creates a unique inbox and sends it as the reply subject. The responder uses that reply subject. A timeout and retry policy are part of the contract.
+The client creates a unique inbox and sends it as the reply subject. The responder uses that reply subject. A timeout and retry policy are part of the contract. The `kind` field expresses request/reply behavior; `.rpc.` is not required in the subject. Add a kind token only when it helps a chosen subscription or permission boundary.
 
 ### Live signal
 
@@ -108,11 +108,11 @@ The `consumer` field belongs to the worker's receive-side contract. Omit it from
 gateway.ingress.raw.github.v1.pull_request
 gateway.ingress.raw.slack.v1.event_callback
 gateway.events.v1.conversation.message
-gateway.rpc.v1.health
+gateway.health.v1.check
 gateway.work.v1.installation_sync
 ```
 
-The GitHub and Slack ingress streams can remain separate when their retention, permissions, or consumers differ. A stream may exist before a reader is deployed. The important rule is that request subjects do not sit under the ingress event wildcard.
+The GitHub and Slack ingress streams can remain separate when their retention, permissions, or consumers differ. A stream may exist before a reader is deployed. Their [NACK filters](nack-jetstream.yaml) capture ingress events and work, not the health request. That boundary comes from the declared filters and contract, not from a required `.rpc.` prefix. Compare request subjects with stream filters before treating them as separate paths.
 
 The `nats-subjects` tag marks the examples that the bundled validator reads. The `yaml` language tag keeps the fixture readable as a small data document. Narrative examples use ordinary fences and are not treated as machine-readable contracts.
 
@@ -138,7 +138,7 @@ The `nats-subjects` tag marks the examples that the bundled validator reads. The
     - gateway.ingress.raw.slack.v1.>
 - kind: publish
   subjects:
-    - gateway.rpc.v1.health
+    - gateway.health.v1.check
 - kind: deliver
   subjects:
     - _INBOX.generated
@@ -158,7 +158,7 @@ The application can validate that a required stream exists. It should not silent
 
 ## Management readback
 
-Management should expose the same descriptor with desired and observed state. Consumer fields are optional and appear only when a reader owns one:
+Build management readback from the declared channel behavior, NACK resources, and observed state. Consumer fields appear only when a reader owns one:
 
 ```text
 channel: gateway.ingress.raw.github.v1
@@ -172,4 +172,18 @@ backlog: 0
 owner: gitops
 ```
 
-Core channels omit stream fields and instead expose responder, queue group, timeout, and authorization status.
+The request/reply channel has no stream or consumer entry. Its readback can show the responder, timeout, and permission path instead:
+
+```yaml
+channel: gateway.health.v1.check
+kind: request-reply
+transport: core
+request_subjects:
+  - gateway.health.v1.check
+reply_subjects:
+  - _INBOX.<generated-by-client>
+responder: gateway
+storage: none
+```
+
+Observed responder readiness and authorization status belong beside this declared shape. Neither is proved by the subject name.

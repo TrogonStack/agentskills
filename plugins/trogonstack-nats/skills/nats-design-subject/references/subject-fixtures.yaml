@@ -18,7 +18,7 @@
     - gateway.ingress.raw.slack.v1.>
 - kind: publish
   subjects:
-    - gateway.rpc.v1.health
+    - gateway.health.v1.check
 - kind: deliver
   subjects:
     - _INBOX.generated
