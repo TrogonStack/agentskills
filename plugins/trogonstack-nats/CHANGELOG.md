@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.2.0...trogonstack-nats@v0.2.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **trogonstack-nats:** Clarify Core NATS and JetStream channels ([#115](https://github.com/TrogonStack/agentskills/issues/115)) ([4ea9ce3](https://github.com/TrogonStack/agentskills/commit/4ea9ce3a08b00b3dedb3d14fa4a36bdf375d6451))
+* **trogonstack-nats:** Derive topology from channel contracts ([#116](https://github.com/TrogonStack/agentskills/issues/116)) ([3bc49a9](https://github.com/TrogonStack/agentskills/commit/3bc49a9843ee07101c5a3fadbaa7f06bdab9069b))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-nats@v0.1.3...trogonstack-nats@v0.2.0) (2026-10-11)
 
 
