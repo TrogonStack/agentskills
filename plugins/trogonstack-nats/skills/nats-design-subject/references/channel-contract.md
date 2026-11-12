@@ -4,7 +4,7 @@ A NATS subject is a routing key. Core NATS and JetStream determine how the messa
 
 JetStream does not require a separate application subject namespace. A stream captures ordinary subjects. `$JS` subjects are the JetStream control plane and must remain separate from application channels.
 
-Use [AsyncAPI 3.0](https://www.asyncapi.com/docs/reference/specification/v3.0.0) in [gateway-asyncapi.yaml](gateway-asyncapi.yaml) to describe application behavior. Its `send` and `receive` operations belong to the application that owns the document. Do not put a downstream consumer into a loosely coupled producer contract. A reader can publish its own receive-side contract and own a JetStream consumer separately.
+Use [AsyncAPI 3.0](https://www.asyncapi.com/docs/reference/specification/v3.0.0) with the small [channel fragments](gateway-asyncapi-fragments.yaml) to describe application behavior. Its `send` and `receive` operations belong to the application that owns the document. Use [NACK JetStream resources](nack-jetstream.yaml) for Kubernetes-owned streams and optional consumers. Do not put a downstream consumer into a loosely coupled producer contract. A reader can publish its own receive-side contract and own a JetStream consumer separately.
 
 The NATS-specific examples below use list-valued `subjects`, `request_subjects`, and `reply_subjects` fields, even when one value is present. AsyncAPI keeps its singular `address` field, and JetStream examples keep exact server fields such as `filter_subject`.
 
@@ -146,7 +146,7 @@ The `nats-subjects` tag marks the examples that the bundled validator reads. The
 
 ## Ownership
 
-Declare one owner for each stream and consumer:
+Declare one owner for each stream and consumer. In Kubernetes, NACK owns the JetStream resources:
 
 ```yaml
 owner: gitops
@@ -154,7 +154,7 @@ provisioner: nack
 publisher: trogon-gateway
 ```
 
-The application can validate that a required stream exists. It should not silently create a second definition that competes with the control plane.
+The application can validate that a required stream exists. It should not silently create a second definition that competes with NACK. Apply mTLS connection settings to NACK through its Helm values and Kubernetes Secrets, not through application startup code.
 
 ## Management readback
 

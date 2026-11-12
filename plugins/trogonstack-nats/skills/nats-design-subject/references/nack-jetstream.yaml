@@ -1,0 +1,59 @@
+# NACK JetStream resources.
+# These resources assume the NACK JetStream controller is installed in the cluster.
+# Configure NACK's NATS connection and mTLS through its Helm values and Kubernetes Secrets.
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: github-primary
+  namespace: nats
+spec:
+  name: GITHUB_PRIMARY
+  subjects:
+    - gateway.ingress.raw.github.v1.>
+  retention: limits
+  storage: file
+  replicas: 3
+  maxAge: 168h
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: slack-primary
+  namespace: nats
+spec:
+  name: SLACK_PRIMARY
+  subjects:
+    - gateway.ingress.raw.slack.v1.>
+  retention: limits
+  storage: file
+  replicas: 3
+  maxAge: 168h
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: gateway-work
+  namespace: nats
+spec:
+  name: GATEWAY_WORK
+  subjects:
+    - gateway.work.v1.installation_sync
+  retention: workqueue
+  storage: file
+  replicas: 3
+  maxConsumers: 1
+---
+# Optional. Apply this only when the installation-sync worker is deployed.
+apiVersion: jetstream.nats.io/v1beta2
+kind: Consumer
+metadata:
+  name: installation-sync
+  namespace: nats
+spec:
+  streamName: GATEWAY_WORK
+  durableName: installation-sync
+  filterSubject: gateway.work.v1.installation_sync
+  deliverPolicy: all
+  ackPolicy: explicit
+  maxDeliver: 5

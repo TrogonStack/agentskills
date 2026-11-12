@@ -1,0 +1,72 @@
+# AsyncAPI 3.0 fragments.
+# Merge the channels and operations below into the owning application document.
+# Message definitions remain in the application's existing components section.
+channels:
+  githubIngress:
+    address: gateway.ingress.raw.github.v1.{event}
+    parameters:
+      event:
+        description: GitHub event name.
+        enum:
+          - pull_request
+          - issues
+          - installation
+    messages:
+      githubWebhook:
+        $ref: '#/components/messages/githubWebhook'
+  slackIngress:
+    address: gateway.ingress.raw.slack.v1.{event}
+    parameters:
+      event:
+        description: Slack event name.
+        enum:
+          - event_callback
+          - url_verification
+    messages:
+      slackWebhook:
+        $ref: '#/components/messages/slackWebhook'
+  healthRequest:
+    address: gateway.rpc.v1.health
+    messages:
+      healthRequest:
+        $ref: '#/components/messages/healthRequest'
+  healthReply:
+    address: null
+    messages:
+      healthResponse:
+        $ref: '#/components/messages/healthResponse'
+  installationSync:
+    address: gateway.work.v1.installation_sync
+    messages:
+      installationSync:
+        $ref: '#/components/messages/installationSync'
+operations:
+  publishGithubWebhook:
+    action: send
+    channel:
+      $ref: '#/channels/githubIngress'
+    messages:
+      - $ref: '#/channels/githubIngress/messages/githubWebhook'
+  publishSlackWebhook:
+    action: send
+    channel:
+      $ref: '#/channels/slackIngress'
+    messages:
+      - $ref: '#/channels/slackIngress/messages/slackWebhook'
+  receiveHealthRequest:
+    action: receive
+    channel:
+      $ref: '#/channels/healthRequest'
+    messages:
+      - $ref: '#/channels/healthRequest/messages/healthRequest'
+    reply:
+      channel:
+        $ref: '#/channels/healthReply'
+      messages:
+        - $ref: '#/channels/healthReply/messages/healthResponse'
+  publishInstallationSync:
+    action: send
+    channel:
+      $ref: '#/channels/installationSync'
+    messages:
+      - $ref: '#/channels/installationSync/messages/installationSync'

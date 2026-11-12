@@ -21,7 +21,7 @@
     },
     {
       "name": "trogonstack-nats",
-      "description": "NATS channel design across Core NATS and JetStream, including AsyncAPI contracts, subjects, streams, consumers, tenancy, authorization, and migrations",
+      "description": "NATS channel design across Core NATS and JetStream, including AsyncAPI fragments, NACK-managed streams, optional consumers, tenancy, authorization, and migrations",
       "source": "./plugins/trogonstack-nats",
       "category": "development"
     },

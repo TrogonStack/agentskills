@@ -52,7 +52,7 @@ Keep tenant identity out of normal tenant-local subjects when the account alread
 
 ### Write the channel contract
 
-Record one logical channel before creating subjects or streams. Prefer the AsyncAPI 3.0 document in [gateway-asyncapi.yaml](references/gateway-asyncapi.yaml) for application send and receive behavior. The compact record below is review metadata, not a replacement wire specification:
+Record one logical channel before creating subjects or streams. Use the small [AsyncAPI fragments](references/gateway-asyncapi-fragments.yaml) for application send and receive behavior. Use the [NACK JetStream resources](references/nack-jetstream.yaml) for Kubernetes-owned streams and optional consumers. The compact record below is review metadata, not a replacement wire specification:
 
 ```yaml
 id: gateway.ingress.raw.github.v1
@@ -142,7 +142,7 @@ Keep stream subject filters disjoint unless overlap is intentional and documente
 
 ### Define ownership and management
 
-A single control-plane owner must provision each stream and consumer. The management view should show:
+A single control-plane owner must provision each stream and consumer. In Kubernetes, NACK is the control-plane owner for these JetStream resources. The management view should show:
 
 ```text
 logical channel
@@ -154,7 +154,7 @@ logical channel
   -> retention, backlog, and last error
 ```
 
-For the Trogon gateway, GitOps and NACK can own external ingress streams while the gateway publishes and validates them. The ownership must be visible in the channel contract.
+For the Trogon gateway, GitOps applies the NACK resources while the gateway publishes and validates the ingress subjects. The application must not create or update competing stream definitions. The ownership must be visible in the channel contract.
 
 ### Plan migrations
 
@@ -213,7 +213,8 @@ node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjec
 ## References
 
 - [Channel contracts and Core versus JetStream](references/channel-contract.md)
-- [AsyncAPI channel template](references/gateway-asyncapi.yaml)
+- [AsyncAPI channel fragments](references/gateway-asyncapi-fragments.yaml)
+- [NACK JetStream resources](references/nack-jetstream.yaml)
 - [Tagged subject validation examples](references/channel-contract.md#gateway-example)
 - [Subject fixture YAML](references/subject-fixtures.yaml)
 - [Subject patterns](references/patterns.md)
