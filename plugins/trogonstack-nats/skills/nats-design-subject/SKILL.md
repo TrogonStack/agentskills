@@ -1,6 +1,6 @@
 ---
 name: nats-design-subject
-description: "Design NATS subject hierarchies for messaging patterns (pub/sub, request/reply, streaming). Apply naming conventions, segmentation strategies, and wildcard patterns to create scalable subject architectures. Use when designing NATS messaging systems, choosing account-vs-subject namespace boundaries for multi-tenant communication, designing export/import subjects, or auditing existing subject hierarchies. Do not use for: (1) NATS server or account provisioning, (2) cluster setup, (3) client library implementation or connection code, (4) debugging connectivity or performance issues, (5) choosing between NATS and other messaging systems."
+description: "Design and audit NATS channels across Core NATS and JetStream, including subjects, request-reply, streams, consumers, tenancy, authorization, and migrations."
 allowed-tools:
   - AskUserQuestion
   - Write
@@ -8,322 +8,221 @@ allowed-tools:
   - Shell
 ---
 
-# Design NATS Subject Hierarchy
+# Design NATS Channels
 
-Design a subject architecture that subscribers can efficiently navigate using wildcards, with proper segment ordering, account-aware tenant isolation, and growth path.
+Design a NATS channel contract that stays understandable as the system grows. A subject is the routing key. Core NATS and JetStream are delivery and storage choices that must remain explicit in the contract.
 
-## Interview Phase
+JetStream is not a second application subject tree. Streams bind to ordinary application subjects. The `$JS` subjects are the control plane and need separate permissions and management ownership.
 
-**Skip interview if ALL of these are already specified:**
-- Messaging patterns (pub/sub, request/reply, streaming)
-- Multi-tenancy needs (single/multi-tenant, scale requirements)
-- Security requirements (authorization, tenant isolation)
-- Persistence needs (JetStream vs core NATS)
+## Start with the channel kind
 
-**Always interview if**: Migrating existing subjects (needs anti-pattern audit first)
+Choose the semantic kind before choosing the subject shape:
 
-### Questions
+| Kind | Transport | Contract |
+| --- | --- | --- |
+| RPC | Core NATS request-reply | A caller waits for one response or a timeout. |
+| Live signal | Core NATS publish-subscribe | Delivery is best effort while subscribers are connected. |
+| Durable event | JetStream | The event can be replayed and consumers acknowledge progress. |
+| Durable work | JetStream | A worker pool shares a durable consumer and retries unacknowledged work. |
 
-1. **Scope** — "Is this greenfield design or migrating existing subjects?"
-   - Impact: Migration needs anti-pattern audit first (see [references/anti-patterns.md](references/anti-patterns.md))
+Do not silently fall back from Core NATS to JetStream. That changes delivery guarantees. If a durable event also needs live observers, publish it on the JetStream subject and let live Core subscribers observe it. The durable consumer remains the correctness path.
 
-2. **Multi-Tenancy & Scale** — "Do you need: (A) Single tenant, (B) Account-per-tenant isolation, (C) Shared account with subject prefixes, (D) Massive scale with regions/shards?"
-   - Impact: Determines whether tenant identity belongs in the NATS account boundary, the subject, or both
+If a stream captures a subject, a Core publish can be stored without giving the publisher a persistence acknowledgement. Use the JetStream publish path when the publisher must know that the server accepted the message for storage.
 
-3. **Messaging Patterns** — "Which patterns do you use? (A) Pub/Sub only, (B) Request/Reply, (C) Streaming/JetStream, (D) All/mix?"
-   - Impact: JetStream needs stream-aware subject design; request/reply has its own conventions
+## Interview only for missing decisions
 
-4. **Security** — "Do you need account-level isolation, subject-based authorization, or both?"
-   - Impact: Determines account boundaries, exports/imports, tenant prefixes, and permission boundaries
+Skip questions that the user already answered. Ask for the missing contract decisions:
 
-5. **Persistence** — "Do you need JetStream persistence or core NATS only?"
-   - Impact: Determines stream/consumer subject design and retention considerations
+- Is this a new design or a migration?
+- What channel kinds are needed: RPC, live signal, durable event, or durable work?
+- Is tenancy an NATS account boundary, a shared-account subject prefix, or both?
+- Which principals publish, subscribe, request, respond, or manage JetStream resources?
+- What must survive a disconnect, and what can be lost?
+- Who owns stream and consumer provisioning?
 
----
-
-## When to Use
-
-- Designing a new NATS messaging system
-- Planning account-aware multi-tenant subject isolation
-- Organizing device telemetry or event streams
-- Setting up request/reply patterns across microservices
-- Defining event subject structure for event-sourced systems
-- Building agentic AI platforms with inter-agent messaging
-
-## When NOT to Use
-
-- Configuring NATS server or cluster settings (infrastructure, not subject design)
-- Writing NATS client code or connection logic (implementation, not architecture)
-- Choosing between NATS and other messaging systems (technology evaluation)
-- Debugging existing NATS connectivity or performance issues
-
----
+For an existing hierarchy, audit current subjects, subscriptions, streams, consumers, and permissions before proposing replacements.
 
 ## Workflow
 
-### 1. Identify Domain Boundaries
+### Define the account and domain boundary
 
-List all NATS account boundaries and business domains involved. For strict multi-tenancy, use one account per tenant first; then design short, domain-first subjects inside each account.
+Use NATS Accounts for tenant or environment isolation when the boundary needs independent credentials, quotas, JetStream, or KV. Use a subject prefix only for an intentional shared-account surface or an exported platform view.
 
-Use subject tenant prefixes only when accounts are intentionally unavailable or when designing a shared/platform surface that must carry tenant provenance.
+Keep tenant identity out of normal tenant-local subjects when the account already supplies it. Put tenant provenance into platform aggregation subjects only when the data crosses an explicit export or import boundary.
 
-### 2. Choose a Pattern
+### Write the channel contract
 
-Match the user's scenario to a pattern:
+Record one logical channel before creating subjects or streams. Use the small [AsyncAPI fragments](references/gateway-asyncapi-fragments.yaml) for application send and receive behavior. Use the [NACK JetStream resources](references/nack-jetstream.yaml) for Kubernetes-owned streams and optional consumers. The compact record below is review metadata, not a replacement wire specification:
 
-| Use Case | Pattern | Example |
-|----------|---------|---------|
-| **Simple Domain** | `{domain}.{action}.{scope}` | `orders.created.us-west` |
-| **Multi-Region** | `{domain}.{action}.{region}.{id}` | `devices.telemetry.us-east.sensor-456` |
-| **Multi-Tenant SaaS** | Account per tenant, subjects: `{domain}.{action}.{id}` | `analytics.processed.report-123` in account `acme-corp` |
-| **Shared Account Fallback** | `{tenant}.{domain}.{action}.{id}` | `acme-corp.analytics.processed.report-123` |
-| **Multi-Tenant AI** | Account per tenant, subjects: `agents.{action}.{agent-id}.{task-id}` | `agents.task-assigned.agent-xyz.task-123` in account `tenant-abc` |
-| **Request/Reply** | `{service}.request` / `{service}.reply` | `orders.request` / `orders.reply` |
-| **Event Sourcing** | `{aggregate}.{action}.v{version}.{id}` | `orders.order.created.v1.order-123` |
-
-For full pattern details with subscriber paths and scaling guidance, read [references/patterns.md](references/patterns.md).
-
-### 3. Order Segments Strategically
-
-Apply these rules when ordering subject segments left-to-right inside the selected account:
-
-- **Broad to specific**: Domain → Action → Scope → Identifier
-- **Low-cardinality left, high-cardinality right**: Regions (few values) before IDs (millions of values)
-- **Never put IDs or UUIDs before actions**
-
-```
-✓ GOOD: orders.created.us-west.order-123
-                            ↑          ↑
-                       low-card    high-card
-
-✗ BAD:  orders.order-123.us-west.created
-                ↑
-           high-card early (kills wildcard filtering)
+```yaml
+id: gateway.ingress.raw.github.v1
+kind: durable-event
+subjects:
+  - gateway.ingress.raw.github.v1.<event>
+transport: jetstream
+stream: GATEWAY_GITHUB_PRIMARY
+owner: gitops
+retention: 7d
+ack: explicit
 ```
 
-Why this matters: NATS wildcard matching scans left-to-right. High-cardinality values on the left force subscribers into inefficient `orders.*.us-west.created` patterns that must match thousands of IDs.
+For an RPC channel:
 
-For common ordering mistakes and migration strategies, read [references/anti-patterns.md](references/anti-patterns.md).
-
-### 4. Plan Subscriber Paths
-
-For each domain, document how subscribers will filter:
-
+```yaml
+id: gateway.rpc.v1.health
+kind: rpc
+request_subjects:
+  - gateway.rpc.v1.health
+reply_subjects:
+  - _INBOX.<generated-by-client>
+transport: core
+storage: none
+owner: gateway
 ```
-orders.>                    → All order events
-orders.created.>            → All order creation events
-orders.created.us-west.>    → Orders created in US West
-orders.created.us-west.order-123 → Specific order
+
+The channel record is the source for the subjects, stream filters, consumer filters, permissions, and management status. Do not make an application silently create production streams that are also declared by GitOps or an operator.
+
+### Choose the subject shape
+
+Use a stable, low-cardinality prefix followed by the fields subscribers need to filter:
+
+```text
+<domain>.<event-or-action>.<bounded-scope>.<identifier>
 ```
 
-Design subjects for subscribers, not publishers. Subscribers determine how you organize — a good hierarchy lets them efficiently filter with wildcards.
+Examples:
 
-### 5. Design Security Model (if multi-tenant)
+```text
+orders.created.us-west.order-123
+orders.shipped.us-west.order-123
+gateway.ingress.raw.github.v1.pull_request
+gateway.ingress.raw.slack.v1.event_callback
+```
 
-If the user needs tenant isolation or role-based access:
+Publishers send concrete subjects. Only subscriptions, permissions, and stream or consumer filters use wildcards.
 
-- Prefer NATS Accounts for tenant isolation; each tenant gets its own subject namespace
-- Use exports/imports for cross-account federation instead of assuming cross-tenant visibility
-- Use tenant IDs in subjects only for shared-account fallbacks or platform aggregation surfaces
-- Separate admin/platform subjects from user operations (`_admin.>` or platform account subjects)
-- Apply least-privilege permissions per service
+- `*` matches exactly one token.
+- `>` matches one or more trailing tokens and must be the final token.
+- A wildcard is a complete token. `foo*` and `foo.>bar` are not NATS wildcards.
+- Keep the subject readable and bounded. NATS documents a reasonable maximum of about 16 tokens and a subject length below 256 characters. A shorter project convention is fine when it is stated as a convention.
+- Use one spelling and casing convention. Lowercase with hyphens is a good project convention, while NATS also permits underscores and case-sensitive names.
+- Keep `$SYS`, `$JS`, `$KV`, `$O`, `$SRV`, and `_INBOX` for their protocol roles unless the design explicitly documents a boundary.
 
-For account-based tenancy, authorization patterns, and tenant isolation examples, read [references/security.md](references/security.md).
+Do not claim a performance effect from token order without a benchmark. Place fields where they make the intended subscription and authorization patterns obvious.
 
-### 6. Design JetStream Streams (if persistence needed)
+### Plan subscriber and permission paths
 
-If the user needs JetStream:
+For every subject template, document the intended filters:
 
-- Treat JetStream streams, consumers, and KV buckets as account-scoped resources
-- Reuse stream/KV names across tenant accounts when the topology is identical
-- Use one stream per domain inside each tenant account
-- Use per-tenant streams in one shared account only as a fallback
-- Consumer filters for fine-grained routing
-- Account and domain retention limits (financial: years, telemetry: days)
-- Keep to 4-6 subject segments — use consumer filters instead of deeper hierarchies
+```yaml nats-subjects
+- kind: stream
+  subjects:
+    - gateway.ingress.raw.github.v1.>
+    - gateway.ingress.raw.slack.v1.>
+- kind: consumer
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
+```
 
-For stream design, consumer patterns, and migration from core NATS, read [references/jetstream.md](references/jetstream.md).
+For a request, document the request subject and reply-to behavior. NATS request-reply uses a generated inbox. Responders publish to the request's reply subject; they do not invent a shared reply subject for each correlation ID.
 
-### 7. Validate and Write Output
+For each principal, list publish and subscribe permissions separately. A broad `>` permission also reaches the JetStream control plane, so scope permissions to the channel and the required `$JS` or `_INBOX` subjects.
 
-Present the design using this template:
+### Design JetStream storage and consumers
+
+Choose a stream boundary from retention, storage, replication, throughput, ownership, and consumer topology. One stream per domain is an option, not a rule.
+
+Select the retention policy deliberately:
+
+- `limits` keeps replayable history under message, byte, or age limits.
+- `workqueue` removes messages after one durable consumer acknowledges them.
+- `interest` keeps messages while a matching consumer has interest.
+
+Define storage, replicas, discard behavior, duplicate windows, maximum message size, and retention. Define consumers separately with durable identity, subject filters, pull or push delivery, acknowledgement policy, acknowledgement wait or backoff, maximum delivery attempts, and maximum pending acknowledgements.
+
+Create a consumer only when a reader needs durable delivery. A durable event stream may have zero, one, or many consumers. The producer's event contract does not imply a consumer.
+
+Keep stream subjects disjoint within an account. JetStream rejects a stream whose subjects overlap another stream in the same account. Use sourcing or mirroring to copy messages into another stream. Work-queue consumers must not have overlapping filters. Use a subject filter for routing. Do not assume arbitrary header predicates are available in JetStream consumers.
+
+### Define ownership and management
+
+A single control-plane owner must provision each stream and consumer. In Kubernetes, NACK is the control-plane owner for these JetStream resources. The management view should show:
+
+```text
+logical channel
+  -> subject or subject filter
+  -> Core or JetStream transport
+  -> stream and any provisioned consumers
+  -> owner
+  -> desired state and observed state
+  -> retention, backlog, and last error
+```
+
+For the Trogon gateway, GitOps applies the NACK resources while the gateway publishes and validates the ingress subjects. The application must not create or update competing stream definitions. The ownership must be visible in the channel contract.
+
+### Plan migrations
+
+Before changing a subject:
+
+1. Inventory concrete subjects, wildcard subscriptions, streams, consumers, and ACLs.
+2. Check wildcard syntax and pattern overlap.
+3. Define the target contract and its stream ownership.
+4. Decide whether dual publishing is safe for ordering, idempotency, and storage cost.
+5. Move consumers before removing the old subject.
+6. Observe old and new traffic before deleting the old path.
+
+Make consumers idempotent with an application key when a migration can deliver a message twice. `Nats-Msg-Id` deduplicates only inside one stream and its duplicate window. It does not deduplicate across the old and new streams.
+
+## Output
+
+Write a design that includes:
 
 ```markdown
-# NATS Subject Architecture: [System Name]
+# NATS Channel Architecture: [System]
 
-## Domain Overview
-[Describe the domains and their interactions]
+## Account and tenancy boundary
 
-## Subject Hierarchy
+## Channel contracts
 
-### Domain: [Name]
-- `domain.action.{scope}.{id}`
-- `domain.action.{scope}.{id}`
+## Subject templates and valid wildcard paths
 
-Subscriber paths:
-- `domain.>` — All events
-- `domain.action.>` — Specific action
+## Core NATS request-reply and live signals
 
-[Repeat for each domain]
+## JetStream streams and consumers
 
-## Multi-Tenancy Model
-[NATS Accounts, exports/imports, or shared-account subject prefixes]
+## Permissions and reserved subjects
 
-## Security Model
-[Authorization rules per role/service, if applicable]
+## Provisioning owner and management readback
 
-## JetStream Streams
-[Account-scoped stream definitions and consumer filters, if applicable]
-
-## Quality Validation
-[Run checklist below]
+## Migration and validation plan
 ```
 
-### Example Output
+## Validation
 
-```markdown
-# NATS Subject Architecture: IoT Smart Building Platform
+Before presenting the design:
 
-## Domain Overview
-
-Smart building system with 10,000+ sensors across multiple regions sending temperature, humidity, and occupancy data. Needs real-time monitoring, regional aggregation, and alerting.
-
-## Subject Hierarchy
-
-### Domain: Devices
-- `devices.telemetry.{region}.{device-id}.{metric}`
-- `devices.telemetry.us-west.sensor-456.temperature`
-- `devices.telemetry.us-west.sensor-456.humidity`
-- `devices.telemetry.eu-central.sensor-789.occupancy`
-
-Subscriber paths:
-- `devices.telemetry.>` — All telemetry (global monitoring)
-- `devices.telemetry.us-west.>` — Regional dashboard (US West)
-- `devices.telemetry.>.>.temperature` — All temperature readings
-
-### Domain: Alerts
-- `alerts.triggered.{severity}.{region}.{device-id}`
-- `alerts.triggered.critical.us-west.sensor-456`
-
-Subscriber paths:
-- `alerts.triggered.critical.>` — Critical alerts only
-- `alerts.triggered.>.us-west.>` — Regional alert dashboard
-
-## Multi-Tenancy Model
-
-Not applicable (single organization)
-
-## Security Model
-
-- Building operators: `devices.telemetry.>`, `alerts.>` (subscribe only)
-- Alert service: `alerts.>` (publish + subscribe)
-- Admin: `>` (full access)
-
-## JetStream Streams
-
-Stream: `telemetry-us-west`
-  Subjects: `devices.telemetry.us-west.>`
-  Retention: 24h (high volume)
-  
-Stream: `alerts`
-  Subjects: `alerts.>`
-  Retention: 30d
-
-## Quality Validation
-
-✓ All segments follow broad-to-specific order
-✓ Device IDs at rightmost position
-✓ Naming consistent (lowercase, hyphens)
-✓ Regional filtering efficient
-✓ 4 segments (within 4-6 limit)
-```
-
-For complete real-world examples across microservices, IoT, SaaS, event sourcing, and agentic AI platforms, read [references/use-cases.md](references/use-cases.md).
-
----
-
-## Quick Start (Simple Cases)
-
-If you're designing a simple single-domain system without multi-tenancy:
-
-1. **Use Pattern 1** (Simple Domain): `{domain}.{action}.{id}`
-2. **Skip references** — follow the workflow above
-3. **Example**: `orders.created.order-123`, `payments.authorized.payment-456`
-
-For multi-region, multi-tenant, or event-sourcing needs, continue with full workflow and read references as needed.
-
----
-
-## Reference Navigation
-
-The skill includes 5 detailed reference documents — read them as needed during workflow steps:
-
-- **[patterns.md](references/patterns.md)**: Read when choosing initial pattern (step 2)
-- **[anti-patterns.md](references/anti-patterns.md)**: Read when migrating or auditing existing subjects
-- **[security.md](references/security.md)**: Read when multi-tenancy/authorization needed (step 5)
-- **[jetstream.md](references/jetstream.md)**: Read when persistence needed (step 6)
-- **[use-cases.md](references/use-cases.md)**: Read for complete worked examples per domain
-
-Don't read all references upfront — use them progressively as the workflow requires.
-
----
-
-## Naming Rules
-
-- All lowercase with hyphens: `orders.created` ✓
-- Never underscores: `orders_created` ✗
-- Never mixed case: `Orders.Created` ✗
-- Keep to 4-6 segments maximum
-
----
-
-## Quality Checklist
-
-- [ ] All segments follow broad-to-specific order (`{domain}.{action}.{scope}.{id}`)
-- [ ] No UUID/ID fields appear before action/scope segments
-- [ ] Naming consistent (all lowercase, hyphens, no underscores)
-- [ ] Documented subscriber wildcard paths for each domain
-- [ ] No subjects deeper than 6 segments
-- [ ] Multi-tenancy boundary is clear (account-per-tenant, shared-account prefix fallback, or both)
-- [ ] Security subjects defined for admin/monitoring access
-- [ ] No conflicting patterns (e.g., `orders.created.123` vs `orders.123.created`)
-- [ ] High-cardinality decision documented (why ID placement chosen)
-
-## Testing Your Design
-
-Validate your subject hierarchy before deployment:
+- Validate every concrete publisher subject.
+- Validate every wildcard expression.
+- Verify that `>` appears only as the final token.
+- Verify that request replies use a generated inbox or an explicitly documented alternative.
+- Check stream and consumer filter overlap.
+- Check permissions against the actual subject and JetStream control-plane requirements.
+- Mark machine-readable Markdown fixtures with the `nats-subjects` info tag. For example, use ` ```yaml nats-subjects` and put a `kind` and `subjects` list in each YAML item. Keep the list shape even when it has one value. Ordinary examples stay untagged.
+- Run the bundled subject validator when it is available:
 
 ```bash
-# Start local NATS server
-nats-server -D
-
-# Test subscriber wildcards
-nats sub "orders.>"                    # Should match all order subjects
-nats sub "orders.created.>"            # Should match only creations
-nats sub "orders.created.us-west.>"    # Should match region-specific
-
-# Test publishing
-nats pub "orders.created.us-west.order-123" "test message"
-
-# Verify JetStream streams (if applicable)
-nats stream info orders-stream
-nats consumer info orders-stream order-consumer
+node plugins/trogonstack-nats/skills/nats-design-subject/scripts/validate-subjects.mjs --root plugins/trogonstack-nats/skills/nats-design-subject
 ```
 
-For existing deployments, audit current subjects:
+## References
 
-```bash
-# List active subjects (requires monitoring enabled)
-nats server report jetstream
-
-# Check subject permissions
-nats server check connection --account <account-name>
-```
-
-## Reference Documentation
-
-- **[Patterns](references/patterns.md)**: 6 hierarchy patterns with subscriber paths and scaling guidance
-- **[Anti-Patterns](references/anti-patterns.md)**: common mistakes with detection, fixes, and migration strategies
-- **[Security & Multi-Tenancy](references/security.md)**: Authorization patterns and tenant isolation
-- **[JetStream Design](references/jetstream.md)**: Stream filters, consumer subjects, and retention policies
-- **[Use Cases](references/use-cases.md)**: Complete examples for microservices, IoT, SaaS, event sourcing, agentic AI
+- [Channel contracts and Core versus JetStream](references/channel-contract.md)
+- [AsyncAPI channel fragments](references/gateway-asyncapi-fragments.yaml)
+- [NACK JetStream resources](references/nack-jetstream.yaml)
+- [Tagged subject validation examples](references/channel-contract.md#gateway-example)
+- [Subject fixture YAML](references/subject-fixtures.yaml)
+- [Subject patterns](references/patterns.md)
+- [JetStream streams and consumers](references/jetstream.md)
+- [Subject anti-patterns](references/anti-patterns.md)
+- [Security and tenancy](references/security.md)
+- [Worked use cases](references/use-cases.md)

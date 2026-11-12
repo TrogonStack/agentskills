@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trogonstack-nats",
   "version": "0.2.0",
-  "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
+  "description": "NATS channel design across Core NATS and JetStream, including AsyncAPI fragments, NACK-managed streams, optional consumers, tenancy, authorization, and migrations",
   "author": {
     "name": "TrogonStack",
     "url": "https://github.com/TrogonStack"

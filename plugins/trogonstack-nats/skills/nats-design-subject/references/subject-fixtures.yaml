@@ -1,0 +1,24 @@
+- kind: publish
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
+- kind: subscribe
+  subjects:
+    - gateway.ingress.raw.github.v1.>
+- kind: stream
+  subjects:
+    - gateway.ingress.raw.github.v1.>
+- kind: consumer
+  subjects:
+    - gateway.ingress.raw.github.v1.pull_request
+- kind: publish
+  subjects:
+    - gateway.ingress.raw.slack.v1.event_callback
+- kind: subscribe
+  subjects:
+    - gateway.ingress.raw.slack.v1.>
+- kind: publish
+  subjects:
+    - gateway.rpc.v1.health
+- kind: deliver
+  subjects:
+    - _INBOX.generated

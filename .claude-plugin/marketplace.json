@@ -21,7 +21,7 @@
     },
     {
       "name": "trogonstack-nats",
-      "description": "NATS messaging skills for designing subject hierarchies with naming conventions and wildcard patterns",
+      "description": "NATS channel design across Core NATS and JetStream, including AsyncAPI fragments, NACK-managed streams, optional consumers, tenancy, authorization, and migrations",
       "source": "./plugins/trogonstack-nats",
       "category": "development"
     },
