@@ -23,17 +23,26 @@ extend google.protobuf.MessageOptions {
 }
 
 message Lifecycle {
-  google.protobuf.Duration budget = 1;   // promised maximum lifetime, excluding scheduler delay
+  google.protobuf.Duration budget = 1;   // promised maximum lifetime, including scheduler delay and reaction time
   string genesis_event = 2;              // oneof field name of the first event
   string initial_state = 3;
   repeated State states = 4;
   repeated Transition transitions = 5;
   repeated Window windows = 6;
+  google.protobuf.Duration scheduler_delay = 7;  // delta: worst-case timer delivery delay
+  google.protobuf.Duration reaction_bound = 8;   // rho: worst-case non-timer delivery plus handling
+}
+
+enum StateKind {
+  STATE_KIND_UNSPECIFIED = 0;
+  STATE_KIND_WAITING = 1;
+  STATE_KIND_INSTANT = 2;
+  STATE_KIND_TERMINAL = 3;
 }
 
 message State {
   string name = 1;
-  bool terminal = 2;
+  StateKind kind = 2;  // the initial state is named by Lifecycle.initial_state
 }
 
 message Transition {
@@ -56,13 +65,19 @@ Annotated envelope:
 message AttemptEvent {
   option (example.process.v1.lifecycle) = {
     budget: { seconds: 1800 }
+    scheduler_delay: { seconds: 60 }
+    reaction_bound: { seconds: 1 }
     genesis_event: "begun"
     initial_state: "AwaitingConsent"
     states: [
-      { name: "AwaitingConsent" }, { name: "CallbackClaimed" },
-      { name: "Exchanging" },      { name: "OutcomeUnknown" },
-      { name: "Completed", terminal: true }, { name: "Failed", terminal: true },
-      { name: "Cancelled", terminal: true }, { name: "Expired", terminal: true }
+      { name: "AwaitingConsent", kind: STATE_KIND_WAITING },
+      { name: "CallbackClaimed", kind: STATE_KIND_WAITING },
+      { name: "Exchanging",      kind: STATE_KIND_WAITING },
+      { name: "OutcomeUnknown",  kind: STATE_KIND_WAITING },
+      { name: "Completed", kind: STATE_KIND_TERMINAL },
+      { name: "Failed",    kind: STATE_KIND_TERMINAL },
+      { name: "Cancelled", kind: STATE_KIND_TERMINAL },
+      { name: "Expired",   kind: STATE_KIND_TERMINAL }
     ]
     transitions: [
       { from: "AwaitingConsent", event: "callback_claimed", to: "CallbackClaimed" },
@@ -98,31 +113,33 @@ A checker reads only the compiled descriptors (or the YAML): no runtime, no netw
 
 | Rule | Fails when |
 |---|---|
+| R0 values | A state's kind is unspecified; `budget`, `scheduler_delay`, or `reaction_bound` is missing or negative; a window's `within` is missing, zero, or negative. Runs first, so a negative duration can never shrink the R8 sum. |
 | R1 resolve | A transition `event` is not a field of the envelope's `oneof`; an `on_deadline` is not a command message in the package; a referenced state is undeclared. |
 | R2 coverage | An envelope event appears in no transition and is not the genesis event. |
-| R3 armed | A non-terminal state is covered by no window. |
-| R4 terminal | A terminal state has an outgoing transition. |
+| R3 armed | A waiting state is covered by no window, or an instant or terminal state is covered by one. |
+| R4 terminal | A terminal state has an outgoing transition, or a non-terminal state has none. |
 | R5 reachable | A state is unreachable from the initial state, or cannot reach a terminal state. |
 | R6 acyclic | The graph has a cycle other than a `from == to` self-loop (counted loops are unrolled in the declaration). |
 | R7 contiguous | A window's covered states are not contiguous along every path, so it would re-arm. |
-| R8 budget | The longest path, adding each window once, exceeds the budget. |
+| R8 budget | The longest path exceeds the budget, adding per window arming its `within` plus `scheduler_delay`, and per transition the `reaction_bound`. Under R6 and R7 each window arms at most once per path. |
 
 Output names the rule and the location, so the failure reads like a review finding:
 
 ```text
 example.attempts.v1.AttemptEvent:
-  R3 armed: state "Exchanging" is covered by no window
-  R3 armed: state "OutcomeUnknown" is covered by no window
+  R3 armed: waiting state "Exchanging" is covered by no window
+  R3 armed: waiting state "OutcomeUnknown" is covered by no window
 ```
 
 ## 3. Conform
 
 The declaration is a claim about the hand-written state machine. A generic test, driven by the declaration, keeps the two from drifting:
 
-1. For each declared transition, build a history that reaches `from`, fold the event through the real fold or evolve function, and assert the state is `to`.
-2. For each undeclared `(state, event)` pair, assert the fold rejects it.
-3. For each window, assert its `on_deadline` command is accepted in every covered state and refused in every other state, which proves late timers are harmless.
-4. Feed duplicate and reordered histories and assert terminal states do not move.
+1. Transitions: build a history that reaches each `from`, fold the declared event through the real fold or evolve function, and assert the state is `to`.
+2. Undeclared pairs: assert the fold rejects every `(state, event)` pair the declaration does not list.
+3. Arming: for every transition that enters a window from outside it, run the real decide function and assert it schedules `on_deadline` for `within` after the event, addressed to the same instance and written together with the event (same append or same outbox transaction). A state machine that folds correctly but never schedules its timer fails here.
+4. Late timers: assert `on_deadline` is accepted in every covered state of the active arming and refused in every other state and for any earlier arming.
+5. Duplicates: feed duplicate and reordered histories and assert terminal states do not move.
 
 The only per-process code is a function that maps the fold state to a state name.
 

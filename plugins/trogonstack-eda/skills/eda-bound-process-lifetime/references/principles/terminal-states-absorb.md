@@ -8,8 +8,8 @@ Messaging is at-least-once and unordered at the edges. The reply that lost the r
 
 Absorption has two parts:
 
-- **Refusal by state.** The decide function rejects inputs that do not apply in the current state, and a terminal state accepts none (or accepts them as explicit no-ops that record nothing). The same rule covers non-terminal states a timer no longer covers: a timer for `Exchanging` arriving in `Completed` is refused.
-- **Deterministic identity.** Messages and events carry ids derived from the instance and the step (for example a name-based UUID from `instance_id + step + attempt`), not random ids. A redelivered command produces the same id, and the store or the decide function recognizes it as already applied.
+- **Refusal by state.** The decide function rejects inputs that do not apply in the current state, and a terminal state accepts none (or accepts them as explicit no-ops that record nothing). The same rule covers non-terminal states a timer no longer covers: a timer for `Exchanging` arriving in `Completed` is refused. A matching state name is not enough when a state can be re-entered: each timer carries the arming it was scheduled for (for example `instance_id + window + attempt`), and the decide function refuses it unless that arming is the active one, so a timer from attempt 1 cannot expire attempt 2.
+- **Deterministic identity.** Messages and events carry ids derived from the instance and the step and the input itself (for example a name-based UUID from `instance_id + step + attempt + input type + source id`), not random ids. The input part keeps two different inputs of one step apart, such as both branches of a join, so deduplication never discards one of them. A redelivered command produces the same id, and the store or the decide function recognizes it as already applied.
 
 ## Typed Outcomes
 
@@ -27,7 +27,7 @@ A kill or abort transition, available from every non-terminal state, gives opera
 
 ## What The Reviewer Must Cite
 
-For each terminal state: what happens to a duplicate command, a late reply, and a late timer. For each timer: what happens when it arrives in a state it does not cover. The id scheme for commands and events.
+For each terminal state: what happens to a duplicate command, a late reply, and a late timer. For each timer: what happens when it arrives in a state it does not cover, and when it arrives for an arming that is no longer active. The id scheme for commands and events.
 
 ## The Wrong Fix It Rules Out
 

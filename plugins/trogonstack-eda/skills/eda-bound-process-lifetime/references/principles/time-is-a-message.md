@@ -8,6 +8,14 @@ An event-sourced process decides from its history. If a decision reads the curre
 
 Because the timer is just another input, it races with the real reply, and it can arrive after the process has moved on. The process must refuse or absorb a timer whose state it has left (see [terminal-states-absorb.md](terminal-states-absorb.md)). That is simpler than cancelling timers: cancellation can fail, refusal cannot.
 
+## The Timer Is Durable With The State
+
+Entering the waiting state and scheduling its timer must not be two independent writes. If the state change is stored and the process crashes before the timer is scheduled, the instance waits with no deadline and no exit. Use one of:
+
+- The transition and the timer intent are recorded atomically (the timer is an event or command in the same append).
+- An outbox records the timer intent in the same transaction as the state change, and a relay delivers it to the scheduler.
+- A recovery step on restart scans for waiting states whose arming has no scheduled timer and schedules it.
+
 ## The Scheduler Is Part Of The Bound
 
 A timer is delivered some time after it is due: queue lag, a scheduler outage, a consumer restart. Call the worst case `delta`. The real bound is the sum of the deadlines plus `delta` for each timer on the path. If the scheduler states no delivery-delay bound, say so in the result; the number is then a target, not a guarantee.
@@ -21,7 +29,7 @@ A timer is delivered some time after it is due: queue lag, a scheduler outage, a
 
 ## What The Reviewer Must Cite
 
-Who schedules each timer, when (on entering which state), what input it delivers, where it is delivered (same stream or correlation), how a late timer is refused, and the scheduler's stated delivery delay.
+Who schedules each timer, when (on entering which state), how the timer intent is made durable together with the state transition, what input it delivers, where it is delivered (same stream or correlation), how a late timer is refused, and the scheduler's stated delivery delay.
 
 ## The Wrong Fix It Rules Out
 

@@ -34,7 +34,7 @@ Apply them in order. A state or loop that fails an earlier principle is a findin
 
 ### 1. Waits Are Where Lifetime Goes
 
-Instant transitions (decide, emit, move on) cost no lifetime. Only waiting states do: a command was sent and the process needs an event it does not control (a reply, a callback, a human, a provider, a timer). The first job is to separate waiting states from instant ones, because only waiting states need deadlines and only they count toward `T_max`.
+Instant transitions (decide, emit, move on) cost no lifetime. Only waiting states do: a command was sent and the process needs an event it does not control (a reply, a callback, a human, a provider, a timer). The first job is to separate waiting states from instant ones, because only waiting states need deadlines. Waits dominate `T_max`; the only other term is a small stated bound per transition for delivering and handling each input (principle 7).
 
 Read [references/principles/waits-are-where-lifetime-goes.md](references/principles/waits-are-where-lifetime-goes.md) when building the state list or when it is unclear whether a state waits.
 
@@ -70,7 +70,7 @@ Read [references/principles/terminal-states-absorb.md](references/principles/ter
 
 ### 7. Lifetime Is The Longest Path
 
-`T_max` is the longest path from the initial state to any terminal state, where each waiting window contributes its deadline once and instant transitions contribute zero, plus the scheduler's delivery delay for each timer on the path. Compare it to a declared budget. A budget exceeded is a design conversation, not a rounding error.
+`T_max` is the longest path from the initial state to any terminal state, where each arming of a waiting window contributes its deadline (a shared window once, a retried window once per attempt), plus the scheduler's delivery delay for each arming and a stated reaction bound for each transition. Without stated delay bounds, `T_max` is a target, not a guarantee. Compare it to a declared budget. A budget exceeded is a design conversation, not a rounding error.
 
 Read [references/principles/longest-path.md](references/principles/longest-path.md) when computing `T_max`, when there is no budget yet, or when the result surprises anyone.
 
@@ -128,6 +128,7 @@ Read [references/review/declare-and-check.md](references/review/declare-and-chec
 - [ ] No deadline value or timeout meaning was invented; missing ones were asked for or reported.
 - [ ] States sharing one window are grouped and counted once.
 - [ ] Every loop has a count, or a finding.
-- [ ] Late timers, duplicates, and late replies are shown to be refused or absorbed in every terminal state.
-- [ ] `T_max` is derived step by step, includes the timer delivery delay, and is compared with a budget.
+- [ ] Late timers (including timers from an earlier arming), duplicates, and late replies are shown to be refused or absorbed in every terminal state.
+- [ ] Each timer is shown to be durable together with the transition that arms it.
+- [ ] `T_max` is derived step by step, counts windows per arming, includes the timer delivery delay and the reaction bound, and is compared with a budget (or the verdict says none is declared).
 - [ ] Any reaper or sweeper is explained as a missing deadline or justified as a backstop.

@@ -40,7 +40,7 @@ After the findings, close the review with:
 - Process: <name>
 - Waiting states: <n> (<m> bounded, <k> unbounded)
 - Loops: <n> (<m> counted)
-- T_max: <value with derivation> | undefined (<k> unbounded waits)
+- T_max: <value with derivation> | target <value> (no stated delta or rho) | undefined (<k> unbounded waits)
 - Budget: <value> | not declared
-- Verdict: bounded within budget | bounded over budget | unbounded
+- Verdict: bounded within budget | bounded over budget | bounded, budget not declared | unbounded
 ```

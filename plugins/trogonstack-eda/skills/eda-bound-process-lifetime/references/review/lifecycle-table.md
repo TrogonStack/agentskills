@@ -31,7 +31,7 @@ A process that sends a user to a provider's consent page, receives the callback,
 
 Reading it: the consent phase is bounded by one 10 minute window set when the attempt begins. `Exchanging` and `OutcomeUnknown` both wait on the provider (a token response, then reconciliation) and have no deadline, so the instance can sit there indefinitely. Each `MISSING` becomes a finding (see [finding-template.md](finding-template.md)). Cancel and Expire are not exits from `Exchanging` on purpose: once the code is sent, the exchange cannot be un-sent, so the only honest exits are a result or "outcome unknown".
 
-After the fixes (`exchange` 30s exiting to `OutcomeUnknown`, `reconciliation` 15m exiting to `Failed` with a typed reason), the longest path is `AwaitingConsent -> CallbackClaimed -> Exchanging -> OutcomeUnknown -> Failed`, and `T_max = 10m + 30s + 15m + 3 * delta`.
+After the fixes (`exchange` 30s exiting to `OutcomeUnknown`, `reconciliation` 15m exiting to `Failed` with a typed reason), the longest path is `AwaitingConsent -> CallbackClaimed -> Exchanging -> OutcomeUnknown -> Failed`, and `T_max = 10m + 30s + 15m + 3 * delta + 4 * rho` (three window armings, four transitions).
 
 ## Encoding It
 
