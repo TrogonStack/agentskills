@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-eda@v0.2.0...trogonstack-eda@v0.3.0) (2026-11-16)
+
+
+### Features
+
+* **trogonstack-eda:** Add eda-bound-process-lifetime skill ([#118](https://github.com/TrogonStack/agentskills/issues/118)) ([66ae38f](https://github.com/TrogonStack/agentskills/commit/66ae38fcb06136b64671ee92ef2acc19acd4e90b))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-eda@v0.1.2...trogonstack-eda@v0.2.0) (2026-10-11)
 
 
