@@ -78,6 +78,12 @@
       "description": "Concurrency skills for finding and fixing time-of-check to time-of-use races in files, databases, caches, authorization, and distributed stores",
       "source": "./plugins/trogonstack-concurrency",
       "category": "development"
+    },
+    {
+      "name": "trogonstack-engineering",
+      "description": "Engineering principles for deciding where to invest effort so mistakes are prevented by the codebase and tooling instead of prose and human review",
+      "source": "./plugins/trogonstack-engineering",
+      "category": "development"
     }
   ]
 }

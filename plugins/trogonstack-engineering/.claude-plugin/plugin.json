@@ -1,0 +1,9 @@
+{
+  "name": "trogonstack-engineering",
+  "description": "Engineering principles for deciding where to invest effort so mistakes are prevented by the codebase and tooling instead of prose and human review",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack",
+    "url": "https://github.com/TrogonStack"
+  }
+}

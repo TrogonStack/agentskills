@@ -1,0 +1,26 @@
+{
+  "name": "trogonstack-engineering",
+  "displayName": "TrogonStack Engineering",
+  "description": "Engineering principles for deciding where to invest effort so mistakes are prevented by the codebase and tooling instead of prose and human review",
+  "version": "0.0.1",
+  "author": {
+    "name": "TrogonStack"
+  },
+  "homepage": "https://github.com/TrogonStack/agentskills/tree/main/plugins/trogonstack-engineering",
+  "repository": "https://github.com/TrogonStack/agentskills",
+  "license": "MIT",
+  "keywords": [
+    "trogonstack",
+    "engineering",
+    "guardrails",
+    "static-analysis",
+    "agents-md"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "engineering",
+    "guardrails",
+    "code-quality"
+  ],
+  "skills": "./skills/"
+}
