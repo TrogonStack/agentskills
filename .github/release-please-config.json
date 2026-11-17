@@ -69,6 +69,9 @@
     },
     "plugins/trogonstack-concurrency": {
       "component": "trogonstack-concurrency"
+    },
+    "plugins/trogonstack-engineering": {
+      "component": "trogonstack-engineering"
     }
   },
   "plugins": [
