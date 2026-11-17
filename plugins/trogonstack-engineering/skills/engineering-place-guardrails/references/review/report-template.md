@@ -1,15 +1,15 @@
 # Report Template
 
-One entry per mistake. Three worked entries follow, ending with one that correctly lands at the bottom.
+One entry per mistake. Three worked entries follow, ending with one that correctly lands at the bottom. The first shows a common shape: a codebase move that makes the right path easy, with a static check closing the escape hatch the code alone leaves open.
 
 ## Handlers query the database directly
 
 - Today: human review (flagged in review repeatedly, still slips in agent-written handlers)
 - Layer chosen: codebase
 - Why not higher: n/a, top layer
-- Move: handlers receive only repository interfaces through their constructor; the database client is not exported from the persistence package
-- Delete after: the AGENTS.md line "always go through the repository layer" and the matching review checklist item
-- Follow-up: if the language cannot hide the client, add an import lint forbidding it in the handlers package
+- Move: handlers receive only repository interfaces through their constructor; the database client is not exported from the persistence package. Hiding the client does not stop a handler from importing the driver and opening its own connection, so pair it with a required import lint (layer 2) that bans the driver and the persistence internals in the handlers package
+- Delete after: the AGENTS.md line "always go through the repository layer" and the matching review checklist item, once the lint runs in a required CI gate
+- Follow-up: none
 
 ## Amounts mixed up between cents and dollars
 
