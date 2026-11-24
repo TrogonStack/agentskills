@@ -20,44 +20,16 @@ Validation answers whether a value is acceptable while leaving the caller with t
 raw input -> parse -> Result<ParseError, RefinedValue> -> domain operations
 ```
 
-An `Email` value should be constructible only through its parser, and `send_email` should accept `Email`, not `String`. A successful parse is evidence carried by the type, rather than a fact a comment or a prior call must preserve.
+An `Email` value should be constructible only through its parser, and `send_email` should accept `Email`, not `String`. A successful parse is evidence carried by the type, rather than a fact a comment or a prior call must preserve. Read [value objects](references/value-objects.md) when choosing the refined type or deciding how it may change after construction.
 
 ## Procedure
 
 1. Identify the boundary where data first enters the trusted part of the system.
 2. List the invariants the downstream operation requires, including shape, syntax, ranges, and cross-field relationships.
-3. Define a refined value object or domain type whose construction is restricted to the parser.
+3. Define a refined value object or domain type whose construction is restricted to the parser. Keep it immutable or make every mutation preserve its invariant. Read [value objects](references/value-objects.md) for the relationship between parsing and refined types.
 4. Return an explicit success-or-failure result with actionable parse errors. Do not hide failure in a boolean, assertion, nullable value, or exception unless the surrounding API requires it.
 5. Make downstream functions accept the refined type so callers cannot skip the parse step.
-6. Remove duplicate validation from downstream code. Keep checks that enforce a different invariant at a different boundary.
+6. Remove duplicate validation from downstream code. Keep checks for mutable state or external facts that can change after parsing, and perform those checks at the operation boundary.
 7. Test both rejection cases and the guarantee that successful parsing produces a value accepted by downstream operations.
 
-## Review Questions
-
-- Can an unparsed primitive reach code that assumes the invariant?
-- Can callers construct the refined type without parsing?
-- Does the parser preserve the original input and enough context to explain failure?
-- Are repeated checks proving the same invariant, or do they protect a new boundary?
-- Is sanitization being confused with parsing? Sanitization transforms data; parsing establishes what the data means.
-
-## Report Format
-
-```markdown
-### <boundary or invariant>
-
-- Raw input: <current weak type and source>
-- Refined type: <type that carries the invariant>
-- Parser: <function or boundary that constructs it>
-- Failure: <explicit error/result shape>
-- Downstream change: <functions that now accept the refined type>
-- Duplicate checks removed: <same-invariant checks, or "none">
-```
-
-## Quality Checklist
-
-- [ ] Parsing occurs at the earliest trusted boundary.
-- [ ] The refined type carries the invariant in its API.
-- [ ] Construction bypasses are restricted or impossible.
-- [ ] Failure is explicit and preserves useful context.
-- [ ] Downstream APIs accept refined values instead of raw primitives.
-- [ ] Repeated checks enforce distinct invariants or have been removed.
+Read [review guidance](references/review.md) when reviewing an implementation or writing a finding. Read [the checklist](references/checklist.md) before considering the work complete.
