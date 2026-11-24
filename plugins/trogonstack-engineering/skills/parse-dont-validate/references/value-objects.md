@@ -2,7 +2,7 @@
 
 Parsing and value objects are two parts of the same design. Parsing checks raw input and constructs a refined value object. The value object carries the stable invariant so downstream APIs can require it by type.
 
-**Related skills:** `design-value-objects` is the canonical guide for replacing primitive obsession with domain types. `code-quality` establishes the broader preference to use value objects over primitives. Use this parse skill when deciding how those values are constructed and verified at an input boundary.
+**Related skills:** `design-value-objects` is the canonical guide for replacing primitive obsession with domain types. Use this parse skill when deciding how those values are constructed and verified at an input boundary.
 
 ```text
 raw input -> parser -> Result<ParseError, Email> -> send_email(Email)

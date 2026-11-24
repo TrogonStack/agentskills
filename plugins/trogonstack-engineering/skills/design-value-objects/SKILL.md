@@ -37,7 +37,6 @@ Read [the checklist](references/checklist.md) before considering the design comp
 
 ## Relationship to Existing Guidance
 
-- `code-quality` states the broad preference: avoid primitive obsession and prefer value objects.
 - `design-value-objects` provides the modeling and API procedure.
 - `parse-dont-validate` handles construction from untrusted or weakly typed input.
 
