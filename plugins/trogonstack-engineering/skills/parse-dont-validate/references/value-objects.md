@@ -2,6 +2,8 @@
 
 Parsing and value objects are two parts of the same design. Parsing checks raw input and constructs a refined value object. The value object carries the stable invariant so downstream APIs can require it by type.
 
+**Related skill:** `code-quality` establishes the broader rule to prefer value objects over primitives. Use this skill when deciding how those values are constructed and verified at an input boundary.
+
 ```text
 raw input -> parser -> Result<ParseError, Email> -> send_email(Email)
 ```
