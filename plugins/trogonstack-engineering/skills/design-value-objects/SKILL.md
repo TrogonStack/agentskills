@@ -39,4 +39,5 @@ Read [the checklist](references/checklist.md) before considering the design comp
 
 - `design-value-objects` provides the modeling and API procedure.
 - `parse-dont-validate` handles construction from untrusted or weakly typed input.
+- When a value is required in some cases and meaningless in others, put it on the case that owns it. See [Make Impossible States Unrepresentable](../make-impossible-states-unrepresentable/SKILL.md).
 

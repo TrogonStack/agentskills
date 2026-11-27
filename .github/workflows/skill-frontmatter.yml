@@ -59,7 +59,7 @@ jobs:
           while IFS= read -r skill; do
             dir=$(dirname "$skill")
             echo "::group::$dir"
-            trg ai skills validate "$dir" || { echo "::error file=$skill::trg ai skills validate failed"; status=1; }
+            trg ai skills validate --skill-dir "$dir" || { echo "::error file=$skill::trg ai skills validate failed"; status=1; }
             echo "::endgroup::"
           done < <(find plugins .agents/skills -name SKILL.md -type f | sort)
           exit $status

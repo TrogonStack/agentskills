@@ -32,4 +32,6 @@ An `Email` value should be constructible only through its parser, and `send_emai
 6. Remove duplicate validation from downstream code. Keep checks for mutable state or external facts that can change after parsing, and perform those checks at the operation boundary.
 7. Test both rejection cases and the guarantee that successful parsing produces a value accepted by downstream operations.
 
+If the input tag determines which fields are required, return a variant carrying those fields. See [Make Impossible States Unrepresentable](../make-impossible-states-unrepresentable/SKILL.md).
+
 Read [review guidance](references/review.md) when reviewing an implementation or writing a finding. Read [the checklist](references/checklist.md) before considering the work complete.
