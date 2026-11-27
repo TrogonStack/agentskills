@@ -2,7 +2,7 @@
   "name": "trogonstack-engineering",
   "displayName": "TrogonStack Engineering",
   "description": "Engineering principles for deciding where to invest effort so mistakes are prevented by the codebase and tooling instead of prose and human review",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "TrogonStack"
   },

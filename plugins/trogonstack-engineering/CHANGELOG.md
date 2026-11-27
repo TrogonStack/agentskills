@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-engineering@v0.2.0...trogonstack-engineering@v0.3.0) (2026-11-27)
+
+
+### Features
+
+* **trogonstack-engineering:** Make impossible states unrepresentable ([#131](https://github.com/TrogonStack/agentskills/issues/131)) ([8843cc5](https://github.com/TrogonStack/agentskills/commit/8843cc5328041b14631d28d5b678fa563e407c00))
+
 ## [0.2.0](https://github.com/TrogonStack/agentskills/compare/trogonstack-engineering@v0.1.0...trogonstack-engineering@v0.2.0) (2026-11-24)
 
 
