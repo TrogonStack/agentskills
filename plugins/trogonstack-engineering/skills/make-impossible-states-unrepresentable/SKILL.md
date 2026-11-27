@@ -9,7 +9,7 @@ allowed-tools:
 
 # Make Impossible States Unrepresentable
 
-Find a value the current type admits that the domain forbids. For example, a job marked successful may carry an error and lack its required result. A type for the outcome can express the rule directly with `Succeeded(result) | Failed(error)`.
+Find a value the current type admits that the domain forbids. For example, a job marked successful may carry an error and lack its required output. In Rust, a completed job can use `Result<JobOutput, JobError>`. Constructing `Ok(output)` requires the output, and `Err(error)` carries the failure.
 
 ## Choose the representation
 
